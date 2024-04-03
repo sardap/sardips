@@ -1,0 +1,336 @@
+/*
+
+    * A pet that loves dark souls
+    * A Gangster
+    * A Biker
+    * A moose
+    * A solider
+    * A Block head
+    * A Dick
+    * A Hunch back
+    * A Youtube essay guy
+    * A Groom
+    * A Bride
+    * A Video game Case
+    * A Rock
+    * A Skelotn
+*/
+
+AssetPetTemplateSet(
+    templates: [
+        PetTemplate(
+            species_name: "Blob",
+            kind: Blob,
+            possible_evolutions: [
+                PossibleEvolution(
+                    criteria: ["Age > 5"],
+                    species: [
+                        // "Pawn",
+                        // "WasGuard",
+                        // "Computiee",
+                        // "TallGuy",
+                        // "Beerie",
+                        // "Humbie",
+                        // "KaraokeGuy",
+                        // "Kat",
+                        "Wrestele",
+                    ]
+                )
+            ],
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/blob.png",
+                tile_size: (83, 70),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (58.1, 49.0),
+            poop_interval: Some(5.0),
+            stomach: Some(
+                Stomach(
+                    size: 50.0,
+                    sensations: {}
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Pawn",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/pawn.png",
+                tile_size: (106, 118),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (128.0, 128.0),
+            poop_interval: Some(10.5),
+            stomach: Some(
+                Stomach(
+                    size: 100.0,
+                    sensations: {
+                        Salty: Likes,
+                        Fatty: Likes,
+                        Umami: Loves,
+                        Spicy: Dislikes,
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "WasGuard",
+            kind: Normal,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/wasgaurd.png",
+                tile_size: (988, 1501),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (99.8, 150.1),
+            speed: 10.0,
+            poop_interval: Some(50.5),
+            stomach: Some(
+                Stomach(
+                    size: 80.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Computiee",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/computiee.png",
+                tile_size: (83, 83),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (83.0, 83.0),
+            speed: 30.0,
+            poop_interval: Some(50.5),
+            stomach: Some(
+                Stomach(
+                    size: 80.0,
+                    sensations: {
+                        Dry: Loves,
+                        Astringent: Loves,
+                        Umami: Likes,
+                        Elastic: Dislikes,
+                        Sweet: Dislikes,
+                        Juicy: Despises,
+                        Fizzy: Despises,
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "TallGuy",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/tall_guy.png",
+                tile_size: (49, 128),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (73.5, 192),
+            speed: 100.0,
+            poop_interval: Some(50.0),
+            stomach: Some(
+                Stomach(
+                    size: 300.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Beerie",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/beerie.png",
+                tile_size: (34, 109),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (44.2, 141.7),
+            speed: 30.0,
+            poop_interval: Some(50.0),
+            stomach: Some(
+                Stomach(
+                    size: 100.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Humbie",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/humbie.png",
+                tile_size: (84, 84),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (64.0, 64.0),
+            speed: 50.0,
+            poop_interval: Some(25.0),
+            stomach: Some(
+                Stomach(
+                    size: 100.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "KaraokeGuy",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/karaoke_guy.png",
+                tile_size: (76, 161),
+                columns: 1,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 0,
+                    Despairing: 0,
+                    Happy: 0,
+                    Ecstatic: 0,
+
+                },
+            ),
+            size: (76, 161),
+            speed: 100.0,
+            poop_interval: Some(15.0),
+            stomach: Some(
+                Stomach(
+                    size: 200.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Kat",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/kat.png",
+                tile_size: (123, 66),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (123, 66),
+            speed: 120.0,
+            poop_interval: Some(5.0),
+            stomach: Some(
+                Stomach(
+                    size: 100.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Wrestele",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/wrestele.png",
+                tile_size: (183, 138),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (183, 138),
+            speed: 40.0,
+            poop_interval: Some(60.0),
+            stomach: Some(
+                Stomach(
+                    size: 150.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        )
+    ]
+)

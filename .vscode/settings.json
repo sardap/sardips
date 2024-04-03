@@ -1,0 +1,40 @@
+{
+    "cSpell.words": [
+        "autoscroll",
+        "chrono",
+        "clickables",
+        "Computiee",
+        "cooldown",
+        "cooldowns",
+        "criterias",
+        "datetime",
+        "despawn",
+        "Interactable",
+        "Minigame",
+        "minigames",
+        "nega",
+        "Pooper",
+        "poopers",
+        "remsadasdove",
+        "Sardex",
+        "sardip",
+        "Sardips",
+        "systemtime",
+        "timestep",
+        "turborand",
+        "Umami",
+        "visislbitly"
+    ],
+    "rust-analyzer.linkedProjects": [
+        ".\\Cargo.toml"
+    ],
+    "editor.formatOnSave": true,
+    "editor.semanticTokenColorCustomizations": {
+        "rules": {
+            "unresolvedReference": "#ff0000",
+        },
+    },
+    "rust-analyzer.cargo.features": [
+        "dev"
+    ]
+}

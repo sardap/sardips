@@ -1,0 +1,8 @@
+target/
+.idea/
+.DS_Store
+*.sav
+*.psd
+*.aseprite
+dist/
+pending_food/

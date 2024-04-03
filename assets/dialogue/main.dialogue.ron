@@ -1,0 +1,64 @@
+RawRuleSet(
+    entries: [
+        Response(RawResponse(
+            id: "ObjectLifeIsGood",
+            now: ["RandomText dialogue.object_life_is_good"],
+        )),
+        Rule(RawRule(
+            id: "ObjectLifeIsGood",
+            criteria: Criteria(
+                concept: ThinkIdle,
+                facts: ["IsKindObject",  "Mood > 1.5"]
+            ),
+            response: "ObjectLifeIsGood",
+        )),
+        Response(RawResponse(
+            id: "ObjectHungryNoFood",
+            now: ["RandomText dialogue.object_hungry_no_food"],
+        )),
+        Rule(RawRule(
+            id: "ObjectHungryNoFood",
+            criteria: Criteria(
+                concept: ThinkIdle,
+                facts: ["IsKindObject", "Hungry > 0.5", "FoodCount = 0"]
+            ),
+            response: "ObjectHungryNoFood",
+        )),
+        Response(RawResponse(
+            id: "ObjectPoopEveryWhere",
+            now: ["RandomText dialogue.object_poop_every_where"],
+        )),
+        Rule(RawRule(
+            id: "ObjectPoopEveryWhere",
+            criteria: Criteria(
+                concept: ThinkIdle,
+                facts: ["IsKindObject", "MoodCleanliness < 1.5", "PoopCount > 1"]
+            ),
+            response: "ObjectPoopEveryWhere",
+        )),
+        Response(RawResponse(
+            id: "WasGaurdNothing",
+            now: ["RandomText dialogue.was_guard_nothing"],
+        )),
+        Rule(RawRule(
+            id: "WasGuardNormal",
+            criteria: Criteria(
+                concept: ThinkIdle,
+                facts: ["IsKindNormal", "IsSpeciesWasGuard"]
+            ),
+            response: "WasGaurdNothing",
+        )),
+        Response(RawResponse(
+            id: "WasGaurdSad",
+            now: ["RandomText dialogue.was_guard_sad"],
+        )),
+        Rule(RawRule(
+            id: "WasGaurdSad",
+            criteria: Criteria(
+                concept: ThinkIdle,
+                facts: ["IsKindNormal", "IsSpeciesWasGuard", "Mood < 1.25"]
+            ),
+            response: "WasGaurdSad",
+        ))
+    ]
+)
