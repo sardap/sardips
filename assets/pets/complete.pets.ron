@@ -12,8 +12,13 @@
     * A Groom
     * A Bride
     * A Video game Case
-    * A Rock
     * A Skelotn
+    * A water elemental
+    * A Rock elematial
+    * A Ice elemantal
+    * A geine
+    * Walk good maybe Biscit
+    * One of the buildings from walk good maybe
 */
 
 AssetPetTemplateSet(
@@ -33,7 +38,10 @@ AssetPetTemplateSet(
                         // "Humbie",
                         // "KaraokeGuy",
                         // "Kat",
-                        "Wrestele",
+                        // "Wrestele",
+                        // "Ballotee",
+                        // "FireElemantal",
+                        "Walker",
                     ]
                 )
             ],
@@ -325,6 +333,93 @@ AssetPetTemplateSet(
             stomach: Some(
                 Stomach(
                     size: 150.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Ballotee",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/ballotee.png",
+                tile_size: (61, 91),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (61, 91),
+            speed: 40.0,
+            poop_interval: Some(50.0),
+            stomach: Some(
+                Stomach(
+                    size: 100.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "FireElemantal",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/fire_elemntal.png",
+                tile_size: (98, 150),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 3,
+                    Despairing: 4,
+                    Happy: 1,
+                    Ecstatic: 2,
+
+                },
+            ),
+            size: (98, 150),
+            speed: 70.0,
+            poop_interval: Some(50.0),
+            stomach: Some(
+                Stomach(
+                    size: 100.0,
+                    sensations: {
+                    }
+                )
+            ),
+            has_fun: true,
+            has_cleanliness: true,
+        ),
+        PetTemplate(
+            species_name: "Walker",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/walker.png",
+                tile_size: (62, 60),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (124, 120),
+            speed: 40.0,
+            poop_interval: Some(50.0),
+            stomach: Some(
+                Stomach(
+                    size: 100.0,
                     sensations: {
                     }
                 )

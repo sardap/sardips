@@ -20,7 +20,7 @@ use super::evolve::PossibleEvolution;
 use super::fun::Fun;
 use super::hunger::Hunger;
 use super::mood::{Mood, MoodCategory, MoodCategoryHistory, MoodImages};
-use super::poop::{Cleanliness, Pooper};
+use super::poop::{Cleanliness, Diarrhea, Pooper};
 use super::PetKind;
 use super::{wonder::Wonder, PetBundle};
 

@@ -68,7 +68,6 @@ pub struct Starving;
 fn tick_hunger(mut commands: Commands, mut query: Query<(Entity, &mut Hunger), Without<Starving>>) {
     for (entity, mut hunger) in query.iter_mut() {
         hunger.decrease(HUNGER_TICK_DOWN);
-        info!("Hunger: {}", hunger.value);
         if hunger.empty() {
             commands.entity(entity).insert(Starving);
         }

@@ -283,7 +283,7 @@ fn update_cleanliness_mood(
     let poop_count = poops.iter().count();
 
     for mut mood in moods.iter_mut() {
-        update_mood(&time, poop_count < 2, mood.cleanliness.as_mut());
+        update_mood(&time, poop_count < 1, mood.cleanliness.as_mut());
     }
 }
 

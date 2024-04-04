@@ -41,14 +41,19 @@ pub struct PoopBundle {
 #[derive(Component, Default, Serialize, Deserialize, Clone)]
 pub struct Cleanliness;
 
+#[derive(Component, Default, Serialize, Deserialize, Clone)]
+pub struct Diarrhea;
+
 #[derive(Component, Clone, Serialize, Deserialize)]
 pub struct Pooper {
+    pub interval: Duration,
     pub poop_timer: Timer,
 }
 
 impl Pooper {
     pub fn new(poop_interval: Duration) -> Self {
         Self {
+            interval: poop_interval,
             poop_timer: Timer::new(poop_interval, TimerMode::Repeating),
         }
     }
@@ -126,12 +131,24 @@ fn tick_poopers(
     mut play_sounds: EventWriter<PlaySoundEffect>,
     time: Res<Time>,
     game_image_assets: Res<GameImageAssets>,
-    mut poopers: Query<(&mut Pooper, &mut RngComponent, Option<&Hunger>, &Transform)>,
+    mut poopers: Query<(
+        &mut Pooper,
+        &mut RngComponent,
+        Option<&Hunger>,
+        &Transform,
+        Option<&Diarrhea>,
+    )>,
 ) {
-    for (mut pooper, mut rng, hunger, transform) in poopers.iter_mut() {
+    for (mut pooper, mut rng, hunger, transform, diarrhea) in poopers.iter_mut() {
         // Only poop if hunger is over 50% full
         if hunger.map_or(true, |hunger| hunger.filled_percent() > 0.5) {
-            if pooper.poop_timer.tick(time.delta()).just_finished() {
+            let tick_mul = if diarrhea.is_some() { 1.0 } else { 2.0 };
+
+            if pooper
+                .poop_timer
+                .tick(time.delta().mul_f32(tick_mul))
+                .just_finished()
+            {
                 let scale = poop_scale(&mut rng.fork());
 
                 play_sounds.send(PlaySoundEffect::new(SoundEffect::Poop).with_volume(scale));

@@ -45,6 +45,7 @@ pub enum PetKind {
     Normal,
     Object,
     Creature,
+    Supernatural,
 }
 
 impl fmt::Display for PetKind {
@@ -54,6 +55,7 @@ impl fmt::Display for PetKind {
             PetKind::Object => write!(f, "Object"),
             PetKind::Blob => write!(f, "Blob"),
             PetKind::Creature => write!(f, "Creature"),
+            PetKind::Supernatural => write!(f, "Supernatural"),
         }
     }
 }
