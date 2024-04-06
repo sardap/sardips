@@ -12,13 +12,17 @@
     * A Groom
     * A Bride
     * A Video game Case
-    * A Skelotn
-    * A water elemental
-    * A Rock elematial
     * A Ice elemantal
+    * A Dirt elemantal
     * A geine
-    * Walk good maybe Biscit
+    * Walk good maybe UFO
     * One of the buildings from walk good maybe
+    * Depresed Ghost
+    * A Blue ball
+    * A Dancer
+    * A rich cow
+    * A Noose
+    * Big ears glasses emoji
 */
 
 AssetPetTemplateSet(
@@ -28,7 +32,7 @@ AssetPetTemplateSet(
             kind: Blob,
             possible_evolutions: [
                 PossibleEvolution(
-                    criteria: ["Age > 5"],
+                    criteria: ["Age > 2"],
                     species: [
                         // "Pawn",
                         // "WasGuard",
@@ -41,7 +45,14 @@ AssetPetTemplateSet(
                         // "Wrestele",
                         // "Ballotee",
                         // "FireElemantal",
-                        "Walker",
+                        // "Walker",
+                        // "Garbie",
+                        // "Skelotn",
+                        // "NoTummy",
+                        // "RockElemental",
+                        // "WarterElemental",
+                        // "Gunie",
+                        "Bisct"
                     ]
                 )
             ],
@@ -59,15 +70,16 @@ AssetPetTemplateSet(
                 },
             ),
             size: (58.1, 49.0),
-            poop_interval: Some(5.0),
-            stomach: Some(
-                Stomach(
-                    size: 50.0,
-                    sensations: {}
-                )
-            ),
-            has_fun: true,
-            has_cleanliness: true,
+            speed: Slow,
+            stomach: Some(TemplateStomach(
+                size: Small,
+                sensations: {}
+            )),
+            pooper: Some(TemplatePooper(
+                interval: VeryFrequent,
+            )),
+            cleanliness: None,
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "Pawn",
@@ -86,10 +98,10 @@ AssetPetTemplateSet(
                 },
             ),
             size: (128.0, 128.0),
-            poop_interval: Some(10.5),
+            speed: Medium,
             stomach: Some(
-                Stomach(
-                    size: 100.0,
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                         Salty: Likes,
                         Fatty: Likes,
@@ -98,8 +110,11 @@ AssetPetTemplateSet(
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            poop_interval: Some(TemplatePooper(
+                interval: Infrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "WasGuard",
@@ -118,17 +133,19 @@ AssetPetTemplateSet(
                 },
             ),
             size: (99.8, 150.1),
-            speed: 10.0,
-            poop_interval: Some(50.5),
+            speed: VerySlow,
             stomach: Some(
-                Stomach(
-                    size: 80.0,
+                TemplateStomach(
+                    size: PaulEatingPizza,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: VeryFrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "Computiee",
@@ -147,11 +164,10 @@ AssetPetTemplateSet(
                 },
             ),
             size: (83.0, 83.0),
-            speed: 30.0,
-            poop_interval: Some(50.5),
+            speed: Slow,
             stomach: Some(
-                Stomach(
-                    size: 80.0,
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                         Dry: Loves,
                         Astringent: Loves,
@@ -163,8 +179,11 @@ AssetPetTemplateSet(
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            poop_interval: Some(TemplatePooper(
+                interval: Infrequent,
+            )),
+            fun: Some(TemplateFun()),
+            cleanliness: Some(TemplateCleanliness()),
         ),
         PetTemplate(
             species_name: "TallGuy",
@@ -183,17 +202,19 @@ AssetPetTemplateSet(
                 },
             ),
             size: (73.5, 192),
-            speed: 100.0,
-            poop_interval: Some(50.0),
+            speed: Fast,
             stomach: Some(
-                Stomach(
-                    size: 300.0,
+                TemplateStomach(
+                    size: Huge,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "Beerie",
@@ -212,17 +233,19 @@ AssetPetTemplateSet(
                 },
             ),
             size: (44.2, 141.7),
-            speed: 30.0,
-            poop_interval: Some(50.0),
+            speed: Slow,
             stomach: Some(
-                Stomach(
-                    size: 100.0,
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            poop_interval: Some(TemplatePooper(
+                interval: Infrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "Humbie",
@@ -241,17 +264,19 @@ AssetPetTemplateSet(
                 },
             ),
             size: (64.0, 64.0),
-            speed: 50.0,
-            poop_interval: Some(25.0),
+            speed: Fast,
+            pooper: Some(TemplatePooper(
+                interval: Frequent,
+            )),
             stomach: Some(
-                Stomach(
-                    size: 100.0,
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "KaraokeGuy",
@@ -270,17 +295,19 @@ AssetPetTemplateSet(
                 },
             ),
             size: (76, 161),
-            speed: 100.0,
-            poop_interval: Some(15.0),
+            speed: Fast,
             stomach: Some(
-                Stomach(
-                    size: 200.0,
+                TemplateStomach(
+                    size: Huge,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: Infrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "Kat",
@@ -299,17 +326,19 @@ AssetPetTemplateSet(
                 },
             ),
             size: (123, 66),
-            speed: 120.0,
-            poop_interval: Some(5.0),
+            speed: VeryFast,
             stomach: Some(
-                Stomach(
-                    size: 100.0,
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: VeryFrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "Wrestele",
@@ -328,17 +357,19 @@ AssetPetTemplateSet(
                 },
             ),
             size: (183, 138),
-            speed: 40.0,
-            poop_interval: Some(60.0),
+            speed: VerySlow,
             stomach: Some(
-                Stomach(
-                    size: 150.0,
+                TemplateStomach(
+                    size: Huge,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "Ballotee",
@@ -357,21 +388,23 @@ AssetPetTemplateSet(
                 },
             ),
             size: (61, 91),
-            speed: 40.0,
-            poop_interval: Some(50.0),
+            speed: Medium,
             stomach: Some(
-                Stomach(
-                    size: 100.0,
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         ),
         PetTemplate(
             species_name: "FireElemantal",
-            kind: Object,
+            kind: Supernatural,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/fire_elemntal.png",
                 tile_size: (98, 150),
@@ -386,21 +419,22 @@ AssetPetTemplateSet(
                 },
             ),
             size: (98, 150),
-            speed: 70.0,
-            poop_interval: Some(50.0),
+            speed: Fast,
             stomach: Some(
-                Stomach(
-                    size: 100.0,
+                TemplateStomach(
+                    size: Small,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: Infrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
         ),
         PetTemplate(
             species_name: "Walker",
-            kind: Object,
+            kind: Creature,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/walker.png",
                 tile_size: (62, 60),
@@ -415,17 +449,230 @@ AssetPetTemplateSet(
                 },
             ),
             size: (124, 120),
-            speed: 40.0,
-            poop_interval: Some(50.0),
+            speed: Slow,
             stomach: Some(
-                Stomach(
-                    size: 100.0,
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                     }
                 )
             ),
-            has_fun: true,
-            has_cleanliness: true,
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Garbie",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/garbie.png",
+                tile_size: (850, 1298),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (170, 259.6),
+            speed: VerySlow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Huge,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Constipated,
+            )),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Skelotn",
+            kind: Supernatural,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/skelotn.png",
+                tile_size: (100, 120),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (100, 120),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Small,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: VeryInfrequent,
+            )),
+            fun: Some(TemplateFun()),
+            cleanliness: Some(TemplateCleanliness()),
+        ),
+        PetTemplate(
+            species_name: "NoTummy",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/no_tummy.png",
+                tile_size: (123, 173),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (123, 173),
+            speed: Slow,
+            stomach: None,
+            pooper: Some(TemplatePooper(
+                interval: VeryInfrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "RockElemental",
+            kind: Supernatural,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/rock_elemntal.png",
+                tile_size: (100, 70),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (100, 70),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Infrequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "WarterElemental",
+            kind: Supernatural,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/water_elemntal.png",
+                tile_size: (280, 298),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (280, 298),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Huge,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Frequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Gunie",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/gunie.png",
+                tile_size: (168, 139),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (168, 139),
+            speed: Fast,
+            stomach: Some(
+                TemplateStomach(
+                    size: Small,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Bisct",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/biscit.png",
+                tile_size: (63, 128),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (63, 128),
+            speed: Medium,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         )
+        
     ]
 )
