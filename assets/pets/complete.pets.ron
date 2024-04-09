@@ -19,11 +19,6 @@
     * Depresed Ghost
     * A Blue ball
     * A Dancer
-    * Big ears glasses emoji
-    * word
-        * gets longer happier
-        * gets more misspelt unhappy
-    * The devil
     * A Urn
     * A hand drawn sqaure
     * A cardboard box
@@ -756,6 +751,68 @@ AssetPetTemplateSet(
                 interval: Regular,
             )),
             cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Word",
+            kind: Supernatural,
+            starter: true,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/word.png",
+                tile_size: (650, 156),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: (650, 156),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Devil",
+            kind: Supernatural,
+            starter: true,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/devil.png",
+                tile_size: (155, 211),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: (155, 211),
+            speed: Fast,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: None,
             fun: Some(TemplateFun()),
         )
     ]
