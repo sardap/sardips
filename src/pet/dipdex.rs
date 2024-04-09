@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-pub struct SardexPlugin;
+pub struct DipdexPlugin;
 
-impl Plugin for SardexPlugin {
+impl Plugin for DipdexPlugin {
     fn build(&self, app: &mut App) {}
 }
 

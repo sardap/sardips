@@ -1,6 +1,7 @@
 pub mod ancestor;
 pub mod breeding;
 pub mod core;
+pub mod dipdex;
 pub mod evolve;
 pub mod fun;
 pub mod hunger;
@@ -8,7 +9,6 @@ pub mod mood;
 pub mod move_towards;
 pub mod pet_ai;
 pub mod poop;
-pub mod sardex;
 pub mod template;
 pub mod wonder;
 
