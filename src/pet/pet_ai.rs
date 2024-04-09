@@ -1,4 +1,5 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy_turborand::{DelegatedRng, RngComponent};
 
 use crate::{
     food::{
@@ -10,6 +11,7 @@ use crate::{
 };
 
 use super::{
+    breeding::{BreedEvent, ReadyToBreed},
     hunger::{EatFoodEvent, Hunger},
     move_towards::{MoveTowardsEvent, MovingTowards},
     wonder::Wonder,
@@ -19,6 +21,7 @@ pub struct PetAiPlugin;
 
 impl Plugin for PetAiPlugin {
     fn build(&self, app: &mut App) {
+        // This should probably run in sim update
         app.add_systems(
             FixedUpdate,
             (
@@ -28,6 +31,7 @@ impl Plugin for PetAiPlugin {
                 reached_food,
                 eating_food_complete,
                 reset_cooldowns,
+                breed_find_partner_action,
             )
                 .run_if(in_state(SimulationState::Running)),
         );
@@ -38,13 +42,20 @@ impl Plugin for PetAiPlugin {
 #[reflect(Component)]
 pub struct PetAi {
     pub food_cooldown: Timer,
+    pub check_breed_cooldown: Timer,
 }
 
 impl Default for PetAi {
     fn default() -> Self {
         let mut food_cooldown = Timer::from_seconds(5.0, TimerMode::Once);
         food_cooldown.tick(food_cooldown.duration());
-        Self { food_cooldown }
+
+        let mut check_breed_cooldown = Timer::from_seconds(5.0, TimerMode::Once);
+        check_breed_cooldown.tick(check_breed_cooldown.duration());
+        Self {
+            food_cooldown,
+            check_breed_cooldown,
+        }
     }
 }
 
@@ -59,9 +70,13 @@ struct WaitingToFinishEatingAction {
     target_food: Entity,
 }
 
+#[derive(Component)]
+struct BreedFindPartnerAction;
+
 fn tick_cooldowns(time: Res<Time>, mut query: Query<&mut PetAi>) {
     for mut pet_ai in query.iter_mut() {
         pet_ai.food_cooldown.tick(time.delta());
+        pet_ai.check_breed_cooldown.tick(time.delta());
     }
 }
 
@@ -75,9 +90,18 @@ fn reset_cooldowns(mut q_ai: Query<&mut PetAi>, food: Query<Entity, Added<FindFo
 
 fn select_action(
     mut commands: Commands,
-    query: Query<(Entity, &EntityName, &PetAi, Option<&Hunger>), (With<PetAi>, With<Wonder>)>,
+    mut query: Query<
+        (
+            Entity,
+            &EntityName,
+            &mut PetAi,
+            Option<&Hunger>,
+            Option<&ReadyToBreed>,
+        ),
+        (With<PetAi>, With<Wonder>),
+    >,
 ) {
-    for (entity, name, pet_ai, hunger) in query.iter() {
+    for (entity, name, mut pet_ai, hunger, ready_to_breed) in query.iter_mut() {
         if pet_ai.food_cooldown.finished() {
             if let Some(hunger) = hunger {
                 if hunger.value < hunger.max * 0.15 {
@@ -88,7 +112,16 @@ fn select_action(
                         hunger.max
                     );
                     add_action(&mut commands.entity(entity), FindFoodAction);
+                    pet_ai.food_cooldown.reset();
                 }
+            }
+        }
+
+        if pet_ai.check_breed_cooldown.finished() {
+            if ready_to_breed.is_some() {
+                info!("{} Checking for breeding", name);
+                add_action(&mut commands.entity(entity), BreedFindPartnerAction);
+                pet_ai.check_breed_cooldown.reset();
             }
         }
     }
@@ -169,5 +202,32 @@ fn eating_food_complete(
         if target_food.get(waiting_to_finish.target_food).is_err() {
             stop_action::<WaitingToFinishEatingAction>(&mut commands.entity(entity));
         }
+    }
+}
+
+fn breed_find_partner_action(
+    mut commands: Commands,
+    mut breed_events: EventWriter<BreedEvent>,
+    ready_to_breed: Query<Entity, With<ReadyToBreed>>,
+    mut query: Query<(Entity, &mut RngComponent), With<BreedFindPartnerAction>>,
+) {
+    for (entity, mut rng) in query.iter_mut() {
+        if ready_to_breed.get(entity).is_err() {
+            stop_action::<BreedFindPartnerAction>(&mut commands.entity(entity));
+            continue;
+        }
+
+        // TODO once ancestor DB is ready stop inset
+        let possible_partners: Vec<_> = ready_to_breed.iter().filter(|e| *e != entity).collect();
+        if possible_partners.is_empty() {
+            stop_action::<BreedFindPartnerAction>(&mut commands.entity(entity));
+            continue;
+        }
+
+        let partner = possible_partners[rng.usize(0..possible_partners.len())];
+        breed_events.send(BreedEvent::new(entity, partner));
+
+        // TODO This should be expanded in the future to include moving towards the partner
+        stop_action::<BreedFindPartnerAction>(&mut commands.entity(entity));
     }
 }

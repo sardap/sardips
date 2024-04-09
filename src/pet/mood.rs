@@ -3,9 +3,13 @@ use std::{collections::HashMap, time::Duration};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::simulation::{
-    SimulationUpdate, CLEANLINESS_MOOD_UPDATE, FUN_MOOD_UPDATE, HUNGER_MOOD_UPDATE,
-    MOOD_HISTORY_UPDATE,
+use crate::{
+    money::{MoneyHungry, Wallet},
+    player::Player,
+    simulation::{
+        SimulationUpdate, CLEANLINESS_MOOD_UPDATE, FUN_MOOD_UPDATE, HUNGER_MOOD_UPDATE,
+        MONEY_MOOD_UPDATE, MOOD_HISTORY_UPDATE,
+    },
 };
 
 use super::{
@@ -24,6 +28,7 @@ impl Plugin for MoodPlugin {
                 update_hunger_mood,
                 update_cleanliness_mood,
                 update_fun_mood,
+                update_money_mood,
                 update_overall_mood,
                 push_mood_category_history,
             ),
@@ -35,6 +40,7 @@ impl Plugin for MoodPlugin {
                 add_hunger_mood,
                 add_cleanliness_mood,
                 add_fun_mood,
+                add_money_mood,
             ),
         );
     }
@@ -84,26 +90,17 @@ impl MoodState {
     }
 }
 
-#[derive(Component, Clone, Serialize, Deserialize)]
+#[derive(Component, Clone, Serialize, Deserialize, Default)]
 pub struct Mood {
     pub hunger: Option<MoodState>,
     pub cleanliness: Option<MoodState>,
     pub fun: Option<MoodState>,
+    pub money: Option<MoodState>,
 }
 
 impl Mood {
     pub fn new() -> Self {
         Self::default()
-    }
-}
-
-impl Default for Mood {
-    fn default() -> Self {
-        Self {
-            hunger: None,
-            cleanliness: None,
-            fun: None,
-        }
     }
 }
 
@@ -121,6 +118,10 @@ impl Mood {
 
         if let Some(fun) = &self.fun {
             result.push(fun);
+        }
+
+        if let Some(money) = &self.money {
+            result.push(money);
         }
 
         result
@@ -297,11 +298,38 @@ fn add_fun_mood(mut query: Query<&mut Mood, Added<Fun>>) {
 
 fn update_fun_mood(time: Res<Time>, mut fun_moods: Query<(&Fun, &mut Mood)>) {
     for (fun, mut mood) in fun_moods.iter_mut() {
-        if mood.fun.is_none() {
-            mood.fun = Some(MoodState::new(FUN_MOOD_UPDATE));
-        }
-
         update_mood(&time, fun.filled(), mood.fun.as_mut());
+    }
+}
+
+fn add_money_mood(mut query: Query<&mut Mood, Added<MoneyHungry>>) {
+    for mut mood in query.iter_mut() {
+        if mood.money.is_none() {
+            mood.money = Some(MoodState::new(MONEY_MOOD_UPDATE));
+        }
+    }
+}
+
+fn update_money_mood(
+    time: Res<Time>,
+    player_wallet: Query<&Wallet, With<Player>>,
+    mut money_moods: Query<(&mut MoneyHungry, &mut Mood)>,
+) {
+    let player_wallet = player_wallet.single();
+
+    for (mut money, mut mood) in money_moods.iter_mut() {
+        if let Some(mood) = &mut mood.money {
+            if mood.timer.tick(time.delta()).just_finished() {
+                if player_wallet.balance >= money.max_care
+                    || money.previous_balance < player_wallet.balance
+                {
+                    mood.satisfaction = mood.satisfaction.step_up();
+                } else {
+                    mood.satisfaction = mood.satisfaction.step_down();
+                }
+                money.previous_balance = player_wallet.balance;
+            }
+        }
     }
 }
 

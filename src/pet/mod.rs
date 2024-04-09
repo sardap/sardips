@@ -1,3 +1,5 @@
+pub mod ancestor;
+pub mod breeding;
 pub mod core;
 pub mod evolve;
 pub mod fun;
@@ -14,8 +16,8 @@ use bevy::prelude::*;
 pub use core::*;
 
 use self::{
-    evolve::EvolvePlugin, fun::FunPlugin, hunger::HungerPlugin, mood::MoodPlugin,
-    move_towards::MoveTowardsPlugin, pet_ai::PetAiPlugin, poop::PoopPlugin,
+    breeding::BreedPlugin, evolve::EvolvePlugin, fun::FunPlugin, hunger::HungerPlugin,
+    mood::MoodPlugin, move_towards::MoveTowardsPlugin, pet_ai::PetAiPlugin, poop::PoopPlugin,
     template::PetTemplatePlugin, wonder::WonderPlugin,
 };
 
@@ -33,6 +35,7 @@ impl Plugin for PetPlugin {
             WonderPlugin,
             FunPlugin,
             EvolvePlugin,
+            BreedPlugin,
         ));
     }
 }

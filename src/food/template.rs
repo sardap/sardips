@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     interaction::Clickable,
     layering,
-    name::{EntityName, HasNameTag, NameTag, NameTagBundle},
+    name::{EntityName, HasNameTag, NameTag, NameTagBundle, SpeciesName},
 };
 
 use super::{FoodBundle, FoodFillFactor, FoodSensationType, FoodSensations};
@@ -63,7 +63,8 @@ impl FoodTemplate {
                 sensations: FoodSensations {
                     values: self.sensations.clone(),
                 },
-                name: EntityName::new(&self.name),
+                species_name: SpeciesName::new(&self.name),
+                name: EntityName::new(format!("food.{}", self.name.to_lowercase())),
                 sprite: SpriteBundle {
                     transform: Transform::from_translation(Vec3::new(
                         location.x,

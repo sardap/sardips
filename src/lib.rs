@@ -9,6 +9,7 @@ pub mod autoscroll;
 pub mod button_hover;
 pub mod debug;
 pub mod dynamic_dialogue;
+pub mod facts;
 pub mod food;
 pub mod game_zone;
 pub mod interaction;
@@ -40,8 +41,9 @@ use bevy_prototype_lyon::prelude::*;
 use bevy_turborand::prelude::*;
 use button_hover::ButtonHoverPlugin;
 use debug::DebugPlugin;
-use dynamic_dialogue::DynamicDialoguePlugin;
-use food::template::FoodTemplatePlugin;
+use dynamic_dialogue::{DynamicDialoguePlugin, FactDb};
+use facts::FactsPlugin;
+use food::{template::FoodTemplatePlugin, FoodPlugin};
 use interaction::InteractionPlugin;
 use minigames::MinigamePlugin;
 use money::MoneyPlugin;
@@ -132,8 +134,10 @@ impl Plugin for GamePlugin {
                 SoundsPlugin,
                 GameScenePlugin,
                 DynamicDialoguePlugin,
+                FactsPlugin,
                 ThinkingPlugin,
                 TextTranslationPlugin,
+                FoodPlugin,
             ));
 
         #[cfg(feature = "dev")]

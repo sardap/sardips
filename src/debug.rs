@@ -1,7 +1,11 @@
 use bevy::prelude::*;
+use rand::seq::IteratorRandom;
 use strum::IntoEnumIterator;
 
 use crate::{
+    food::{template::FoodTemplateDatabase, SpawnFoodEvent},
+    money::Wallet,
+    player::Player,
     simulation::{SimTimeScale, SimulationState},
     text_database::Language,
     text_translation::SelectedLanguageTag,
@@ -17,7 +21,8 @@ impl Plugin for DebugPlugin {
             .add_systems(Update, update_sim_time_scale_debug_text)
             .add_systems(
                 Update,
-                sim_time_scale_input.run_if(in_state(SimulationState::Running)),
+                (sim_time_scale_input, free_money, spawn_random_food)
+                    .run_if(in_state(SimulationState::Running)),
             )
             .add_systems(Update, change_language);
     }
@@ -68,17 +73,24 @@ fn sim_time_scale_input(
     mut sim_time_scale: ResMut<SimTimeScale>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
-    const TIME_SCALE_STEP: f32 = 10.;
+    let time_scale_step: f32 = match sim_time_scale.0 {
+        0.0..=1.0 => 0.1,
+        1.0..=10.0 => 1.0,
+        10.0..=120.0 => 10.0,
+        120.0..=1000.0 => 100.0,
+        1000.0..=10000.0 => 1000.0,
+        _ => 10000.0,
+    };
 
     if keyboard_input.just_pressed(KeyCode::Equal) {
-        sim_time_scale.0 += TIME_SCALE_STEP;
+        sim_time_scale.0 += time_scale_step;
     }
 
     if keyboard_input.just_pressed(KeyCode::Minus) {
-        sim_time_scale.0 -= TIME_SCALE_STEP;
+        sim_time_scale.0 -= time_scale_step;
     }
 
-    sim_time_scale.0 = sim_time_scale.0.clamp(0., 100.);
+    sim_time_scale.0 = sim_time_scale.0.clamp(0., 100000.);
 }
 
 fn update_sim_time_scale_debug_text(
@@ -109,5 +121,30 @@ fn change_language(
         // Cycle to the next language
         let next_language_index = (current_language_index + 1) % languages.len();
         *selected_language = languages[next_language_index];
+    }
+}
+
+fn free_money(
+    mut wallet: Query<&mut Wallet, With<Player>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::KeyM) {
+        let mut wallet = wallet.single_mut();
+        wallet.balance += 1000;
+    }
+}
+
+fn spawn_random_food(
+    mut food_events: EventWriter<SpawnFoodEvent>,
+    food_template_db: Res<FoodTemplateDatabase>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+) {
+    if keyboard_input.just_pressed(KeyCode::KeyF) {
+        let random_food = food_template_db
+            .iter()
+            .choose(&mut rand::thread_rng())
+            .unwrap();
+
+        food_events.send(SpawnFoodEvent::new(&random_food.name));
     }
 }

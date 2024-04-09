@@ -8,11 +8,13 @@ use serde::{Deserialize, Serialize};
 use crate::{
     age::Age,
     assets::GameImageAssets,
-    dynamic_dialogue::{EntityFactDatabase, FactDb, GlobalFactDatabase},
+    dynamic_dialogue::FactDb,
+    facts::{EntityFactDatabase, GlobalFactDatabase},
     food::{template::FoodTemplateDatabase, Food},
-    money::Wallet,
+    money::{MoneyHungry, Wallet},
     name::{EntityName, SpeciesName},
     pet::{
+        breeding::Breeds,
         fun::Fun,
         hunger::Hunger,
         mood::{Mood, MoodCategoryHistory},
@@ -72,7 +74,8 @@ struct PlayerSave {
 #[derive(Serialize, Deserialize)]
 pub struct SavedFood {
     pub position: Vec2,
-    pub name: EntityName,
+    pub name: SpeciesName,
+    pub persistent_id: PersistentId,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -89,12 +92,14 @@ pub struct SavedPet {
     pub fact_db: EntityFactDatabase,
     pub kind: PetKind,
     pub age: Age,
+    pub breeds: Option<Breeds>,
     pub mood: Mood,
     pub mood_history: MoodCategoryHistory,
     pub fun: Option<Fun>,
     pub hunger: Option<Hunger>,
     pub pooper: Option<Pooper>,
     pub cleanliness: Option<Cleanliness>,
+    pub money_hungry: Option<MoneyHungry>,
 }
 
 struct SaveTimer {
@@ -131,17 +136,19 @@ fn save_game(
             &EntityFactDatabase,
             &PetKind,
             &Age,
+            Option<&Breeds>,
             &Mood,
             &MoodCategoryHistory,
             Option<&Fun>,
             Option<&Hunger>,
             Option<&Pooper>,
             Option<&Cleanliness>,
+            Option<&MoneyHungry>,
         ),
         With<Pet>,
     >,
     poops: Query<&Transform, With<Poop>>,
-    foods: Query<(&Transform, &EntityName), With<Food>>,
+    foods: Query<(&PersistentId, &Transform, &SpeciesName), With<Food>>,
     player: Query<&Wallet, With<Player>>,
 ) {
     if should_save.is_empty() {
@@ -172,12 +179,14 @@ fn save_game(
         fact_db,
         kind,
         age,
+        breeds,
         mood,
         mood_category_history,
         fun,
         hunger,
         pooper,
         cleanliness,
+        money_hungry,
     ) in pet.iter()
     {
         save_game.pets.push(SavedPet {
@@ -188,12 +197,14 @@ fn save_game(
             fact_db: fact_db.clone(),
             kind: kind.clone(),
             age: age.clone(),
+            breeds: breeds.cloned(),
             mood: mood.clone(),
             mood_history: mood_category_history.clone(),
             fun: fun.cloned(),
             hunger: hunger.cloned(),
             pooper: pooper.cloned(),
             cleanliness: cleanliness.cloned(),
+            money_hungry: money_hungry.cloned(),
         });
     }
 
@@ -203,8 +214,9 @@ fn save_game(
         });
     }
 
-    for (transform, name) in foods.iter() {
+    for (id, transform, name) in foods.iter() {
         save_game.foods.push(SavedFood {
+            persistent_id: id.clone(),
             position: transform.translation.xy(),
             name: name.clone(),
         });
@@ -212,6 +224,11 @@ fn save_game(
 
     let save_path = Path::new(SAVE_PATH);
     let save_file = std::fs::File::create(save_path).unwrap();
+    #[cfg(feature = "dev")]
+    ron::ser::to_writer_pretty(save_file, &save_game, ron::ser::PrettyConfig::default())
+        .expect("Failed to save game");
+
+    #[cfg(not(feature = "dev"))]
     bincode::serialize_into(save_file, &save_game).unwrap();
 }
 
@@ -262,6 +279,17 @@ fn load_game(
     };
 
     // Check minor version is the same
+    #[cfg(feature = "dev")]
+    let version: SaveGame = match ron::de::from_bytes(&save_file) {
+        Ok(version) => version,
+        Err(_) => {
+            error!("Failed to deserialize save file version");
+            state.set(SardipLoadingState::Failed);
+            return;
+        }
+    };
+
+    #[cfg(not(feature = "dev"))]
     let version: SaveGameVersionOnly = match bincode::deserialize(&save_file) {
         Ok(version) => version,
         Err(_) => {
@@ -280,6 +308,17 @@ fn load_game(
         return;
     }
 
+    #[cfg(feature = "dev")]
+    let save_game: SaveGame = match ron::de::from_bytes(&save_file) {
+        Ok(save_game) => save_game,
+        Err(err) => {
+            error!("Failed to deserialize save file {}", err);
+            state.set(SardipLoadingState::Failed);
+            return;
+        }
+    };
+
+    #[cfg(not(feature = "dev"))]
     let save_game: SaveGame = match bincode::deserialize(&save_file) {
         Ok(save_game) => save_game,
         Err(_) => {
@@ -302,7 +341,7 @@ fn load_game(
     // Load pets
     for saved_pet in save_game.pets {
         let template = pet_template_db
-            .get(&saved_pet.species_name.0)
+            .get_by_name(&saved_pet.species_name.0)
             .expect("Failed to find pet template");
 
         template.create_entity_from_saved(
@@ -318,10 +357,11 @@ fn load_game(
     for saved_food in save_game.foods {
         //Get Food template from name
         let template = food_template_db
-            .get(&saved_food.name.first_name)
+            .get(&saved_food.name.0)
             .expect("Failed to find food template");
 
-        template.spawn(&mut commands, &asset_server, saved_food.position);
+        let entity = template.spawn(&mut commands, &asset_server, saved_food.position);
+        commands.entity(entity).insert(saved_food.persistent_id);
     }
 
     let mut rng = RngComponent::from(&mut rng);
@@ -345,3 +385,16 @@ const SAVE_PATH: &str = "sardip_save.sav";
 
 #[derive(Event)]
 pub struct TriggerSave;
+
+#[derive(Component, Serialize, Deserialize, Clone)]
+pub struct PersistentId {
+    uuid: uuid::Uuid,
+}
+
+impl Default for PersistentId {
+    fn default() -> Self {
+        Self {
+            uuid: uuid::Uuid::new_v4(),
+        }
+    }
+}

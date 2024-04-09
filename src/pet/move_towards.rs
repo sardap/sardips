@@ -7,7 +7,7 @@ pub struct MoveTowardsPlugin;
 impl Plugin for MoveTowardsPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<MoveTowardsEvent>().add_systems(
-            Update,
+            FixedUpdate,
             (
                 set_target,
                 check_target_reached,

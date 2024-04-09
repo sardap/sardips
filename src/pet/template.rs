@@ -7,20 +7,22 @@ use bevy_turborand::{GlobalRng, RngComponent};
 use serde::{Deserialize, Serialize};
 
 use crate::age::Age;
-use crate::dynamic_dialogue::EntityFactDatabase;
+use crate::facts::EntityFactDatabase;
 use crate::food::preferences::{FoodPreference, FoodSensationRating};
 use crate::food::FoodSensationType;
 use crate::interaction::Clickable;
 use crate::layering;
+use crate::money::MoneyHungry;
 use crate::name::{EntityName, HasNameTag, NameTag, NameTagBundle, SpeciesName};
 use crate::sardip_save::SavedPet;
 use crate::velocity::Speed;
 
+use super::breeding::Breeds;
 use super::evolve::PossibleEvolution;
 use super::fun::Fun;
 use super::hunger::Hunger;
-use super::mood::{Mood, MoodCategory, MoodCategoryHistory, MoodImages};
-use super::poop::{Cleanliness, Diarrhea, Pooper};
+use super::mood::{MoodCategory, MoodCategoryHistory, MoodImages};
+use super::poop::{Cleanliness, Pooper};
 use super::PetKind;
 use super::{wonder::Wonder, PetBundle};
 
@@ -47,14 +49,14 @@ fn load_templates(
     template_handle: Res<PetTemplateSetHandle>,
     mut template_assets: ResMut<Assets<AssetPetTemplateSet>>,
 ) {
-    if let Some(level) = template_assets.remove(template_handle.0.id()) {
+    if let Some(set) = template_assets.remove(template_handle.0.id()) {
         commands.insert_resource(PetTemplateDatabase {
-            templates: level.templates,
+            templates: set.templates,
         });
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PetTemplateImageSet {
     pub sprite_sheet: String,
     pub tile_size: (f32, f32),
@@ -62,34 +64,139 @@ pub struct PetTemplateImageSet {
     pub column_mood_map: HashMap<MoodCategory, u32>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Stomach {
-    size: f32,
-    sensations: HashMap<FoodSensationType, FoodSensationRating>,
-}
-
-fn default_speed() -> f32 {
-    70.0
+fn default_speed() -> TemplateSpeed {
+    TemplateSpeed::Medium
 }
 
 fn default_possible_evolutions() -> Vec<PossibleEvolution> {
     vec![]
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy)]
+pub enum TemplateSpeed {
+    VerySlow,
+    Slow,
+    Medium,
+    Fast,
+    VeryFast,
+    BlueBlur,
+}
+
+impl TemplateSpeed {
+    fn value(&self) -> f32 {
+        match self {
+            TemplateSpeed::VerySlow => 20.0,
+            TemplateSpeed::Slow => 35.0,
+            TemplateSpeed::Medium => 50.0,
+            TemplateSpeed::Fast => 70.0,
+            TemplateSpeed::VeryFast => 90.0,
+            TemplateSpeed::BlueBlur => 130.0,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+enum TemplateStomachSize {
+    Tiny,
+    Small,
+    Medium,
+    Large,
+    Huge,
+    PaulEatingPizza,
+}
+
+impl TemplateStomachSize {
+    fn value(&self) -> f32 {
+        match self {
+            TemplateStomachSize::Tiny => 50.0,
+            TemplateStomachSize::Small => 80.0,
+            TemplateStomachSize::Medium => 100.0,
+            TemplateStomachSize::Large => 120.0,
+            TemplateStomachSize::Huge => 150.0,
+            TemplateStomachSize::PaulEatingPizza => 300.0,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TemplateStomach {
+    size: TemplateStomachSize,
+    sensations: HashMap<FoodSensationType, FoodSensationRating>,
+}
+
+#[derive(Serialize, Deserialize)]
+enum TemplatePoopInterval {
+    VeryFrequent,
+    Frequent,
+    Regular,
+    Infrequent,
+    VeryInfrequent,
+    Constipated,
+}
+
+impl TemplatePoopInterval {
+    fn interval(&self) -> Duration {
+        match self {
+            TemplatePoopInterval::VeryFrequent => Duration::from_secs(10 * 60),
+            TemplatePoopInterval::Frequent => Duration::from_secs(25 * 60),
+            TemplatePoopInterval::Regular => Duration::from_secs(60 * 60),
+            TemplatePoopInterval::Infrequent => Duration::from_secs(80 * 60),
+            TemplatePoopInterval::VeryInfrequent => Duration::from_secs(120 * 60),
+            TemplatePoopInterval::Constipated => Duration::from_secs(24 * 60 * 60),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TemplatePooper {
+    interval: TemplatePoopInterval,
+}
+
+impl TemplatePooper {
+    fn pooper(&self) -> Pooper {
+        Pooper::new(self.interval.interval())
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct TemplateFun {}
+
+#[derive(Serialize, Deserialize)]
+pub struct TemplateCleanliness {}
+
+#[derive(Serialize, Deserialize)]
+pub struct TemplateMoneyHungry {
+    max_balance: i32,
+}
+
+fn default_breeds() -> bool {
+    true
+}
+
 #[derive(Deserialize, TypePath)]
 pub struct PetTemplate {
-    species_name: String,
-    kind: PetKind,
-    image_set: PetTemplateImageSet,
-    size: (f32, f32),
+    pub species_name: String,
+    pub kind: PetKind,
     #[serde(default = "default_possible_evolutions")]
     pub possible_evolutions: Vec<PossibleEvolution>,
+    pub image_set: PetTemplateImageSet,
+    pub size: (f32, f32),
+    #[serde(default)]
+    pub starter: bool,
     #[serde(default = "default_speed")]
-    speed: f32,
-    stomach: Option<Stomach>,
-    poop_interval: Option<f32>,
-    has_cleanliness: bool,
-    has_fun: bool,
+    pub speed: TemplateSpeed,
+    #[serde(default = "default_breeds")]
+    pub breeds: bool,
+    #[serde(default)]
+    pub stomach: Option<TemplateStomach>,
+    #[serde(default)]
+    pub pooper: Option<TemplatePooper>,
+    #[serde(default)]
+    pub cleanliness: Option<TemplateCleanliness>,
+    #[serde(default)]
+    pub fun: Option<TemplateFun>,
+    #[serde(default)]
+    pub money_hungry: Option<TemplateMoneyHungry>,
 }
 
 pub struct EvolvingPet {
@@ -105,16 +212,15 @@ impl PetTemplate {
     fn get_hunger(&self) -> Option<Hunger> {
         self.stomach
             .as_ref()
-            .map(|stomach| Hunger::new(stomach.size))
+            .map(|stomach| Hunger::new(stomach.size.value()))
     }
 
     fn get_pooper(&self) -> Option<Pooper> {
-        self.poop_interval
-            .map(|interval| Pooper::new(Duration::from_secs_f32(interval * 60.)))
+        self.pooper.as_ref().map(|template| template.pooper())
     }
 
     fn get_cleanliness(&self) -> Option<Cleanliness> {
-        if self.has_cleanliness {
+        if self.cleanliness.is_some() {
             Some(Cleanliness)
         } else {
             None
@@ -122,8 +228,27 @@ impl PetTemplate {
     }
 
     fn get_fun(&self) -> Option<Fun> {
-        if self.has_fun {
+        if self.fun.is_some() {
             Some(Fun::default())
+        } else {
+            None
+        }
+    }
+
+    fn get_money_hungry(&self) -> Option<MoneyHungry> {
+        if let Some(money) = &self.money_hungry {
+            Some(MoneyHungry {
+                previous_balance: 0,
+                max_care: money.max_balance,
+            })
+        } else {
+            None
+        }
+    }
+
+    fn get_breeds(&self) -> Option<Breeds> {
+        if self.breeds {
+            Some(Breeds::default())
         } else {
             None
         }
@@ -148,12 +273,14 @@ impl PetTemplate {
             &SavedPet {
                 location: Some(evolving.location),
                 species_name: SpeciesName::new(&self.species_name),
-                speed: Speed(self.speed),
+                speed: Speed(self.speed.value()),
                 kind: self.kind,
+                breeds: self.get_breeds(),
                 fun: self.get_fun(),
                 hunger: self.get_hunger(),
                 pooper: self.get_pooper(),
                 cleanliness: self.get_cleanliness(),
+                money_hungry: self.get_money_hungry(),
                 // Copied from evolving
                 name: evolving.name,
                 age: evolving.age,
@@ -170,6 +297,7 @@ impl PetTemplate {
         asset_server: &AssetServer,
         global_rng: &mut GlobalRng,
         text_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
+        location: Vec2,
         name: EntityName,
     ) -> Entity {
         self.create_entity_from_saved(
@@ -180,12 +308,15 @@ impl PetTemplate {
             &SavedPet {
                 species_name: SpeciesName::new(&self.species_name),
                 name,
-                speed: Speed(self.speed),
+                speed: Speed(self.speed.value()),
                 kind: self.kind,
+                location: Some(location),
+                breeds: self.get_breeds(),
                 fun: self.get_fun(),
                 hunger: self.get_hunger(),
                 pooper: self.get_pooper(),
                 cleanliness: self.get_cleanliness(),
+                money_hungry: self.get_money_hungry(),
                 ..default()
             },
         )
@@ -250,6 +381,10 @@ impl PetTemplate {
             ))
             .id();
 
+        if let Some(breeds) = &saved.breeds {
+            commands.entity(entity_id).insert(breeds.clone());
+        }
+
         if let Some(hunger) = &saved.hunger {
             commands.entity(entity_id).insert((
                 hunger.clone(),
@@ -288,21 +423,32 @@ impl PetTemplate {
     }
 }
 
-#[derive(Resource)]
+#[derive(Resource, Default)]
 pub struct PetTemplateDatabase {
     templates: Vec<PetTemplate>,
 }
 
 impl PetTemplateDatabase {
-    pub fn get<T: ToString>(&self, species_name: T) -> Option<&PetTemplate> {
+    pub fn get_by_name<T: ToString>(&self, species_name: T) -> Option<&PetTemplate> {
         let species_name = species_name.to_string();
         self.templates
             .iter()
             .find(|template| template.species_name == species_name)
     }
 
+    pub fn get_by_kind(&self, kind: PetKind) -> Vec<&PetTemplate> {
+        self.templates
+            .iter()
+            .filter(|template| template.kind == kind)
+            .collect()
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &PetTemplate> {
         self.templates.iter()
+    }
+
+    pub fn add(&mut self, template: PetTemplate) {
+        self.templates.push(template);
     }
 }
 

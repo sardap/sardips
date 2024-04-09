@@ -1,9 +1,10 @@
 use core::fmt;
 
 use bevy::prelude::*;
+use bevy_turborand::RngComponent;
 use serde::{Deserialize, Serialize};
 
-use crate::{assets::FontAssets, text_translation::KeyText};
+use crate::{assets::FontAssets, text_database::TextDatabase, text_translation::KeyText};
 
 pub struct NamePlugin;
 
@@ -31,6 +32,16 @@ impl EntityName {
             middle_name: None,
             last_name: None,
         }
+    }
+
+    pub fn random(text_db: &TextDatabase) -> Self {
+        let first_name = text_db.random_given_name_key();
+        let middle_name = text_db.random_given_name_key();
+        let last_name = text_db.random_surname_key();
+
+        Self::new(first_name)
+            .with_middle_name(middle_name)
+            .with_last_name(last_name)
     }
 
     pub fn with_middle_name(mut self, middle_name: impl Into<String>) -> Self {
@@ -194,7 +205,7 @@ fn update_name_tag(
 
             transform.translation = Vec3::new(0., y_offset, 0.);
 
-            key.set(0, name.full_name());
+            key.set(0, name.first_name.to_owned());
         }
     }
 }

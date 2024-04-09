@@ -5,7 +5,6 @@
     * A Biker
     * A moose
     * A solider
-    * A Block head
     * A Dick
     * A Hunch back
     * A Youtube essay guy
@@ -20,9 +19,14 @@
     * Depresed Ghost
     * A Blue ball
     * A Dancer
-    * A rich cow
-    * A Noose
     * Big ears glasses emoji
+    * word
+        * gets longer happier
+        * gets more misspelt unhappy
+    * The devil
+    * A Urn
+    * A hand drawn sqaure
+    * A cardboard box
 */
 
 AssetPetTemplateSet(
@@ -33,27 +37,8 @@ AssetPetTemplateSet(
             possible_evolutions: [
                 PossibleEvolution(
                     criteria: ["Age > 2"],
-                    species: [
-                        // "Pawn",
-                        // "WasGuard",
-                        // "Computiee",
-                        // "TallGuy",
-                        // "Beerie",
-                        // "Humbie",
-                        // "KaraokeGuy",
-                        // "Kat",
-                        // "Wrestele",
-                        // "Ballotee",
-                        // "FireElemantal",
-                        // "Walker",
-                        // "Garbie",
-                        // "Skelotn",
-                        // "NoTummy",
-                        // "RockElemental",
-                        // "WarterElemental",
-                        // "Gunie",
-                        "Bisct"
-                    ]
+                    // Blob has a speical case where it will always evolve into a starter
+                    species: []
                 )
             ],
             image_set: PetTemplateImageSet(
@@ -71,6 +56,7 @@ AssetPetTemplateSet(
             ),
             size: (58.1, 49.0),
             speed: Slow,
+            breeds: false,
             stomach: Some(TemplateStomach(
                 size: Small,
                 sensations: {}
@@ -84,6 +70,7 @@ AssetPetTemplateSet(
         PetTemplate(
             species_name: "Pawn",
             kind: Object,
+            starter: true,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/pawn.png",
                 tile_size: (106, 118),
@@ -118,7 +105,7 @@ AssetPetTemplateSet(
         ),
         PetTemplate(
             species_name: "WasGuard",
-            kind: Normal,
+            kind: Creature,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/wasgaurd.png",
                 tile_size: (988, 1501),
@@ -250,6 +237,7 @@ AssetPetTemplateSet(
         PetTemplate(
             species_name: "Humbie",
             kind: Object,
+            starter: true,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/humbie.png",
                 tile_size: (84, 84),
@@ -303,6 +291,7 @@ AssetPetTemplateSet(
                     }
                 )
             ),
+            breeds: false,
             pooper: Some(TemplatePooper(
                 interval: Infrequent,
             )),
@@ -312,6 +301,7 @@ AssetPetTemplateSet(
         PetTemplate(
             species_name: "Kat",
             kind: Creature,
+            starter: true,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/kat.png",
                 tile_size: (123, 66),
@@ -659,6 +649,37 @@ AssetPetTemplateSet(
                 },
             ),
             size: (63, 128),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "BlockHead",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/block_head.png",
+                tile_size: (173, 233),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: (173, 233),
             speed: Medium,
             stomach: Some(
                 TemplateStomach(
@@ -672,7 +693,70 @@ AssetPetTemplateSet(
             )),
             cleanliness: Some(TemplateCleanliness()),
             fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "RicheCow",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/riche_cow.png",
+                tile_size: (324, 179),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: (324, 179),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Huge,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: VeryFrequent,
+            )),
+            cleanliness: None,
+            fun: Some(TemplateFun()),
+            money_hungry: Some(TemplateMoneyHungry(
+                max_balance: 100
+            )),
+        ),
+        PetTemplate(
+            species_name: "MistElemental",
+            kind: Supernatural,
+            starter: true,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/mist_elemntal.png",
+                tile_size: (280, 243),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: (280, 243),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Small,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
         )
-        
     ]
 )

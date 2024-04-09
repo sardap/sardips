@@ -7,6 +7,7 @@ use crate::{
     name::{HasNameTag, NameTag, SpeciesName},
     palettes,
     pet::{
+        breeding::ReadyToBreed,
         mood::{Mood, MoodCategory, SatisfactionRating},
         Pet,
     },
@@ -42,6 +43,8 @@ impl Plugin for InfoPanelPlugin {
                     update_pet_thought,
                     update_pet_age,
                     update_overall_mood,
+                    update_pet_panel_money_mood,
+                    update_ready_to_breed,
                 ),
             )
                 .chain()
@@ -111,6 +114,9 @@ struct PetInfoPanelThought;
 #[derive(Component)]
 struct PetInfoPanelAgeText;
 
+#[derive(Component)]
+struct PetInfoPanelReadyToBreedImage;
+
 #[derive(Component, Default)]
 struct PetInfoPanelOverallMood;
 
@@ -134,6 +140,12 @@ struct PetInfoPanelMoodFun;
 
 #[derive(Component, Default)]
 struct PetInfoPanelMoodFunImage;
+
+#[derive(Component, Default)]
+struct PetInfoPanelMoodMoney;
+
+#[derive(Component, Default)]
+struct PetInfoPanelMoodMoneyImage;
 
 pub fn create_info_panel(
     commands: &mut Commands,
@@ -253,6 +265,26 @@ pub fn create_info_panel(
                                     ));
                                 });
 
+                            parent
+                                .spawn((
+                                    NodeBundle {
+                                        style: child_element_style.clone(),
+                                        ..default()
+                                    },
+                                    PetInfoPanelReadyToBreedImage,
+                                ))
+                                .with_children(|parent| {
+                                    parent.spawn(AtlasImageBundle {
+                                        style: SMALL_ICON_STYLE.clone(),
+                                        texture_atlas: TextureAtlas {
+                                            layout: view_screen_images.mood_icons_layout.clone(),
+                                            index: 5,
+                                        },
+                                        image: UiImage::new(view_screen_images.mood_icons.clone()),
+                                        ..default()
+                                    });
+                                });
+
                             spawn_panel::<PetInfoPanelOverallMood, PetInfoPanelOverallMoodImage>(
                                 parent,
                                 &child_element_style,
@@ -279,6 +311,13 @@ pub fn create_info_panel(
                                 &child_element_style,
                                 view_screen_images,
                                 3,
+                            );
+
+                            spawn_panel::<PetInfoPanelMoodMoney, PetInfoPanelMoodMoneyImage>(
+                                parent,
+                                &child_element_style,
+                                view_screen_images,
+                                4,
                             );
                         });
 
@@ -354,18 +393,20 @@ pub fn create_info_panel(
         .id()
 }
 
+lazy_static! {
+    static ref SMALL_ICON_STYLE: Style = Style {
+        width: Val::Px(20.0),
+        margin: UiRect::all(Val::Px(5.0)),
+        ..default()
+    };
+}
+
 fn spawn_panel<T: Component + Default, J: Component + Default>(
     parent: &mut ChildBuilder,
     child_element_style: &Style,
     view_screen_images: &ViewScreenImageAssets,
     icon_index: usize,
 ) {
-    let image_style = Style {
-        width: Val::Px(20.0),
-        margin: UiRect::all(Val::Px(5.0)),
-        ..default()
-    };
-
     parent
         .spawn((
             NodeBundle {
@@ -376,7 +417,7 @@ fn spawn_panel<T: Component + Default, J: Component + Default>(
         ))
         .with_children(|parent| {
             parent.spawn(AtlasImageBundle {
-                style: image_style.clone(),
+                style: SMALL_ICON_STYLE.clone(),
                 texture_atlas: TextureAtlas {
                     layout: view_screen_images.mood_icons_layout.clone(),
                     index: icon_index,
@@ -387,7 +428,7 @@ fn spawn_panel<T: Component + Default, J: Component + Default>(
 
             parent.spawn((
                 AtlasImageBundle {
-                    style: image_style.clone(),
+                    style: SMALL_ICON_STYLE.clone(),
                     texture_atlas: TextureAtlas {
                         layout: view_screen_images.moods_layout.clone(),
                         ..default()
@@ -666,6 +707,40 @@ update_pet_panel_mood!(
     PetInfoPanelMoodFun,
     PetInfoPanelMoodFunImage
 );
+
+update_pet_panel_mood!(
+    update_pet_panel_money_mood,
+    money,
+    PetInfoPanelMoodMoney,
+    PetInfoPanelMoodMoneyImage
+);
+
+fn update_ready_to_breed(
+    pet_info_panel: Query<&PetInfoPanel>,
+    pets_ready_to_breed: Query<Entity, With<ReadyToBreed>>,
+    mut node: Query<&mut Style, With<PetInfoPanelReadyToBreedImage>>,
+) {
+    let pet_info_panel = match pet_info_panel.get_single() {
+        Ok(val) => val,
+        Err(_) => return,
+    };
+
+    let pet_entity = match pet_info_panel.target {
+        Some(entity) => entity,
+        None => return,
+    };
+
+    let mut node_style = match node.get_single_mut() {
+        Ok(val) => val,
+        Err(_) => return,
+    };
+
+    if pets_ready_to_breed.get(pet_entity).is_ok() {
+        node_style.display = Display::DEFAULT;
+    } else {
+        node_style.display = Display::None;
+    }
+}
 
 fn update_pet_thought(
     pet_info_panel: Query<&PetInfoPanel, Changed<PetInfoPanel>>,

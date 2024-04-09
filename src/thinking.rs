@@ -1,9 +1,8 @@
 use bevy::prelude::*;
 
 use crate::{
-    dynamic_dialogue::{
-        ActionEvent, Concept, EntityFactDatabase, FactQuery, GlobalFactDatabase, RuleSet,
-    },
+    dynamic_dialogue::{ActionEvent, Concept, FactQuery, RuleSet},
+    facts::{EntityFactDatabase, GlobalFactDatabase},
     simulation::SimulationState,
 };
 

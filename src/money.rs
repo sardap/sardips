@@ -21,3 +21,9 @@ impl fmt::Display for Wallet {
         write!(f, "{:.2}", self.balance as f32 / 100.)
     }
 }
+
+#[derive(Debug, Component, Serialize, Deserialize, Clone)]
+pub struct MoneyHungry {
+    pub previous_balance: Money,
+    pub max_care: Money,
+}

@@ -1,15 +1,28 @@
 use std::{collections::HashSet, fmt};
 
 use bevy::prelude::*;
+use bevy_turborand::{GlobalRng, RngComponent};
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
-use crate::{name::EntityName, simulation::Simulated};
+use crate::{
+    game_zone::random_point_in_game_zone,
+    name::{EntityName, SpeciesName},
+    sardip_save::PersistentId,
+    simulation::{Simulated, SimulationState},
+};
+
+use super::template::FoodTemplateDatabase;
 
 pub struct FoodPlugin;
 
 impl Plugin for FoodPlugin {
-    fn build(&self, _: &mut App) {}
+    fn build(&self, app: &mut App) {
+        app.add_event::<SpawnFoodEvent>().add_systems(
+            Update,
+            spawn_pending_food.run_if(in_state(SimulationState::Running)),
+        );
+    }
 }
 
 #[derive(Bundle, Default)]
@@ -17,9 +30,11 @@ pub struct FoodBundle {
     pub food: Food,
     pub sensations: FoodSensations,
     pub fill_factor: FoodFillFactor,
+    pub species_name: SpeciesName,
     pub name: EntityName,
     pub sprite: SpriteBundle,
     pub simulated: Simulated,
+    pub id: PersistentId,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, EnumIter, Serialize, Deserialize)]
@@ -83,3 +98,38 @@ pub struct FoodFillFactor(pub f32);
 
 #[derive(Debug, Component, Default)]
 pub struct Food;
+
+#[derive(Event)]
+pub struct SpawnFoodEvent {
+    pub name: String,
+}
+
+impl SpawnFoodEvent {
+    pub fn new(name: impl ToString) -> Self {
+        Self {
+            name: name.to_string(),
+        }
+    }
+}
+
+fn spawn_pending_food(
+    mut commands: Commands,
+    mut events: EventReader<SpawnFoodEvent>,
+    mut global_rng: ResMut<GlobalRng>,
+    asset_server: Res<AssetServer>,
+    food_db: Res<FoodTemplateDatabase>,
+) {
+    for event in events.read() {
+        let mut rng = RngComponent::from(&mut global_rng);
+
+        if let Some(template) = food_db.get(&event.name) {
+            template.spawn(
+                &mut commands,
+                &asset_server,
+                random_point_in_game_zone(&mut rng),
+            );
+        } else {
+            error!("No food template found for {}", event.name);
+        }
+    }
+}

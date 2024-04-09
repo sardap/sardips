@@ -8,6 +8,7 @@ use crate::{
     autoscroll::AutoScroll,
     button_hover::ButtonHover,
     palettes,
+    pet::template::PetTemplateDatabase,
     text_database::text_keys,
     text_translation::KeyText,
     GameState,

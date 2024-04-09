@@ -58,7 +58,7 @@ pub struct ViewScreenImageAssets {
     #[asset(path = "textures/view_screen/moods.png")]
     pub moods: Handle<Image>,
 
-    #[asset(texture_atlas_layout(tile_size_x = 30., tile_size_y = 30., columns = 5, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 30., tile_size_y = 30., columns = 10, rows = 1,))]
     pub mood_icons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/mood_icons.png")]
     pub mood_icons: Handle<Image>,
@@ -81,6 +81,9 @@ pub struct GameImageAssets {
 
     #[asset(path = "textures/game/poop_scooper.png")]
     pub poop_scooper: Handle<Image>,
+
+    #[asset(path = "textures/game/egg.png")]
+    pub egg: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]

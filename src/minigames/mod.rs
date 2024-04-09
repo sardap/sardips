@@ -6,6 +6,8 @@ mod tic_tac_toe;
 // Rytem game
 // Snake
 // Bug catch
+// Battleship
+// Candy Crush clone
 
 use bevy::prelude::*;
 

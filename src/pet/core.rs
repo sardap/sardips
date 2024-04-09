@@ -3,11 +3,12 @@ use core::fmt;
 use bevy::prelude::*;
 use bevy_turborand::RngComponent;
 use serde::{Deserialize, Serialize};
+use strum_macros::EnumIter;
 
 use super::mood::{AutoSetMoodImage, Mood, MoodCategory, MoodCategoryHistory, MoodImages};
 use super::pet_ai::PetAi;
 use crate::age::Age;
-use crate::dynamic_dialogue::EntityFactDatabase;
+use crate::facts::EntityFactDatabase;
 use crate::name::{EntityName, SpeciesName};
 use crate::simulation::Simulated;
 use crate::thinking::ThinkerBundle;
@@ -38,11 +39,23 @@ pub struct PetBundle {
     pub age: Age,
 }
 
-#[derive(Debug, Component, Default, Serialize, Deserialize, Clone, Copy)]
+#[derive(
+    Debug,
+    Component,
+    Default,
+    Serialize,
+    Deserialize,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    EnumIter,
+)]
 pub enum PetKind {
     #[default]
     Blob,
-    Normal,
     Object,
     Creature,
     Supernatural,
@@ -51,7 +64,6 @@ pub enum PetKind {
 impl fmt::Display for PetKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            PetKind::Normal => write!(f, "Normal"),
             PetKind::Object => write!(f, "Object"),
             PetKind::Blob => write!(f, "Blob"),
             PetKind::Creature => write!(f, "Creature"),
