@@ -112,12 +112,12 @@ impl Plugin for GamePlugin {
                 ShapePlugin,
             ))
             .add_plugins((
+                PetPlugin,
                 SardipSavePlugin,
                 SimulationPlugin,
                 AutoScrollPlugin,
                 TextDatabasePlugin,
                 ButtonHoverPlugin,
-                PetPlugin,
                 NamePlugin,
                 VelocityPlugin,
                 FoodTemplatePlugin,

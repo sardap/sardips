@@ -56,8 +56,11 @@ TextDatabase(
             "species.bisct": "Bisct",
             "species.blockhead": "Block Head",
             "species.richecow": "Riche Cow",
+            "species.mistelemental": "Mist Elemental",
             "species.word": "Word",
             "species.devil": "Devil",
+            "species.building": "Building",
+            "species.sqaure": "Sqaure",
 
             "dialogue.object_life_is_good": "My life as an inanimate object is good.",
             "dialogue.object_hungry_no_food": "I'm hungry, but i'm just an object",

@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, text};
 use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ use crate::{
         hunger::Hunger,
         mood::{Mood, MoodCategoryHistory},
         poop::{poop_scale, spawn_poop, Cleanliness, Poop, Pooper},
-        template::PetTemplateDatabase,
+        template::{PetTemplateDatabase, SpawnPetEvent},
         Pet, PetKind,
     },
     player::Player,
@@ -81,9 +81,10 @@ pub struct SavedFood {
 #[derive(Serialize, Deserialize)]
 pub struct SavedPoop {
     pub position: Vec2,
+    pub texture: String,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct SavedPet {
     pub location: Option<Vec2>,
     pub species_name: SpeciesName,
@@ -147,7 +148,7 @@ fn save_game(
         ),
         With<Pet>,
     >,
-    poops: Query<&Transform, With<Poop>>,
+    poops: Query<(&Transform, &Poop)>,
     foods: Query<(&PersistentId, &Transform, &SpeciesName), With<Food>>,
     player: Query<&Wallet, With<Player>>,
 ) {
@@ -208,9 +209,10 @@ fn save_game(
         });
     }
 
-    for transform in poops.iter() {
+    for (transform, poop) in poops.iter() {
         save_game.poops.push(SavedPoop {
             position: transform.translation.xy(),
+            texture: poop.texture_path.clone(),
         });
     }
 
@@ -256,13 +258,12 @@ pub fn save_compatibility(a: &str, b: &str) -> bool {
 
 fn load_game(
     mut commands: Commands,
+    mut spawn_pets: EventWriter<SpawnPetEvent>,
     mut sim_time: ResMut<Time<SimTime>>,
-    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut rng: ResMut<GlobalRng>,
     mut state: ResMut<NextState<SardipLoadingState>>,
     mut global_fact_db: ResMut<GlobalFactDatabase>,
     asset_server: Res<AssetServer>,
-    pet_template_db: Res<PetTemplateDatabase>,
     food_template_db: Res<FoodTemplateDatabase>,
     game_image_assets: Res<GameImageAssets>,
     player: Query<Entity, With<Player>>,
@@ -340,17 +341,7 @@ fn load_game(
 
     // Load pets
     for saved_pet in save_game.pets {
-        let template = pet_template_db
-            .get_by_name(&saved_pet.species_name.0)
-            .expect("Failed to find pet template");
-
-        template.create_entity_from_saved(
-            &mut commands,
-            &asset_server,
-            &mut rng,
-            &mut layouts,
-            &saved_pet,
-        );
+        spawn_pets.send(SpawnPetEvent::Saved(saved_pet.clone()));
     }
 
     // Load Foods
@@ -371,10 +362,12 @@ fn load_game(
     for saved_poop in save_game.poops {
         spawn_poop(
             &mut commands,
+            &asset_server,
             &game_image_assets,
             poop_scale(&mut rng),
             saved_poop.position,
-        )
+            &saved_poop.texture,
+        );
     }
 
     debug!("Game loaded");

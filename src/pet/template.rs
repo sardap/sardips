@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
+use bevy::ecs::event;
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_turborand::{GlobalRng, RngComponent};
@@ -11,11 +12,13 @@ use crate::facts::EntityFactDatabase;
 use crate::food::preferences::{FoodPreference, FoodSensationRating};
 use crate::food::FoodSensationType;
 use crate::interaction::Clickable;
-use crate::layering;
 use crate::money::MoneyHungry;
 use crate::name::{EntityName, HasNameTag, NameTag, NameTagBundle, SpeciesName};
 use crate::sardip_save::SavedPet;
+use crate::simulation::SimulationUpdate;
+use crate::text_database::TextDatabase;
 use crate::velocity::Speed;
+use crate::{layering, GameState};
 
 use super::breeding::Breeds;
 use super::evolve::PossibleEvolution;
@@ -30,8 +33,13 @@ pub struct PetTemplatePlugin;
 
 impl Plugin for PetTemplatePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(RonAssetPlugin::<AssetPetTemplateSet>::new(&["pets.ron"]))
+        app.add_event::<SpawnPetEvent>()
+            .add_plugins(RonAssetPlugin::<AssetPetTemplateSet>::new(&["pets.ron"]))
             .add_systems(Startup, setup)
+            .add_systems(
+                Update,
+                spawn_pending_pets.run_if(not(in_state(GameState::Loading))),
+            )
             .add_systems(
                 Update,
                 load_templates.run_if(not(resource_exists::<PetTemplateDatabase>)),
@@ -150,11 +158,18 @@ impl TemplatePoopInterval {
 #[derive(Serialize, Deserialize)]
 pub struct TemplatePooper {
     interval: TemplatePoopInterval,
+    #[serde(default)]
+    texture: Option<String>,
 }
 
 impl TemplatePooper {
     fn pooper(&self) -> Pooper {
-        Pooper::new(self.interval.interval())
+        let texture = match &self.texture {
+            Some(texture) => texture,
+            None => "textures/game/poop.png",
+        };
+
+        Pooper::new(self.interval.interval(), texture)
     }
 }
 
@@ -199,6 +214,7 @@ pub struct PetTemplate {
     pub money_hungry: Option<TemplateMoneyHungry>,
 }
 
+#[derive(Clone)]
 pub struct EvolvingPet {
     pub entity: Entity,
     pub location: Vec2,
@@ -254,7 +270,7 @@ impl PetTemplate {
         }
     }
 
-    pub fn evolve(
+    fn evolve(
         &self,
         commands: &mut Commands,
         asset_server: &AssetServer,
@@ -291,7 +307,7 @@ impl PetTemplate {
         );
     }
 
-    pub fn create_entity(
+    fn create_entity(
         &self,
         commands: &mut Commands,
         asset_server: &AssetServer,
@@ -322,7 +338,7 @@ impl PetTemplate {
         )
     }
 
-    pub fn create_entity_from_saved(
+    fn create_entity_from_saved(
         &self,
         commands: &mut Commands,
         asset_server: &AssetServer,
@@ -459,3 +475,71 @@ pub struct AssetPetTemplateSet {
 
 #[derive(Debug, Resource)]
 struct PetTemplateSetHandle(Handle<AssetPetTemplateSet>);
+
+#[derive(Event)]
+pub enum SpawnPetEvent {
+    Blank((Vec2, String)),
+    Saved(SavedPet),
+    Evolve((String, EvolvingPet)),
+}
+
+impl SpawnPetEvent {
+    fn species_name(&self) -> &str {
+        match self {
+            SpawnPetEvent::Blank((_, species_name)) => species_name,
+            SpawnPetEvent::Saved(saved) => &saved.species_name.0,
+            SpawnPetEvent::Evolve((species_name, _)) => species_name,
+        }
+    }
+}
+
+fn spawn_pending_pets(
+    mut commands: Commands,
+    mut events: EventReader<SpawnPetEvent>,
+    mut global_rng: ResMut<GlobalRng>,
+    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
+    asset_server: Res<AssetServer>,
+    pet_template_db: Res<PetTemplateDatabase>,
+    text_db: Res<TextDatabase>,
+) {
+    for event in events.read() {
+        info!("Spawning pet: {:?}", event.species_name());
+        if let Some(template) = pet_template_db.get_by_name(event.species_name()) {
+            match event {
+                SpawnPetEvent::Blank((pos, _)) => {
+                    template.create_entity(
+                        &mut commands,
+                        &asset_server,
+                        &mut global_rng,
+                        &mut layouts,
+                        pos.clone(),
+                        EntityName::random(&text_db),
+                    );
+                }
+                SpawnPetEvent::Saved(saved) => {
+                    template.create_entity_from_saved(
+                        &mut commands,
+                        &asset_server,
+                        &mut global_rng,
+                        &mut layouts,
+                        saved,
+                    );
+                }
+                SpawnPetEvent::Evolve((_, evolving)) => {
+                    template.evolve(
+                        &mut commands,
+                        &asset_server,
+                        &mut global_rng,
+                        &mut layouts,
+                        evolving.clone(),
+                    );
+                }
+            }
+        } else {
+            error!(
+                "Unable to find template for species {}",
+                event.species_name()
+            );
+        }
+    }
+}

@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::{
-    template::{PetTemplate, PetTemplateDatabase},
+    template::{PetTemplate, PetTemplateDatabase, SpawnPetEvent},
     PetKind,
 };
 use rand::prelude::SliceRandom;
@@ -66,6 +66,13 @@ fn breeding_result(
         .into_iter()
         .filter(|i| i.starter)
         .collect::<Vec<_>>();
+
+    assert!(
+        !possible.is_empty(),
+        "No possible breed result for {:?} and {:?}",
+        breeder_left,
+        breeder_right
+    );
 
     Some(*possible.choose(&mut rand::thread_rng()).unwrap())
 }
@@ -164,27 +171,14 @@ fn attempt_hatch(
 
 fn egg_hatch(
     mut commands: Commands,
-    pet_db: Res<PetTemplateDatabase>,
-    asset_server: Res<AssetServer>,
-    mut global_rng: ResMut<GlobalRng>,
-    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    text_db: Res<TextDatabase>,
+    mut spawn_pets: EventWriter<SpawnPetEvent>,
     query: Query<(Entity, &Egg, &GlobalTransform), Without<EggHatchAttempt>>,
 ) {
     for (entity, egg, transform) in query.iter() {
-        if let Some(template) = pet_db.get_by_name(&egg.contains) {
-            template.create_entity(
-                &mut commands,
-                &asset_server,
-                &mut global_rng,
-                &mut layouts,
-                transform.translation().xy(),
-                EntityName::random(&text_db),
-            );
-        } else {
-            error!("No template found for egg {:?}", egg.contains);
-        }
-
+        spawn_pets.send(SpawnPetEvent::Blank((
+            transform.translation().xy(),
+            egg.contains.clone(),
+        )));
         commands.entity(entity).despawn_recursive();
     }
 }
@@ -338,7 +332,7 @@ mod test {
                 cleanliness: None,
                 fun: None,
                 money_hungry: None,
-                starter: false,
+                starter: true,
             });
         }
 

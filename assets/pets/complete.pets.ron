@@ -15,13 +15,13 @@
     * A Dirt elemantal
     * A geine
     * Walk good maybe UFO
-    * One of the buildings from walk good maybe
     * Depresed Ghost
     * A Blue ball
     * A Dancer
     * A Urn
     * A hand drawn sqaure
     * A cardboard box
+    * A Angel
 */
 
 AssetPetTemplateSet(
@@ -756,7 +756,6 @@ AssetPetTemplateSet(
         PetTemplate(
             species_name: "Word",
             kind: Supernatural,
-            starter: true,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/word.png",
                 tile_size: (650, 156),
@@ -813,6 +812,67 @@ AssetPetTemplateSet(
                 interval: Regular,
             )),
             cleanliness: None,
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Building",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/building.png",
+                tile_size: (40, 94),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: (40, 94),
+            speed: VerySlow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Huge,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Frequent,
+                texture: Some("textures/game/poop_garbage.png"),
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Sqaure",
+            kind: Object,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/sqaure.png",
+                tile_size: (531, 483),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: (531, 483),
+            speed: Medium,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
             fun: Some(TemplateFun()),
         )
     ]

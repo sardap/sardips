@@ -1,10 +1,7 @@
 use bevy::prelude::*;
-use bevy_turborand::{GlobalRng, RngComponent};
 
 use crate::{
-    food::template::FoodTemplateDatabase, game_zone::random_point_in_game_zone, name::EntityName,
-    pet::template::PetTemplateDatabase, player::PlayerBundle, sardip_save::SardipLoadingState,
-    text_database::TextDatabase, GameState,
+    pet::template::SpawnPetEvent, player::PlayerBundle, sardip_save::SardipLoadingState, GameState,
 };
 
 pub struct LoadViewScreenPlugin;
@@ -29,27 +26,15 @@ impl Plugin for LoadViewScreenPlugin {
 }
 
 fn setup_new_game(
-    mut commands: Commands,
+    mut spawn_pets: EventWriter<SpawnPetEvent>,
     mut game_state: ResMut<NextState<GameState>>,
     mut loading_state: ResMut<NextState<SardipLoadingState>>,
-    mut global_rng: ResMut<GlobalRng>,
-    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    asset_server: Res<AssetServer>,
-    pet_template_db: Res<PetTemplateDatabase>,
-    text_db: Res<TextDatabase>,
 ) {
     for _ in 0..2 {
-        pet_template_db
-            .get_by_name("Blob")
-            .expect("Unable to find blob")
-            .create_entity(
-                &mut commands,
-                &asset_server,
-                &mut global_rng,
-                &mut layouts,
-                Vec2::new(0.0, 0.0),
-                EntityName::random(&text_db),
-            );
+        spawn_pets.send(SpawnPetEvent::Blank((
+            Vec2::new(0., 0.),
+            "Blob".to_string(),
+        )));
     }
 
     game_state.set(GameState::ViewScreen);

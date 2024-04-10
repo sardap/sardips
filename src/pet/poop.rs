@@ -27,7 +27,11 @@ impl Plugin for PoopPlugin {
 }
 
 #[derive(Component, Default)]
-pub struct Poop;
+pub struct Poop {
+    // Fuck it
+    // Probably should define poops in the pet tempalte file I guess I don't know
+    pub texture_path: String,
+}
 
 #[derive(Bundle, Default)]
 pub struct PoopBundle {
@@ -48,22 +52,26 @@ pub struct Diarrhea;
 pub struct Pooper {
     pub interval: Duration,
     pub poop_timer: Timer,
+    pub texture: String,
 }
 
 impl Pooper {
-    pub fn new(poop_interval: Duration) -> Self {
+    pub fn new(poop_interval: Duration, texture: impl ToString) -> Self {
         Self {
             interval: poop_interval,
             poop_timer: Timer::new(poop_interval, TimerMode::Repeating),
+            texture: texture.to_string(),
         }
     }
 }
 
 pub fn spawn_poop(
     commands: &mut Commands,
+    asset_server: &AssetServer,
     game_image_assets: &GameImageAssets,
     scale: f32,
     location: Vec2,
+    texture: &str,
 ) {
     const MAX_SIZE: f32 = 64.;
     let size = MAX_SIZE * scale;
@@ -71,6 +79,9 @@ pub fn spawn_poop(
 
     let entity_id = commands
         .spawn(PoopBundle {
+            poop: Poop {
+                texture_path: texture.to_owned(),
+            },
             clickable: Clickable::new(
                 Vec2::new(-size_half, size_half),
                 Vec2::new(-size_half, size_half),
@@ -86,7 +97,7 @@ pub fn spawn_poop(
                     custom_size: Some(Vec2::new(MAX_SIZE, MAX_SIZE)),
                     ..default()
                 },
-                texture: game_image_assets.poop.clone(),
+                texture: asset_server.load(texture.to_owned()),
                 ..default()
             },
             entity_name: EntityName::new(text_keys::POOP),
@@ -130,6 +141,7 @@ fn tick_poopers(
     mut commands: Commands,
     mut play_sounds: EventWriter<PlaySoundEffect>,
     time: Res<Time>,
+    asset_server: Res<AssetServer>,
     game_image_assets: Res<GameImageAssets>,
     mut poopers: Query<(
         &mut Pooper,
@@ -155,9 +167,11 @@ fn tick_poopers(
 
                 spawn_poop(
                     &mut commands,
+                    &asset_server,
                     &game_image_assets,
                     scale,
                     transform.translation.xy(),
+                    &pooper.texture,
                 );
             }
         }

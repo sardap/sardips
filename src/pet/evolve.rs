@@ -12,7 +12,7 @@ use crate::{
 
 use super::{
     mood::MoodCategoryHistory,
-    template::{EvolvingPet, PetTemplateDatabase},
+    template::{EvolvingPet, PetTemplateDatabase, SpawnPetEvent},
     Pet, PetKind,
 };
 
@@ -108,10 +108,7 @@ fn check_evolve(
 }
 
 fn evolve_pending(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut global_rng: ResMut<GlobalRng>,
-    mut text_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut spawn_pets: EventWriter<SpawnPetEvent>,
     evolvers: Query<
         (
             Entity,
@@ -124,7 +121,6 @@ fn evolve_pending(
         ),
         With<Pet>,
     >,
-    pet_template_db: Res<PetTemplateDatabase>,
 ) {
     for (entity, should_evolve, transform, entity_name, age, mood_history, fact_db) in
         evolvers.iter()
@@ -135,8 +131,6 @@ fn evolve_pending(
             should_evolve.species
         );
 
-        let template = pet_template_db.get_by_name(&should_evolve.species).unwrap();
-
         let evolve = EvolvingPet {
             entity,
             location: transform.translation().xy(),
@@ -145,13 +139,9 @@ fn evolve_pending(
             mood_history: mood_history.clone(),
             fact_db: fact_db.clone(),
         };
-
-        template.evolve(
-            &mut commands,
-            &asset_server,
-            &mut global_rng,
-            &mut text_atlas_layouts,
+        spawn_pets.send(SpawnPetEvent::Evolve((
+            should_evolve.species.clone(),
             evolve,
-        );
+        )));
     }
 }

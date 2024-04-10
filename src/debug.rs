@@ -5,6 +5,7 @@ use strum::IntoEnumIterator;
 use crate::{
     food::{template::FoodTemplateDatabase, SpawnFoodEvent},
     money::Wallet,
+    pet::template::{PetTemplateDatabase, SpawnPetEvent},
     player::Player,
     simulation::{SimTimeScale, SimulationState},
     text_database::Language,
@@ -17,19 +18,33 @@ pub struct DebugPlugin;
 impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         // Sim time scale
-        app.add_systems(OnExit(GameState::Loading), setup_debug_text)
-            .add_systems(Update, update_sim_time_scale_debug_text)
-            .add_systems(
-                Update,
-                (sim_time_scale_input, free_money, spawn_random_food)
-                    .run_if(in_state(SimulationState::Running)),
+        app.add_systems(
+            OnExit(GameState::Loading),
+            (setup_debug_text, setup_debug_sardip),
+        )
+        .add_systems(
+            Update,
+            (update_sim_time_scale_debug_text, update_pet_debug_text),
+        )
+        .add_systems(
+            Update,
+            (
+                sim_time_scale_input,
+                free_money,
+                spawn_random_food,
+                spawn_sardip,
             )
-            .add_systems(Update, change_language);
+                .run_if(in_state(SimulationState::Running)),
+        )
+        .add_systems(Update, change_language);
     }
 }
 
 #[derive(Component)]
 struct DebugText;
+
+const SIM_TIME_TEXT_SECTION: i32 = 2;
+const PET_TEXT_SECTION: i32 = 5;
 
 fn setup_debug_text(mut commands: Commands) {
     const SIZE: f32 = 20.0;
@@ -61,13 +76,14 @@ fn setup_debug_text(mut commands: Commands) {
                     TextSection::new("SIM_TIME:", title_text_style.clone()),
                     TextSection::new("", value_text_style.clone()),
                     TextSection::new("\n", value_text_style.clone()),
+                    TextSection::new("Pet:", title_text_style.clone()),
+                    TextSection::new("", value_text_style.clone()),
+                    TextSection::new("\n", value_text_style.clone()),
                 ]),
                 DebugText,
             ));
         });
 }
-
-const SIM_TIME_TEXT_SECTION: i32 = 2;
 
 fn sim_time_scale_input(
     mut sim_time_scale: ResMut<SimTimeScale>,
@@ -147,4 +163,55 @@ fn spawn_random_food(
 
         food_events.send(SpawnFoodEvent::new(&random_food.name));
     }
+}
+
+#[derive(Component)]
+struct DebugSardip(String);
+
+fn setup_debug_sardip(mut commands: Commands) {
+    commands.spawn(DebugSardip("Blob".to_string()));
+}
+
+fn spawn_sardip(
+    mut spawn_pets: EventWriter<SpawnPetEvent>,
+    buttons: Res<ButtonInput<KeyCode>>,
+    mut sardip: Query<&mut DebugSardip>,
+    pet_templates: Res<PetTemplateDatabase>,
+) {
+    let mut sardip = sardip.single_mut();
+
+    if buttons.just_pressed(KeyCode::KeyP) {
+        spawn_pets.send(SpawnPetEvent::Blank((Vec2::new(0., 0.), sardip.0.clone())));
+    }
+
+    if buttons.just_pressed(KeyCode::KeyO) {
+        let templates = pet_templates.iter().collect::<Vec<_>>();
+        let index = templates
+            .iter()
+            .position(|t| t.species_name == sardip.0)
+            .unwrap() as i32;
+        let mut next_index = index - 1;
+        if next_index < 0 {
+            next_index = templates.len() as i32 - 1;
+        }
+
+        sardip.0 = templates[next_index as usize].species_name.clone();
+    }
+}
+
+fn update_pet_debug_text(
+    mut debug_text: Query<&mut Text, With<DebugText>>,
+    sardip: Query<&DebugSardip, Changed<DebugSardip>>,
+) {
+    let sardip = match sardip.iter().next() {
+        Some(sardip) => sardip,
+        None => return,
+    };
+
+    let mut debug_text = match debug_text.get_single_mut() {
+        Ok(debug_text) => debug_text,
+        Err(_) => return,
+    };
+
+    debug_text.sections[PET_TEXT_SECTION as usize].value = sardip.0.clone();
 }
