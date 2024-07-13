@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::text_database::text_keys;
+
 use super::{FoodSensationType, FoodSensations};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
@@ -27,6 +29,17 @@ impl FoodSensationRating {
             FoodSensationRating::Dislikes => -7.0,
             FoodSensationRating::Hates => -10.0,
             FoodSensationRating::Despises => -100.0,
+        }
+    }
+
+    pub fn key(&self) -> &'static str {
+        match self {
+            FoodSensationRating::Loves => text_keys::LOVES,
+            FoodSensationRating::Likes => text_keys::LIKES,
+            FoodSensationRating::Neutral => text_keys::NEUTRAL,
+            FoodSensationRating::Dislikes => text_keys::DISLIKES,
+            FoodSensationRating::Hates => text_keys::HATES,
+            FoodSensationRating::Despises => text_keys::DESPISES,
         }
     }
 }

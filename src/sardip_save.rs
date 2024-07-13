@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{collections::HashSet, path::Path};
 
 use bevy::{prelude::*, text};
 use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
@@ -15,6 +15,7 @@ use crate::{
     name::{EntityName, SpeciesName},
     pet::{
         breeding::Breeds,
+        dipdex::DipdexDiscoveredEntries,
         fun::Fun,
         hunger::Hunger,
         mood::{Mood, MoodCategoryHistory},
@@ -69,6 +70,7 @@ struct SaveGame {
 #[derive(Serialize, Deserialize)]
 struct PlayerSave {
     wallet: Wallet,
+    dipdex: DipdexDiscoveredEntries,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -150,7 +152,7 @@ fn save_game(
     >,
     poops: Query<(&Transform, &Poop)>,
     foods: Query<(&PersistentId, &Transform, &SpeciesName), With<Food>>,
-    player: Query<&Wallet, With<Player>>,
+    player: Query<(&Wallet, &DipdexDiscoveredEntries), With<Player>>,
 ) {
     if should_save.is_empty() {
         return;
@@ -159,13 +161,14 @@ fn save_game(
 
     debug!("Saving game");
 
-    let player_wallet = player.single();
+    let (player_wallet, dipdex) = player.single();
 
     let mut save_game = SaveGame {
         version: VERSION.to_string(),
         time_saved: sim_time.last_run(),
         player_save: PlayerSave {
             wallet: player_wallet.clone(),
+            dipdex: dipdex.clone(),
         },
         global_facts: global_facts.0.clone(),
         pets: Vec::new(),
@@ -281,7 +284,7 @@ fn load_game(
 
     // Check minor version is the same
     #[cfg(feature = "dev")]
-    let version: SaveGame = match ron::de::from_bytes(&save_file) {
+    let version: SaveGameVersionOnly = match ron::de::from_bytes(&save_file) {
         Ok(version) => version,
         Err(_) => {
             error!("Failed to deserialize save file version");
@@ -337,7 +340,8 @@ fn load_game(
     let player_entity = player.single();
     commands
         .entity(player_entity)
-        .insert(save_game.player_save.wallet.clone());
+        .insert(save_game.player_save.wallet.clone())
+        .insert(save_game.player_save.dipdex.clone());
 
     // Load pets
     for saved_pet in save_game.pets {

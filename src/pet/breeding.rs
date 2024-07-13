@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
-use ron::de::Position;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -308,7 +307,9 @@ fn apply_pending_breeds(
 mod test {
     use strum::IntoEnumIterator;
 
-    use crate::pet::template::{PetTemplate, PetTemplateImageSet, TemplateSpeed};
+    use crate::pet::template::{
+        PetTemplate, PetTemplateImageSet, PreCalculated, TemplateSize, TemplateSpeed,
+    };
 
     #[test]
     fn test_all_combos_exist() {
@@ -324,7 +325,7 @@ mod test {
                 kind,
                 possible_evolutions: vec![],
                 image_set: PetTemplateImageSet::default(),
-                size: (1.0, 1.0),
+                size: TemplateSize::XY(1.0, 1.0),
                 speed: TemplateSpeed::Medium,
                 breeds: false,
                 stomach: None,
@@ -333,6 +334,7 @@ mod test {
                 fun: None,
                 money_hungry: None,
                 starter: true,
+                pre_calculated: PreCalculated::default(),
             });
         }
 

@@ -24,6 +24,7 @@ pub mod sardip_save;
 pub mod scenes;
 pub mod simulation;
 pub mod sounds;
+pub mod stock_market;
 pub mod text_database;
 pub mod text_translation;
 pub mod thinking;
@@ -47,12 +48,13 @@ use food::{template::FoodTemplatePlugin, FoodPlugin};
 use interaction::InteractionPlugin;
 use minigames::MinigamePlugin;
 use money::MoneyPlugin;
-use pet::PetPlugin;
+use pet::{dipdex::DipdexPlugin, PetPlugin};
 use player::PlayerPlugin;
 use sardip_save::SardipSavePlugin;
 use scenes::GameScenePlugin;
 use simulation::{SimulationPlugin, SimulationState};
 use sounds::SoundsPlugin;
+use stock_market::StockMarketPlugin;
 use text_database::TextDatabasePlugin;
 use text_translation::TextTranslationPlugin;
 use thinking::ThinkingPlugin;
@@ -76,6 +78,7 @@ pub enum GameState {
     LoadViewScreen,
     ViewScreen,
     MiniGame,
+    DipdexView,
 }
 
 pub fn despawn_all<C: Component>(mut commands: Commands, query: Query<Entity, With<C>>) {
@@ -138,9 +141,11 @@ impl Plugin for GamePlugin {
                 ThinkingPlugin,
                 TextTranslationPlugin,
                 FoodPlugin,
+                StockMarketPlugin,
+                DipdexPlugin,
             ));
 
-        #[cfg(feature = "dev")]
+        // #[cfg(feature = "dev")]
         app.add_plugins(DebugPlugin);
     }
 }

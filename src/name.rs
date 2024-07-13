@@ -107,8 +107,12 @@ impl SpeciesName {
         Self(name.into())
     }
 
-    pub fn key(&self) -> String {
+    pub fn name_key(&self) -> String {
         format!("species.{}", self.0.to_lowercase())
+    }
+
+    pub fn dipdex_description_key(&self) -> String {
+        format!("dipdex.{}.description", self.0.to_lowercase())
     }
 }
 

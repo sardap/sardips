@@ -12,6 +12,15 @@ macro_rules! rgb_to_color {
     }};
 }
 
+// #CCFFDD
+pub const PASTEL_GREEN: Color = rgb_to_color!(204, 255, 221);
+
+// #80FFAA
+pub const MEDIUM_SPRING_GREEN: Color = rgb_to_color!(128, 255, 170);
+
+// #E6FFEE
+pub const VERY_LIGHT_GREEN: Color = rgb_to_color!(230, 255, 238);
+
 // #FFCCD5
 pub const PALE_PINK: Color = rgb_to_color!(255, 204, 213);
 
@@ -64,6 +73,36 @@ pub mod minigame_select {
     use crate::button_hover::ButtonColorSet;
 
     pub const BACKGROUND: Color = super::LIGHT_DARK_GREEN;
+
+    pub const BUTTON_SET: ButtonColorSet = ButtonColorSet::new(
+        super::PALE_PINK,
+        super::VERY_LIGHT_PINK_RED,
+        super::PALE_PINK,
+    );
+    pub const BUTTON_BORDER_SET: ButtonColorSet =
+        ButtonColorSet::new(super::LIGHT_PINK, Color::WHITE, super::LIGHT_PINK);
+}
+
+pub mod dipdex_view {
+    use bevy::render::color::Color;
+
+    use crate::button_hover::ButtonColorSet;
+
+    pub const ENTRY_BACKGROUND: Color = super::LIGHT_DARK_GREEN;
+    pub const ENTRY_BORDER: Color = super::PALE_PINK;
+
+    pub const BUTTON_ENTRY_SET: ButtonColorSet = ButtonColorSet::new(
+        super::PASTEL_GREEN,
+        super::MEDIUM_SPRING_GREEN,
+        super::PASTEL_GREEN,
+    )
+    .with_disabled(Color::GRAY);
+    pub const BUTTON_ENTRY_BORDER_SET: ButtonColorSet = ButtonColorSet::new(
+        super::VERY_LIGHT_GREEN,
+        Color::WHITE,
+        super::VERY_LIGHT_GREEN,
+    )
+    .with_disabled(Color::DARK_GRAY);
 
     pub const BUTTON_SET: ButtonColorSet = ButtonColorSet::new(
         super::PALE_PINK,

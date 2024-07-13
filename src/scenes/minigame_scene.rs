@@ -11,7 +11,7 @@ use crate::{
         MINIGAME_SELECT_FOUR_IN_ROW, MINIGAME_SELECT_HIGHER_LOWER, MINIGAME_SELECT_SPRINT,
         MINIGAME_SELECT_TIC_TAC_TOE,
     },
-    text_translation::KeyText,
+    text_translation::{KeyString, KeyText},
     GameState,
 };
 
@@ -104,12 +104,12 @@ fn setup_select_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                                 },
                             ),
                             KeyText {
-                                keys: hashmap! { 0 => match button_kind {
+                                keys: hashmap! { 0 => KeyString::Direct(match button_kind {
                                     MinigameButton::PlayTicTacToe => MINIGAME_SELECT_TIC_TAC_TOE,
                                     MinigameButton::PlaySprint => MINIGAME_SELECT_SPRINT,
                                     MinigameButton::PlayHigherLower => MINIGAME_SELECT_HIGHER_LOWER,
                                     MinigameButton::PlayFourInRow => MINIGAME_SELECT_FOUR_IN_ROW,
-                                }.to_string() },
+                                }.to_string()) },
                             },
                         ));
                     });

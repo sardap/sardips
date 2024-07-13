@@ -1,8 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{
-    pet::template::SpawnPetEvent, player::PlayerBundle, sardip_save::SardipLoadingState, GameState,
-};
+#[cfg(not(feature = "dev"))]
+use crate::pet::template::SpawnPetEvent;
+
+use crate::{player::PlayerBundle, sardip_save::SardipLoadingState, GameState};
 
 pub struct LoadViewScreenPlugin;
 
@@ -26,10 +27,11 @@ impl Plugin for LoadViewScreenPlugin {
 }
 
 fn setup_new_game(
-    mut spawn_pets: EventWriter<SpawnPetEvent>,
+    #[cfg(not(feature = "dev"))] mut spawn_pets: EventWriter<SpawnPetEvent>,
     mut game_state: ResMut<NextState<GameState>>,
     mut loading_state: ResMut<NextState<SardipLoadingState>>,
 ) {
+    #[cfg(not(feature = "dev"))]
     for _ in 0..2 {
         spawn_pets.send(SpawnPetEvent::Blank((
             Vec2::new(0., 0.),

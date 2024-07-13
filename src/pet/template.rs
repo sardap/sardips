@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use bevy::ecs::event;
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
 use bevy_turborand::{GlobalRng, RngComponent};
@@ -15,7 +14,6 @@ use crate::interaction::Clickable;
 use crate::money::MoneyHungry;
 use crate::name::{EntityName, HasNameTag, NameTag, NameTagBundle, SpeciesName};
 use crate::sardip_save::SavedPet;
-use crate::simulation::SimulationUpdate;
 use crate::text_database::TextDatabase;
 use crate::velocity::Speed;
 use crate::{layering, GameState};
@@ -54,13 +52,19 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn load_templates(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
     template_handle: Res<PetTemplateSetHandle>,
     mut template_assets: ResMut<Assets<AssetPetTemplateSet>>,
 ) {
     if let Some(set) = template_assets.remove(template_handle.0.id()) {
-        commands.insert_resource(PetTemplateDatabase {
+        let mut db = PetTemplateDatabase {
             templates: set.templates,
-        });
+        };
+
+        db.populate_pre_calculated(&asset_server, &mut layouts);
+
+        commands.insert_resource(db);
     }
 }
 
@@ -101,10 +105,21 @@ impl TemplateSpeed {
             TemplateSpeed::BlueBlur => 130.0,
         }
     }
+
+    pub fn key(&self) -> &'static str {
+        match self {
+            TemplateSpeed::VerySlow => "global.very_slow",
+            TemplateSpeed::Slow => "global.slow",
+            TemplateSpeed::Medium => "global.medium",
+            TemplateSpeed::Fast => "global.fast",
+            TemplateSpeed::VeryFast => "global.very_fast",
+            TemplateSpeed::BlueBlur => "global.blue_blur",
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
-enum TemplateStomachSize {
+pub enum TemplateStomachSize {
     Tiny,
     Small,
     Medium,
@@ -124,16 +139,27 @@ impl TemplateStomachSize {
             TemplateStomachSize::PaulEatingPizza => 300.0,
         }
     }
+
+    pub fn key(&self) -> &'static str {
+        match self {
+            TemplateStomachSize::Tiny => "global.tiny",
+            TemplateStomachSize::Small => "global.small",
+            TemplateStomachSize::Medium => "global.medium",
+            TemplateStomachSize::Large => "global.large",
+            TemplateStomachSize::Huge => "global.huge",
+            TemplateStomachSize::PaulEatingPizza => "global.paul_eating_pizza",
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TemplateStomach {
-    size: TemplateStomachSize,
-    sensations: HashMap<FoodSensationType, FoodSensationRating>,
+    pub size: TemplateStomachSize,
+    pub sensations: HashMap<FoodSensationType, FoodSensationRating>,
 }
 
 #[derive(Serialize, Deserialize)]
-enum TemplatePoopInterval {
+pub enum TemplatePoopInterval {
     VeryFrequent,
     Frequent,
     Regular,
@@ -153,11 +179,22 @@ impl TemplatePoopInterval {
             TemplatePoopInterval::Constipated => Duration::from_secs(24 * 60 * 60),
         }
     }
+
+    pub fn key(&self) -> &'static str {
+        match self {
+            TemplatePoopInterval::VeryFrequent => "global.very_frequent",
+            TemplatePoopInterval::Frequent => "global.frequent",
+            TemplatePoopInterval::Regular => "global.regular",
+            TemplatePoopInterval::Infrequent => "global.infrequent",
+            TemplatePoopInterval::VeryInfrequent => "global.very_infrequent",
+            TemplatePoopInterval::Constipated => "global.constipated",
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct TemplatePooper {
-    interval: TemplatePoopInterval,
+    pub interval: TemplatePoopInterval,
     #[serde(default)]
     texture: Option<String>,
 }
@@ -188,6 +225,43 @@ fn default_breeds() -> bool {
     true
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum TemplateSize {
+    X(f32),
+    Y(f32),
+    XY(f32, f32),
+}
+
+impl TemplateSize {
+    pub fn vec2(&self, image_size: (f32, f32)) -> Vec2 {
+        match self {
+            TemplateSize::X(x) => {
+                let ratio = x / image_size.0;
+                let y = image_size.1 * ratio;
+
+                Vec2::new(*x, y)
+            }
+            TemplateSize::Y(y) => {
+                let max = y.max(image_size.1 as f32);
+                let min = y.min(image_size.1 as f32);
+                let ratio = min / max;
+                let x = image_size.0 * ratio;
+
+                Vec2::new(x, *y)
+            }
+            TemplateSize::XY(x, y) => Vec2::new(*x, *y),
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct PreCalculated {
+    pub number: i32,
+    pub layout: Handle<TextureAtlasLayout>,
+    pub texture: Handle<Image>,
+    pub custom_size: Vec2,
+}
+
 #[derive(Deserialize, TypePath)]
 pub struct PetTemplate {
     pub species_name: String,
@@ -195,7 +269,7 @@ pub struct PetTemplate {
     #[serde(default = "default_possible_evolutions")]
     pub possible_evolutions: Vec<PossibleEvolution>,
     pub image_set: PetTemplateImageSet,
-    pub size: (f32, f32),
+    pub size: TemplateSize,
     #[serde(default)]
     pub starter: bool,
     #[serde(default = "default_speed")]
@@ -212,6 +286,8 @@ pub struct PetTemplate {
     pub fun: Option<TemplateFun>,
     #[serde(default)]
     pub money_hungry: Option<TemplateMoneyHungry>,
+    #[serde(skip)]
+    pub pre_calculated: PreCalculated,
 }
 
 #[derive(Clone)]
@@ -270,22 +346,13 @@ impl PetTemplate {
         }
     }
 
-    fn evolve(
-        &self,
-        commands: &mut Commands,
-        asset_server: &AssetServer,
-        global_rng: &mut GlobalRng,
-        text_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
-        evolving: EvolvingPet,
-    ) {
+    fn evolve(&self, commands: &mut Commands, global_rng: &mut GlobalRng, evolving: EvolvingPet) {
         // Create new delete old
         commands.entity(evolving.entity).despawn_recursive();
 
         self.create_entity_from_saved(
             commands,
-            asset_server,
             global_rng,
-            text_atlas_layouts,
             &SavedPet {
                 location: Some(evolving.location),
                 species_name: SpeciesName::new(&self.species_name),
@@ -310,17 +377,13 @@ impl PetTemplate {
     fn create_entity(
         &self,
         commands: &mut Commands,
-        asset_server: &AssetServer,
         global_rng: &mut GlobalRng,
-        text_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
         location: Vec2,
         name: EntityName,
     ) -> Entity {
         self.create_entity_from_saved(
             commands,
-            asset_server,
             global_rng,
-            text_atlas_layouts,
             &SavedPet {
                 species_name: SpeciesName::new(&self.species_name),
                 name,
@@ -341,25 +404,16 @@ impl PetTemplate {
     fn create_entity_from_saved(
         &self,
         commands: &mut Commands,
-        asset_server: &AssetServer,
         global_rng: &mut GlobalRng,
-        text_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
         saved: &SavedPet,
     ) -> Entity {
-        let layout = TextureAtlasLayout::from_grid(
-            Vec2::new(self.image_set.tile_size.0, self.image_set.tile_size.1),
-            self.image_set.columns,
-            1,
-            None,
-            None,
-        );
-        let layout = text_atlas_layouts.add(layout);
-
         let mut transform = Transform::from_xyz(0.0, 0.0, layering::view_screen::PET);
         if let Some(location) = saved.location {
             transform.translation.x = location.x;
             transform.translation.y = location.y;
         }
+
+        let custom_size = self.pre_calculated.custom_size;
 
         let entity_id = commands
             .spawn(PetBundle {
@@ -374,14 +428,14 @@ impl PetTemplate {
                 sprite: SpriteSheetBundle {
                     transform,
                     sprite: Sprite {
-                        custom_size: Some(Vec2::new(self.size.0, self.size.1)),
+                        custom_size: Some(custom_size.clone()),
                         ..default()
                     },
                     atlas: TextureAtlas {
-                        layout: layout.clone(),
+                        layout: self.pre_calculated.layout.clone(),
                         ..default()
                     },
-                    texture: asset_server.load(&self.image_set.sprite_sheet),
+                    texture: self.pre_calculated.texture.clone(),
                     ..default()
                 },
                 speed: saved.speed.clone(),
@@ -391,8 +445,8 @@ impl PetTemplate {
             .insert((
                 Wonder,
                 Clickable::new(
-                    Vec2::new(-(self.size.0 / 2.), self.size.0 / 2.),
-                    Vec2::new(-(self.size.1 / 2.), self.size.1 / 2.),
+                    Vec2::new(-(custom_size.x / 2.), custom_size.x / 2.),
+                    Vec2::new(-(custom_size.y / 2.), custom_size.y / 2.),
                 ),
             ))
             .id();
@@ -466,6 +520,36 @@ impl PetTemplateDatabase {
     pub fn add(&mut self, template: PetTemplate) {
         self.templates.push(template);
     }
+
+    fn populate_pre_calculated(
+        &mut self,
+        asset_server: &AssetServer,
+        layouts: &mut Assets<TextureAtlasLayout>,
+    ) {
+        for (i, template) in self.templates.iter_mut().enumerate() {
+            let layout = TextureAtlasLayout::from_grid(
+                Vec2::new(
+                    template.image_set.tile_size.0,
+                    template.image_set.tile_size.1,
+                ),
+                template.image_set.columns,
+                1,
+                None,
+                None,
+            );
+            let layout = layouts.add(layout);
+            let texture = asset_server.load(&template.image_set.sprite_sheet);
+
+            let custom_size = template.size.vec2(template.image_set.tile_size);
+
+            template.pre_calculated = PreCalculated {
+                layout,
+                texture,
+                number: i as i32 + 1,
+                custom_size,
+            };
+        }
+    }
 }
 
 #[derive(Deserialize, Asset, TypePath)]
@@ -497,8 +581,6 @@ fn spawn_pending_pets(
     mut commands: Commands,
     mut events: EventReader<SpawnPetEvent>,
     mut global_rng: ResMut<GlobalRng>,
-    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    asset_server: Res<AssetServer>,
     pet_template_db: Res<PetTemplateDatabase>,
     text_db: Res<TextDatabase>,
 ) {
@@ -509,30 +591,16 @@ fn spawn_pending_pets(
                 SpawnPetEvent::Blank((pos, _)) => {
                     template.create_entity(
                         &mut commands,
-                        &asset_server,
                         &mut global_rng,
-                        &mut layouts,
                         pos.clone(),
                         EntityName::random(&text_db),
                     );
                 }
                 SpawnPetEvent::Saved(saved) => {
-                    template.create_entity_from_saved(
-                        &mut commands,
-                        &asset_server,
-                        &mut global_rng,
-                        &mut layouts,
-                        saved,
-                    );
+                    template.create_entity_from_saved(&mut commands, &mut global_rng, saved);
                 }
                 SpawnPetEvent::Evolve((_, evolving)) => {
-                    template.evolve(
-                        &mut commands,
-                        &asset_server,
-                        &mut global_rng,
-                        &mut layouts,
-                        evolving.clone(),
-                    );
+                    template.evolve(&mut commands, &mut global_rng, evolving.clone());
                 }
             }
         } else {

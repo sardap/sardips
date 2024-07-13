@@ -1,9 +1,9 @@
 /*
+    Add Shinys
 
     * A pet that loves dark souls
     * A Gangster
     * A Biker
-    * A moose
     * A solider
     * A Dick
     * A Hunch back
@@ -11,7 +11,6 @@
     * A Groom
     * A Bride
     * A Video game Case
-    * A Ice elemantal
     * A Dirt elemantal
     * A geine
     * Walk good maybe UFO
@@ -19,9 +18,12 @@
     * A Blue ball
     * A Dancer
     * A Urn
-    * A hand drawn sqaure
-    * A cardboard box
-    * A Angel
+    * A real cardboard box
+        * With cut out features
+    * A Candy
+    * Phonie
+    * bycicle
+    * tradie
 */
 
 AssetPetTemplateSet(
@@ -49,7 +51,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (58.1, 49.0),
+            size: X(40.),
             speed: Slow,
             breeds: false,
             stomach: Some(TemplateStomach(
@@ -79,7 +81,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (128.0, 128.0),
+            size: X(64),
             speed: Medium,
             stomach: Some(
                 TemplateStomach(
@@ -114,7 +116,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (99.8, 150.1),
+            size: X(70),
             speed: VerySlow,
             stomach: Some(
                 TemplateStomach(
@@ -145,7 +147,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (83.0, 83.0),
+            size: X(83),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -183,7 +185,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (73.5, 192),
+            size: Y(120),
             speed: Fast,
             stomach: Some(
                 TemplateStomach(
@@ -214,7 +216,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (44.2, 141.7),
+            size: Y(80),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -246,7 +248,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (64.0, 64.0),
+            size: X(64),
             speed: Fast,
             pooper: Some(TemplatePooper(
                 interval: Frequent,
@@ -277,7 +279,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (76, 161),
+            size: Y(130),
             speed: Fast,
             stomach: Some(
                 TemplateStomach(
@@ -310,7 +312,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (123, 66),
+            size: X(65),
             speed: VeryFast,
             stomach: Some(
                 TemplateStomach(
@@ -341,7 +343,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (183, 138),
+            size: X(130),
             speed: VerySlow,
             stomach: Some(
                 TemplateStomach(
@@ -372,7 +374,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (61, 91),
+            size: Y(100),
             speed: Medium,
             stomach: Some(
                 TemplateStomach(
@@ -403,7 +405,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (98, 150),
+            size: X(60),
             speed: Fast,
             stomach: Some(
                 TemplateStomach(
@@ -433,7 +435,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (124, 120),
+            size: X(64),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -464,7 +466,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (170, 259.6),
+            size: Y(120),
             speed: VerySlow,
             stomach: Some(
                 TemplateStomach(
@@ -494,7 +496,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (100, 120),
+            size: X(90),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -525,7 +527,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (123, 173),
+            size: X(70),
             speed: Slow,
             stomach: None,
             pooper: Some(TemplatePooper(
@@ -550,7 +552,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (100, 70),
+            size: X(60),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -581,7 +583,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (280, 298),
+            size: X(60),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -612,7 +614,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (168, 139),
+            size: X(70),
             speed: Fast,
             stomach: Some(
                 TemplateStomach(
@@ -643,7 +645,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (63, 128),
+            size: Y(70),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -674,7 +676,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: (173, 233),
+            size: Y(90),
             speed: Medium,
             stomach: Some(
                 TemplateStomach(
@@ -704,7 +706,7 @@ AssetPetTemplateSet(
                     Ecstatic: 4,
                 },
             ),
-            size: (324, 179),
+            size: X(120),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -738,7 +740,7 @@ AssetPetTemplateSet(
                     Ecstatic: 4,
                 },
             ),
-            size: (280, 243),
+            size: X(60),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -768,7 +770,7 @@ AssetPetTemplateSet(
                     Ecstatic: 4,
                 },
             ),
-            size: (650, 156),
+            size: X(200),
             speed: Slow,
             stomach: Some(
                 TemplateStomach(
@@ -799,7 +801,7 @@ AssetPetTemplateSet(
                     Ecstatic: 4,
                 },
             ),
-            size: (155, 211),
+            size: X(70),
             speed: Fast,
             stomach: Some(
                 TemplateStomach(
@@ -829,7 +831,7 @@ AssetPetTemplateSet(
                     Ecstatic: 4,
                 },
             ),
-            size: (40, 94),
+            size: X(60),
             speed: VerySlow,
             stomach: Some(
                 TemplateStomach(
@@ -860,7 +862,7 @@ AssetPetTemplateSet(
                     Ecstatic: 4,
                 },
             ),
-            size: (531, 483),
+            size: X(80),
             speed: Medium,
             stomach: Some(
                 TemplateStomach(
@@ -874,6 +876,124 @@ AssetPetTemplateSet(
             )),
             cleanliness: Some(TemplateCleanliness()),
             fun: Some(TemplateFun()),
-        )
+        ),
+        PetTemplate(
+            species_name: "IceElemantal",
+            kind: Supernatural,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/ice_elemantal.png",
+                tile_size: (160, 164),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: X(60),
+            speed: Medium,
+            stomach: Some(
+                TemplateStomach(
+                    size: Small,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Moose",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/moose.png",
+                tile_size: (237, 256),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: X(120),
+            speed: Medium,
+            stomach: Some(
+                TemplateStomach(
+                    size: Huge,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Frequent,
+            )),
+            cleanliness: None,
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Angel",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/angel.png",
+                tile_size: (600, 600),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 2,
+                    Sad: 1,
+                    Despairing: 0,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: X(200),
+            speed: Fast,
+            stomach: Some(
+                TemplateStomach(
+                    size: Small,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: None,
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Genie",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/genie.png",
+                tile_size: (303, 351),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 0,
+                    Sad: 1,
+                    Despairing: 2,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: X(80),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
     ]
 )

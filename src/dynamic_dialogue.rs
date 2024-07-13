@@ -8,7 +8,7 @@ use serde::de::{self, Visitor};
 use serde::Deserializer;
 use serde::{Deserialize, Serialize};
 
-use crate::facts::{EntityFactDatabase, GlobalFactDatabase};
+use crate::facts::{fact_str_hash, EntityFactDatabase, GlobalFactDatabase};
 
 // https://www.youtube.com/watch?v=tAbBID3N64A&t=20s
 // https://www.gdcvault.com/play/1015317/AI-driven-Dynamic-Dialog-through
@@ -185,6 +185,11 @@ impl FactDb {
         self.facts.insert(key.to_string(), value);
     }
 
+    pub fn add_str<T: ToString, J: ToString>(&mut self, key: T, value: J) {
+        self.facts
+            .insert(key.to_string(), fact_str_hash(value.to_string()));
+    }
+
     pub fn remove<T: ToString>(&mut self, key: T) {
         self.facts.remove(&key.to_string());
     }
@@ -228,6 +233,8 @@ impl fmt::Display for FactDb {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Concept {
     ThinkIdle,
+    ThinkJustAte,
+    ThinkStartingEating,
     Evolve,
 }
 

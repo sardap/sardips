@@ -139,3 +139,11 @@ pub struct FourInRowAssets {
     #[asset(path = "textures/mini_games/four_in_row/background.png")]
     pub background: Handle<Image>,
 }
+
+#[derive(AssetCollection, Resource)]
+pub struct DipdexImageAssets {
+    #[asset(path = "textures/dipdex/unknown.png")]
+    pub unknown: Handle<Image>,
+    #[asset(path = "textures/dipdex/screen_noise.png")]
+    pub screen_noise: Handle<Image>,
+}

@@ -11,10 +11,8 @@ use crate::{
         mood::{Mood, MoodCategory, SatisfactionRating},
         Pet,
     },
-    text_database::text_keys::{
-        UI_PET_INFO_PANEL_AGE, UI_PET_INFO_PANEL_SPECIES, UI_PET_PANEL_NO_THOUGHT,
-    },
-    text_translation::KeyText,
+    text_database::text_keys::{UI_PET_INFO_PANEL_AGE, UI_PET_PANEL_NO_THOUGHT},
+    text_translation::{KeyString, KeyText},
     thinking::Thought,
     GameState,
 };
@@ -625,7 +623,7 @@ fn update_pet_panel_species(
 
     let species_name = pets.get(pet_entity).unwrap();
 
-    text.set(0, species_name.key());
+    text.set(0, species_name.name_key());
 }
 
 macro_rules! update_pet_panel_mood {
@@ -761,11 +759,13 @@ fn update_pet_thought(
 
     let thought = pets.get(pet_entity).unwrap();
 
-    let next_text = match &thought.text {
-        Some(thought) => thought,
-        None => UI_PET_PANEL_NO_THOUGHT,
-    }
-    .to_string();
+    let next_text = KeyString::Direct(
+        match &thought.text {
+            Some(thought) => thought,
+            None => UI_PET_PANEL_NO_THOUGHT,
+        }
+        .to_string(),
+    );
 
     if text.keys[&0] != next_text {
         text.keys.insert(0, next_text);

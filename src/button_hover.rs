@@ -96,7 +96,7 @@ fn update(
             Option<&mut BorderColor>,
             &ButtonHover,
         ),
-        (With<Button>, Without<Disabled>, Without<Selected>),
+        (With<Button>, Without<Selected>),
     >,
 ) {
     for (interaction, background_color, border_color, button_hover) in interaction_query.iter_mut()
@@ -176,13 +176,10 @@ fn toggle_selected_colors(
     }
 }
 
-#[derive(Component)]
-pub struct Disabled;
-
 fn toggle_disabled_colors(
     mut buttons: Query<
         (Option<&mut BackgroundColor>, Option<&mut BorderColor>),
-        (With<ButtonHover>, With<Disabled>),
+        (With<ButtonHover>, Without<Interaction>),
     >,
 ) {
     for (background, border) in buttons.iter_mut() {

@@ -71,6 +71,18 @@ RawRuleSet(
                 facts: ["Kind = Creature", "Species = WasGuard", "Mood < 1.25"]
             ),
             response: "WasGaurdSad",
-        ))
+        )),
+        Response(RawResponse(
+            id: "StartEatAnything",
+            now: ["RandomText dialogue.starting_eating_anything"],
+        )),
+        Rule(RawRule(
+            id: "StartEatAnything",
+            criteria: Criteria(
+                concept: ThinkStartingEating,
+                facts: [""]
+            ),
+            response: "StartEatAnything",
+        )),
     ]
 )

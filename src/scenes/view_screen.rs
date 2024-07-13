@@ -66,6 +66,7 @@ enum MenuOption {
     Food,
     Tools,
     MiniGames,
+    Dipdex,
     Options,
 }
 
@@ -76,6 +77,7 @@ impl MenuOption {
             MenuOption::Tools => 1,
             MenuOption::Food => 2,
             MenuOption::MiniGames => 3,
+            MenuOption::Dipdex => 0,
             MenuOption::Options => 0,
         }
     }
@@ -313,6 +315,10 @@ fn menu_button_interaction(
             MenuOption::MiniGames => {
                 vs_state.set(VSSubState::None);
                 game_state.set(GameState::MiniGame);
+            }
+            MenuOption::Dipdex => {
+                vs_state.set(VSSubState::None);
+                game_state.set(GameState::DipdexView);
             }
             MenuOption::Options => {
                 vs_state.set(VSSubState::None);

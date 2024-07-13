@@ -10,6 +10,7 @@ use crate::{
     name::{EntityName, SpeciesName},
     sardip_save::PersistentId,
     simulation::{Simulated, SimulationState},
+    text_database::text_keys,
 };
 
 use super::template::FoodTemplateDatabase;
@@ -37,7 +38,9 @@ pub struct FoodBundle {
     pub id: PersistentId,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, EnumIter, Serialize, Deserialize)]
+#[derive(
+    Debug, Copy, Clone, Eq, PartialEq, Hash, EnumIter, Serialize, Deserialize, PartialOrd, Ord,
+)]
 pub enum FoodSensationType {
     Spicy,
     Cool,
@@ -78,6 +81,27 @@ impl FoodSensationType {
             FoodSensationType::Tender => "Ten",
             FoodSensationType::Dry => "Dry",
             FoodSensationType::Elastic => "Ela",
+        }
+    }
+
+    pub fn key(&self) -> &'static str {
+        match self {
+            FoodSensationType::Spicy => text_keys::SPICY,
+            FoodSensationType::Cool => text_keys::COOL,
+            FoodSensationType::Astringent => text_keys::ASTRINGENT,
+            FoodSensationType::Umami => text_keys::UMAMI,
+            FoodSensationType::Fatty => text_keys::FATTY,
+            FoodSensationType::Sour => text_keys::SOUR,
+            FoodSensationType::Bitter => text_keys::BITTER,
+            FoodSensationType::Sweet => text_keys::SWEET,
+            FoodSensationType::Salty => text_keys::SALTY,
+            FoodSensationType::Crunchy => text_keys::CRUNCHY,
+            FoodSensationType::Creamy => text_keys::CREAMY,
+            FoodSensationType::Fizzy => text_keys::FIZZY,
+            FoodSensationType::Juicy => text_keys::JUICY,
+            FoodSensationType::Tender => text_keys::TENDER,
+            FoodSensationType::Dry => text_keys::DRY,
+            FoodSensationType::Elastic => text_keys::ELASTIC,
         }
     }
 }
