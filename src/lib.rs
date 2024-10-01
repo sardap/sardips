@@ -1,7 +1,6 @@
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
-#![feature(const_mut_refs)]
 #![feature(const_trait_impl)]
 #![feature(const_for)]
 pub mod age;
