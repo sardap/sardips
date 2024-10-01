@@ -83,7 +83,6 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                         font: fonts.main_font.clone(),
                         font_size: 70.0,
                         color: Color::BLACK,
-                        ..default()
                     },
                 ),
                 KeyText::new().with(0, text_keys::MAIN_MENU_TITLE),
@@ -104,7 +103,7 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                         },
                         ..default()
                     },
-                    ButtonHover::new()
+                    ButtonHover::default()
                         .with_background(palettes::ui::BUTTON_SET)
                         .with_border(palettes::ui::BUTTON_BORDER_SET),
                     PlayButton,
@@ -131,7 +130,6 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                 font: fonts.main_font.clone(),
                 font_size: 50.0,
                 color: bevy::color::palettes::css::DARK_GREEN.into(),
-                ..default()
             },
         )
         .with_text_justify(JustifyText::Center)

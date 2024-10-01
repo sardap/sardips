@@ -152,7 +152,6 @@ fn setup_ui(
                                         font_size: 40.,
                                         color: Color::BLACK,
                                         font: fonts.main_font.clone(),
-                                        ..default()
                                     },
                                 ),
                                 PlayerMoneyText,
@@ -193,7 +192,8 @@ fn setup_ui(
                             ..default()
                         },
                         option,
-                        ButtonHover::new().with_border(palettes::view_screen::BUTTON_BORDER_SET),
+                        ButtonHover::default()
+                            .with_border(palettes::view_screen::BUTTON_BORDER_SET),
                     ))
                     .with_children(|button| {
                         button.spawn((
@@ -209,7 +209,6 @@ fn setup_ui(
                             TextureAtlas {
                                 layout: view_screen_images.view_buttons_layout.clone(),
                                 index: option.get_index(),
-                                ..default()
                             },
                         ));
                     });

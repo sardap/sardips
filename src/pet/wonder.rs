@@ -12,14 +12,8 @@ impl Plugin for WonderPlugin {
     }
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Default)]
 pub struct Wonder;
-
-impl Default for Wonder {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 fn new_target(
     mut move_towards_events: EventWriter<MoveTowardsEvent>,

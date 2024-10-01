@@ -90,7 +90,7 @@ pub fn handle_thought(
                 .add_fact_db(&event.facts);
             let response = fact_query.run(&rule_set);
             if let Some(response) = response {
-                thought.text = response.now.get_text().get(0).cloned();
+                thought.text = response.now.get_text().first().cloned();
                 info!("{:?} thinks: {:?}", entity, thought.text);
                 action_events.send(ActionEvent::new(response.now).with_entity(entity));
             }

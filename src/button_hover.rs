@@ -40,20 +40,13 @@ impl ButtonColorSet {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ButtonHover {
     pub background: Option<ButtonColorSet>,
     pub border: Option<ButtonColorSet>,
 }
 
 impl ButtonHover {
-    pub fn new() -> Self {
-        Self {
-            background: None,
-            border: None,
-        }
-    }
-
     pub fn with_background(mut self, background: ButtonColorSet) -> Self {
         self.background = Some(background);
         self
@@ -103,34 +96,25 @@ fn update(
     {
         let (background, border) = match *interaction {
             Interaction::Hovered => (
-                match &button_hover.background {
-                    Some(background) => Some(background.hover),
-                    None => None,
-                },
-                match &button_hover.border {
-                    Some(border) => Some(border.hover),
-                    None => None,
-                },
+                button_hover
+                    .background
+                    .as_ref()
+                    .map(|background| background.hover),
+                button_hover.border.as_ref().map(|border| border.hover),
             ),
             Interaction::None => (
-                match &button_hover.background {
-                    Some(background) => Some(background.normal),
-                    None => None,
-                },
-                match &button_hover.border {
-                    Some(border) => Some(border.normal),
-                    None => None,
-                },
+                button_hover
+                    .background
+                    .as_ref()
+                    .map(|background| background.normal),
+                button_hover.border.as_ref().map(|border| border.normal),
             ),
             Interaction::Pressed => (
-                match &button_hover.background {
-                    Some(background) => Some(background.pressed),
-                    None => None,
-                },
-                match &button_hover.border {
-                    Some(border) => Some(border.pressed),
-                    None => None,
-                },
+                button_hover
+                    .background
+                    .as_ref()
+                    .map(|background| background.pressed),
+                button_hover.border.as_ref().map(|border| border.pressed),
             ),
         };
 

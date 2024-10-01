@@ -147,7 +147,7 @@ fn setup(
             ..default()
         },
         RenderLayers::from_layers(&[GAME_LAYER]),
-        mood_images.clone(),
+        *mood_images,
         MoodCategory::Neutral,
         AutoSetMoodImage,
         BoundingRect {
@@ -172,7 +172,7 @@ fn setup(
                 ..default()
             },
             RenderLayers::from_layers(&[GAME_LAYER]),
-            mood_images.clone(),
+            *mood_images,
             MoodCategory::Neutral,
             AutoSetMoodImage,
             Velocity(Vec2::new(-HORIZONTAL_SPEED, 0.)),
@@ -188,6 +188,7 @@ fn teardown(mut commands: Commands, to_delete: Query<Entity, With<Sprint>>) {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Component)]
 struct BoundingRect {
     pub min: Vec2,
@@ -199,9 +200,9 @@ struct Velocity(Vec2);
 
 fn apply_velocity(
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut Velocity, &BoundingRect)>,
+    mut query: Query<(&mut Transform, &mut Velocity), With<BoundingRect>>,
 ) {
-    for (mut transform, mut velocity, rect) in query.iter_mut() {
+    for (mut transform, mut velocity) in query.iter_mut() {
         transform.translation.y += velocity.y * time.delta_seconds();
         transform.translation.x += velocity.x * time.delta_seconds();
 

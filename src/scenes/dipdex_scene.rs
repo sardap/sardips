@@ -185,7 +185,7 @@ fn setup_ui_roots(mut commands: Commands, font_assets: Res<FontAssets>) {
                                     },
                                     ..default()
                                 },
-                                ButtonHover::new()
+                                ButtonHover::default()
                                     .with_background(palettes::dipdex_view::BUTTON_SET)
                                     .with_border(palettes::dipdex_view::BUTTON_BORDER_SET),
                                 DexPageChangeButton(if i == 0 { -1 } else { 1 }),
@@ -198,7 +198,6 @@ fn setup_ui_roots(mut commands: Commands, font_assets: Res<FontAssets>) {
                                             font_size: 40.0,
                                             color: Color::BLACK,
                                             font: font_assets.main_font.clone(),
-                                            ..default()
                                         },
                                     ),
                                     ..default()
@@ -242,7 +241,7 @@ fn spawn_back_button<T: Component + Default>(parent: &mut ChildBuilder, font_ass
                 },
                 ..default()
             },
-            ButtonHover::new()
+            ButtonHover::default()
                 .with_background(palettes::dipdex_view::BUTTON_SET)
                 .with_border(palettes::dipdex_view::BUTTON_BORDER_SET),
             T::default(),
@@ -256,7 +255,6 @@ fn spawn_back_button<T: Component + Default>(parent: &mut ChildBuilder, font_ass
                             font_size: 40.0,
                             color: Color::BLACK,
                             font: font_assets.main_font.clone(),
-                            ..default()
                         },
                     ),
                     ..default()
@@ -286,7 +284,6 @@ fn make_dipdex_list_entry(
                 font_size: TITLE_SIZE,
                 color: Color::BLACK,
                 font: font_assets.main_font.clone(),
-                ..default()
             },
         ),
         ..default()
@@ -370,7 +367,6 @@ fn make_dipdex_list_entry(
                 font_size: HEADER_SIZE,
                 color: Color::BLACK,
                 font: font_assets.main_font.clone(),
-                ..default()
             },
         ),
         ..default()
@@ -393,7 +389,7 @@ fn make_dipdex_list_entry(
             },
             ..default()
         },
-        ButtonHover::new()
+        ButtonHover::default()
             .with_background(palettes::dipdex_view::BUTTON_ENTRY_SET)
             .with_border(palettes::dipdex_view::BUTTON_ENTRY_BORDER_SET),
         DipdexEntryOpenButton(template.species_name.clone()),
@@ -407,7 +403,6 @@ fn make_dipdex_list_entry(
                     font_size: 60.0,
                     color: Color::BLACK,
                     font: font_assets.main_font.clone(),
-                    ..default()
                 },
             ),
             ..default()
@@ -536,7 +531,7 @@ fn next_page_button(
         if *interaction == Interaction::Pressed {
             page.page += button.0;
 
-            let max = (pet_db.iter().count() / PAGE_ENTRY_COUNT as usize) as i32;
+            let max = (pet_db.iter().count() / PAGE_ENTRY_COUNT) as i32;
             if page.page < 0 {
                 page.page = max
             }
@@ -603,7 +598,6 @@ fn update_dipdex_entry_view(
                     font_size: TITLE_SIZE,
                     color: Color::BLACK,
                     font: font_assets.main_font.clone(),
-                    ..default()
                 },
             )]),
             KeyText::new().with(0, SpeciesName::new(&template.species_name).name_key()),
@@ -729,7 +723,7 @@ fn update_dipdex_entry_view(
                                     },
                                     ..default()
                                 },
-                                ButtonHover::new()
+                                ButtonHover::default()
                                     .with_background(palettes::dipdex_view::BUTTON_SET)
                                     .with_border(palettes::dipdex_view::BUTTON_BORDER_SET),
                                 button,
@@ -743,7 +737,6 @@ fn update_dipdex_entry_view(
                                     TextureAtlas {
                                         layout: view_screen_images.moods_layout.clone(),
                                         index: satisfaction.atlas_index(),
-                                        ..default()
                                     },
                                 ));
                             });
@@ -768,7 +761,6 @@ fn update_dipdex_entry_view(
                         font_size: SUBHEADER_SIZE,
                         color: Color::BLACK,
                         font: font_assets.main_font.clone(),
-                        ..default()
                     },
                 ),
                 KeyText::new().with(0, text_keys::DIPDEX_DESCRIPTION_HEADER),
@@ -787,7 +779,6 @@ fn update_dipdex_entry_view(
                             font_size: BODY_SIZE,
                             color: Color::BLACK,
                             font: font_assets.main_font.clone(),
-                            ..default()
                         },
                     ),
                     ..default()
@@ -803,7 +794,6 @@ fn update_dipdex_entry_view(
                     font_size: SUBHEADER_SIZE,
                     color: Color::BLACK,
                     font: font_assets.main_font.clone(),
-                    ..default()
                 },
             ),
             KeyText::new().with(0, text_keys::DIPDEX_STATS_HEADER),
@@ -824,13 +814,12 @@ fn update_dipdex_entry_view(
                         font_size: SUB_SUBHEADER_SIZE,
                         color: Color::BLACK,
                         font: font_assets.main_font.clone(),
-                        ..default()
                     },
                 ),
                 KeyText::new().with_format(0, stomach_size),
             ));
 
-            if stomach.sensations.len() > 0 {
+            if !stomach.sensations.is_empty() {
                 parent
                     .spawn(NodeBundle {
                         style: Style {
@@ -849,7 +838,6 @@ fn update_dipdex_entry_view(
                                     font_size: SUB_SUBHEADER_SIZE,
                                     color: Color::BLACK,
                                     font: font_assets.main_font.clone(),
-                                    ..default()
                                 },
                             )]),
                             KeyText::new().with(0, text_keys::DIPDEX_FOOD_SENSATION_TITLE),
@@ -860,7 +848,6 @@ fn update_dipdex_entry_view(
                                 font_size: BODY_SIZE,
                                 color: Color::BLACK,
                                 font: font_assets.main_font.clone(),
-                                ..default()
                             };
 
                             let mut sensations: Vec<_> = stomach
@@ -871,7 +858,7 @@ fn update_dipdex_entry_view(
                                 .collect();
                             sensations.sort();
 
-                            if sensations.len() == 0 {
+                            if sensations.is_empty() {
                                 continue;
                             }
 
@@ -912,7 +899,6 @@ fn update_dipdex_entry_view(
                         font_size: SUB_SUBHEADER_SIZE,
                         color: Color::BLACK,
                         font: font_assets.main_font.clone(),
-                        ..default()
                     },
                 ),
                 KeyText::new().with_format(0, key),
@@ -922,13 +908,13 @@ fn update_dipdex_entry_view(
         // Poop info
         {
             let mut key = format!("~{title}~: ", title = text_keys::DIPDEX_POOP_TITLE);
-            key.push_str("~");
+            key.push('~');
             if let Some(pooper) = &template.pooper {
-                key.push_str(&pooper.interval.key());
+                key.push_str(pooper.interval.key());
             } else {
                 key.push_str(text_keys::DIPDEX_DOES_NOT_POOP);
             }
-            key.push_str("~");
+            key.push('~');
 
             parent.spawn((
                 TextBundle::from_section(
@@ -937,7 +923,6 @@ fn update_dipdex_entry_view(
                         font_size: SUB_SUBHEADER_SIZE,
                         color: Color::BLACK,
                         font: font_assets.main_font.clone(),
-                        ..default()
                     },
                 ),
                 KeyText::new().with_format(0, key),
@@ -953,7 +938,6 @@ fn update_dipdex_entry_view(
                         font_size: SUB_SUBHEADER_SIZE,
                         color: Color::BLACK,
                         font: font_assets.main_font.clone(),
-                        ..default()
                     },
                 ),
                 KeyText::new().with(

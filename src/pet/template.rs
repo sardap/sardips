@@ -330,14 +330,10 @@ impl PetTemplate {
     }
 
     fn get_money_hungry(&self) -> Option<MoneyHungry> {
-        if let Some(money) = &self.money_hungry {
-            Some(MoneyHungry {
-                previous_balance: 0,
-                max_care: money.max_balance,
-            })
-        } else {
-            None
-        }
+        self.money_hungry.as_ref().map(|money| MoneyHungry {
+            previous_balance: 0,
+            max_care: money.max_balance,
+        })
     }
 
     fn get_breeds(&self) -> Option<Breeds> {
@@ -426,11 +422,11 @@ impl PetTemplate {
                 mood: saved.mood.clone(),
                 mood_category_history: saved.mood_history.clone(),
                 fact_db: saved.fact_db.clone(),
-                kind: saved.kind.clone(),
+                kind: saved.kind,
                 sprite: SpriteBundle {
                     transform,
                     sprite: Sprite {
-                        custom_size: Some(custom_size.clone()),
+                        custom_size: Some(custom_size),
                         ..default()
                     },
                     texture: self.pre_calculated.texture.clone(),
@@ -594,7 +590,7 @@ fn spawn_pending_pets(
                     template.create_entity(
                         &mut commands,
                         &mut global_rng,
-                        pos.clone(),
+                        *pos,
                         EntityName::random(&text_db),
                     );
                 }

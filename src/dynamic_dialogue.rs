@@ -42,6 +42,7 @@ fn parse_rule_sets(
     }
 }
 
+#[allow(dead_code)]
 #[derive(Event)]
 enum FactInsert {
     Global(String, f32, Option<Duration>),
@@ -63,9 +64,11 @@ impl PendingFactDelete {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Component)]
 struct PendingFactDeleteEntity(Entity);
 
+#[allow(dead_code)]
 fn read_fact_inserts(
     mut commands: Commands,
     mut fact_db: ResMut<GlobalFactDatabase>,
@@ -97,12 +100,14 @@ fn read_fact_inserts(
     }
 }
 
+#[allow(dead_code)]
 fn tick_pending_fact_deletes(time: Res<Time>, mut query: Query<&mut PendingFactDelete>) {
     for mut delete in query.iter_mut() {
         delete.expire.tick(time.delta());
     }
 }
 
+#[allow(dead_code)]
 fn expire_global_facts(
     mut commands: Commands,
     mut fact_db: ResMut<GlobalFactDatabase>,
@@ -116,6 +121,7 @@ fn expire_global_facts(
     }
 }
 
+#[allow(dead_code)]
 fn expire_entity_facts(
     mut commands: Commands,
     mut fact_dbs: Query<&mut EntityFactDatabase>,
@@ -152,6 +158,7 @@ impl ActionEvent {
     }
 }
 
+#[allow(dead_code)]
 fn apply_pending_action(
     mut action_events: EventReader<ActionEvent>,
     mut inserts: EventWriter<FactInsert>,
@@ -208,7 +215,7 @@ impl FactDb {
             .facts
             .keys()
             .filter(|k| k.starts_with(prefix))
-            .map(|k| k.clone())
+            .cloned()
             .collect();
 
         for key in keys {
@@ -387,7 +394,7 @@ impl<'a> FactDataBaseSet<'a> {
             }
         }
 
-        return 0.;
+        0.
     }
 
     fn add(&mut self, fact_db: &'a FactDb) {
@@ -601,17 +608,17 @@ mod parse {
         super::ActionSet::new(result)
     }
 
-    impl Into<super::RuleSet> for RawRuleSet {
-        fn into(self) -> super::RuleSet {
+    impl From<RawRuleSet> for super::RuleSet {
+        fn from(val: RawRuleSet) -> super::RuleSet {
             let mut result = super::RuleSet { rules: Vec::new() };
 
-            let rules = self.get_rules();
+            let rules = val.get_rules();
 
             for rule in rules {
                 let possible_criteria = parse_criteria(&rule.criteria);
 
                 for criteria in possible_criteria.into_iter() {
-                    let raw_response = self.get_response(&rule.response);
+                    let raw_response = val.get_response(&rule.response);
 
                     let response = super::Response {
                         now: raw_action_to_action_set(&raw_response.now),
@@ -685,7 +692,7 @@ mod parse {
                     }
                 }
             }
-            _ => panic!("Invalid fact: {}", criterion.to_string()),
+            _ => panic!("Invalid fact: {}", criterion),
         }
     }
 
@@ -886,7 +893,7 @@ mod tests {
 
         let rule_set: RuleSet = raw_rule_set.clone().into();
 
-        assert!(rule_set.rules.len() >= 1);
+        assert!(!rule_set.rules.is_empty());
     }
 
     #[test]

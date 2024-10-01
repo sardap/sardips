@@ -219,7 +219,7 @@ fn setup_game(
             ..default()
         },
         atlas.clone(),
-        mood_images.clone(),
+        *mood_images,
         MoodCategory::Neutral,
         AutoSetMoodImage,
         FourInRowPet,
@@ -240,7 +240,6 @@ fn setup_game(
         TextureAtlas {
             layout: assets.layout.clone(),
             index: player_color.to_sprite_index(),
-            ..default()
         },
         AttachToCursor,
         InputDisc,
@@ -436,12 +435,11 @@ fn process_move(
     let (mut board, board_trans) = board.single_mut();
 
     for move_event in moves.read() {
-        if board
+        if !board
             .0
             .possible_moves()
             .iter()
-            .find(|&&col| col == move_event.col)
-            .is_none()
+            .any(|&col| col == move_event.col)
         {
             error!("Column full");
             continue;
@@ -486,7 +484,6 @@ fn process_move(
             TextureAtlas {
                 layout: assets.layout.clone(),
                 index: current_player.to_sprite_index(),
-                ..default()
             },
             Speed(250.),
             MovementDirection {
@@ -764,14 +761,14 @@ enum Side {
 }
 
 impl Side {
-    fn to_index(&self) -> usize {
+    fn to_index(self) -> usize {
         match self {
             Side::Red => 0,
             Side::Yellow => 1,
         }
     }
 
-    fn to_sprite_index(&self) -> usize {
+    fn to_sprite_index(self) -> usize {
         match self {
             Side::Red => 1,
             Side::Yellow => 2,
@@ -959,7 +956,7 @@ fn nega_max(board: &Board, depth: i32) -> f32 {
         }
     }
 
-    return max;
+    max
 }
 
 fn any_move_results_in_win(board: &Board) -> Option<Player> {

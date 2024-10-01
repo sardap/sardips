@@ -57,11 +57,11 @@ impl EntityName {
         let mut result = String::new();
         result.push_str(&self.first_name);
         if let Some(middle_name) = &self.middle_name {
-            result.push_str(" ");
+            result.push(' ');
             result.push_str(middle_name);
         }
         if let Some(last_name) = &self.last_name {
-            result.push_str(" ");
+            result.push(' ');
             result.push_str(last_name);
         }
         result
@@ -173,7 +173,7 @@ impl HasNameTag {
 
 fn add_section_to_text(font_assets: Res<FontAssets>, mut texts: Query<&mut Text, Added<NameTag>>) {
     for mut text in texts.iter_mut() {
-        if text.sections.len() > 0 {
+        if !text.sections.is_empty() {
             continue;
         }
 
@@ -215,7 +215,7 @@ fn update_name_tag(
 
 fn update_text_color(mut q_texts: Query<(&mut Text, &NameTag), Changed<NameTag>>) {
     for (mut text, name_tag) in q_texts.iter_mut() {
-        if text.sections.len() > 0 {
+        if !text.sections.is_empty() {
             text.sections[0].style.color = name_tag.color;
         }
     }

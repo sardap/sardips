@@ -117,12 +117,10 @@ fn select_action(
             }
         }
 
-        if pet_ai.check_breed_cooldown.finished() {
-            if ready_to_breed.is_some() {
-                info!("{} Checking for breeding", name);
-                add_action(&mut commands.entity(entity), BreedFindPartnerAction);
-                pet_ai.check_breed_cooldown.reset();
-            }
+        if pet_ai.check_breed_cooldown.finished() && ready_to_breed.is_some() {
+            info!("{} Checking for breeding", name);
+            add_action(&mut commands.entity(entity), BreedFindPartnerAction);
+            pet_ai.check_breed_cooldown.reset();
         }
     }
 }
@@ -137,7 +135,7 @@ fn add_action<T: Component>(entity_builder: &mut EntityCommands, action: T) {
 }
 
 fn stop_action<T: Component>(entity_builder: &mut EntityCommands) {
-    replace_action::<T, Wonder>(entity_builder, Wonder::default());
+    replace_action::<T, Wonder>(entity_builder, Wonder);
 }
 
 fn find_food(

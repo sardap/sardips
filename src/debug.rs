@@ -138,9 +138,9 @@ struct DevConsoleHistory {
 }
 
 impl DevConsoleHistory {
-    pub fn push_command_output(&mut self, output: String) {
+    pub fn push_command_output<T: ToString>(&mut self, output: T) {
         self.history
-            .push(DevConsoleHistoryEntry::CommandOutput(output));
+            .push(DevConsoleHistoryEntry::CommandOutput(output.to_string()));
     }
 
     pub fn get_last_user_input(&self) -> Option<&String> {
@@ -365,14 +365,15 @@ lazy_static! {
 
 fn common_prefix(matches: &[&str]) -> String {
     let mut common_prefix = String::new();
-    let mut chars = matches[0].chars();
-    while let Some(c) = chars.next() {
+    let chars = matches[0].chars();
+    for c in chars {
         if matches.iter().all(|m| m.starts_with(&common_prefix)) {
             common_prefix.push(c);
         } else {
             break;
         }
     }
+
     if !common_prefix.is_empty() {
         common_prefix.pop();
     }
@@ -394,12 +395,10 @@ fn command_auto_complete(
                     .filter(|template| template.name.starts_with(sub_command))
                     .map(|template| template.name.as_str())
                     .collect::<Vec<_>>();
-                if matches.len() > 1 {
-                    Some(common_prefix(&matches))
-                } else if matches.len() == 1 {
-                    Some(matches[0].to_string())
-                } else {
-                    None
+                match matches.len().cmp(&1) {
+                    std::cmp::Ordering::Less => None,
+                    std::cmp::Ordering::Equal => Some(matches[0].to_string()),
+                    std::cmp::Ordering::Greater => Some(common_prefix(&matches)),
                 }
             } else {
                 None
@@ -408,10 +407,7 @@ fn command_auto_complete(
         _ => None,
     };
 
-    match split {
-        Some(matched) => Some(format!("{} {}", command, matched)),
-        None => None,
-    }
+    split.map(|matched| format!("{} {}", command, matched))
 }
 
 fn dev_console_text_input(
@@ -436,13 +432,10 @@ fn dev_console_text_input(
                     .filter(|command| command.starts_with(splits[0]))
                     .map(|command| command.as_str())
                     .collect::<Vec<_>>();
-
-                if matches.len() > 1 {
-                    Some(common_prefix(&matches))
-                } else if matches.len() == 1 {
-                    Some(matches[0].to_string())
-                } else {
-                    None
+                match matches.len().cmp(&1) {
+                    std::cmp::Ordering::Less => None,
+                    std::cmp::Ordering::Equal => Some(matches[0].to_string()),
+                    std::cmp::Ordering::Greater => Some(common_prefix(&matches)),
                 }
             } else if splits.len() == 2 {
                 command_auto_complete(splits[0], splits[1], &food_db)
@@ -464,15 +457,11 @@ fn dev_console_text_input(
         if input.pressed(KeyCode::ShiftLeft) {
             if let Some(key) = KEY_UPPERCASE_MAP.get(pressed) {
                 text.text.push_str(key);
-            } else {
-                if let Some(key) = KEY_MAP.get(pressed) {
-                    text.text.push_str(key.to_uppercase().as_str());
-                }
+            } else if let Some(key) = KEY_MAP.get(pressed) {
+                text.text.push_str(key.to_uppercase().as_str());
             }
-        } else {
-            if let Some(key) = KEY_MAP.get(pressed) {
-                text.text.push_str(key);
-            }
+        } else if let Some(key) = KEY_MAP.get(pressed) {
+            text.text.push_str(key);
         }
     }
 
@@ -634,7 +623,7 @@ fn action_dev_console_command(
                             dipdex.entries.insert(pet.species_name.clone());
                         }
                     }
-                    history.push_command_output(format!("Discovered all pets in dipdex"));
+                    history.push_command_output("Discovered all pets in dipdex");
                 } else {
                     error!("Pet database not available");
                 }

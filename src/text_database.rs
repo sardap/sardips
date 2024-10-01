@@ -159,7 +159,7 @@ impl TextDatabase {
 
     fn populate_default_name_keys(&mut self) {
         // English is the base language, so we can just use that to find the default name keys
-        for (key, _) in self.values.get(&Language::English).unwrap() {
+        for key in self.values.get(&Language::English).unwrap().keys() {
             if key.starts_with("names.default.given") {
                 self.default_given_names_keys.push(key.clone());
             } else if key.starts_with("names.default.surname") {

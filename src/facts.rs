@@ -193,7 +193,7 @@ fn update_food_exists(
     added: Query<Entity, Added<Food>>,
     foods: Query<&SpeciesName, With<Food>>,
 ) {
-    const FOOD_PREFIX: &'static str = "FoodExists";
+    const FOOD_PREFIX: &str = "FoodExists";
 
     if removed.is_empty() && added.iter().count() == 0 {
         return;
@@ -215,7 +215,7 @@ fn update_existing_pets(
     added: Query<Entity, Added<Pet>>,
     pets: Query<&SpeciesName, With<Pet>>,
 ) {
-    const PET_PREFIX: &'static str = "PetExists";
+    const PET_PREFIX: &str = "PetExists";
 
     if removed.is_empty() && added.iter().count() == 0 {
         return;

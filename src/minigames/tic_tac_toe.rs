@@ -124,7 +124,7 @@ fn setup_game(
                 },
                 atlas.clone(),
                 UiPetImage,
-                mood_images.clone(),
+                *mood_images,
                 MoodCategory::Neutral,
                 AutoSetMoodImage,
             ));
@@ -162,7 +162,7 @@ fn setup_game(
                                     },
                                     ..default()
                                 },
-                                ButtonHover::new().with_background(ButtonColorSet::new(
+                                ButtonHover::default().with_background(ButtonColorSet::new(
                                     Color::Srgba(bevy::color::palettes::css::BEIGE),
                                     Color::WHITE,
                                     Color::Srgba(bevy::color::palettes::css::BEIGE),
@@ -183,7 +183,6 @@ fn setup_game(
                                     TextureAtlas {
                                         layout: assets.layout.clone(),
                                         index: 0,
-                                        ..default()
                                     },
                                     SquareImage,
                                 ));
@@ -307,7 +306,6 @@ fn setup_game_over(
                             font: fonts.main_font.clone(),
                             font_size: 60.,
                             color: Color::BLACK,
-                            ..default()
                         },
                     )]),
                     KeyText::new().with(
@@ -522,7 +520,7 @@ enum Side {
 }
 
 impl Side {
-    fn to_index(&self) -> usize {
+    fn to_index(self) -> usize {
         match self {
             Side::X => 0,
             Side::O => 1,
@@ -739,12 +737,16 @@ fn best_moves(board: &Board) -> Vec<Square> {
     for square in moves.iter() {
         let new_board = board.make_move_new(*square);
         let score = -nega_max(&new_board, 9);
-        if score > best_rating {
-            best_moves.clear();
-            best_rating = score;
-            best_moves.push(*square);
-        } else if score == best_rating {
-            best_moves.push(*square);
+        match score.cmp(&best_rating) {
+            std::cmp::Ordering::Greater => {
+                best_moves.clear();
+                best_rating = score;
+                best_moves.push(*square);
+            }
+            std::cmp::Ordering::Equal => {
+                best_moves.push(*square);
+            }
+            _ => {}
         }
     }
 

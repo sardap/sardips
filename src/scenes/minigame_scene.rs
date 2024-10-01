@@ -87,7 +87,7 @@ fn setup_select_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                             },
                             ..default()
                         },
-                        ButtonHover::new()
+                        ButtonHover::default()
                             .with_background(palettes::minigame_select::BUTTON_SET)
                             .with_border(palettes::minigame_select::BUTTON_BORDER_SET),
                         button_kind,
@@ -100,15 +100,14 @@ fn setup_select_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                                     font: fonts.main_font.clone(),
                                     font_size: 40.0,
                                     color: Color::BLACK,
-                                    ..default()
                                 },
                             ),
                             KeyText {
                                 keys: hashmap! { 0 => KeyString::Direct(match button_kind {
-                                    MinigameButton::PlayTicTacToe => MINIGAME_SELECT_TIC_TAC_TOE,
-                                    MinigameButton::PlaySprint => MINIGAME_SELECT_SPRINT,
-                                    MinigameButton::PlayHigherLower => MINIGAME_SELECT_HIGHER_LOWER,
-                                    MinigameButton::PlayFourInRow => MINIGAME_SELECT_FOUR_IN_ROW,
+                                    MinigameButton::TicTacToe => MINIGAME_SELECT_TIC_TAC_TOE,
+                                    MinigameButton::Sprint => MINIGAME_SELECT_SPRINT,
+                                    MinigameButton::HigherLower => MINIGAME_SELECT_HIGHER_LOWER,
+                                    MinigameButton::FourInRow => MINIGAME_SELECT_FOUR_IN_ROW,
                                 }.to_string()) },
                             },
                         ));
@@ -131,10 +130,10 @@ struct MiniGameSelect;
 
 #[derive(Component, EnumIter, Copy, Clone, PartialEq, Eq, Hash)]
 enum MinigameButton {
-    PlayTicTacToe,
-    PlaySprint,
-    PlayHigherLower,
-    PlayFourInRow,
+    TicTacToe,
+    Sprint,
+    HigherLower,
+    FourInRow,
 }
 
 fn tick_input_selecting(
@@ -147,10 +146,10 @@ fn tick_input_selecting(
         }
 
         minigame_state.set(match *button_kind {
-            MinigameButton::PlayTicTacToe => MiniGameState::PlayingTicTakToe,
-            MinigameButton::PlaySprint => MiniGameState::PlayingSprint,
-            MinigameButton::PlayHigherLower => MiniGameState::PlayingHigherLower,
-            MinigameButton::PlayFourInRow => MiniGameState::PlayingFourInRow,
+            MinigameButton::TicTacToe => MiniGameState::PlayingTicTakToe,
+            MinigameButton::Sprint => MiniGameState::PlayingSprint,
+            MinigameButton::HigherLower => MiniGameState::PlayingHigherLower,
+            MinigameButton::FourInRow => MiniGameState::PlayingFourInRow,
         });
     }
 }

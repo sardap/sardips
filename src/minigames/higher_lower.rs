@@ -157,7 +157,7 @@ fn setup_game(
                 ..default()
             },
             atlas.clone(),
-            mood_images.clone(),
+            *mood_images,
             MoodCategory::Neutral,
             AutoSetMoodImage,
             RenderLayers::layer(1),
@@ -232,7 +232,7 @@ fn setup_game(
                             },
                             ..default()
                         },
-                        ButtonHover::new()
+                        ButtonHover::default()
                             .with_background(
                                 ButtonColorSet::new(
                                     Color::Srgba(bevy::color::palettes::css::BEIGE),
@@ -255,7 +255,6 @@ fn setup_game(
                                     font: fonts.main_font.clone(),
                                     color: Color::BLACK,
                                     font_size: 30.,
-                                    ..default()
                                 },
                             ),
                             ..default()

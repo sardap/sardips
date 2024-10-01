@@ -222,7 +222,6 @@ pub fn create_info_panel(
                                                 font: fonts.main_font.clone(),
                                                 font_size: INFO_PANEL_TEXT_SIZE,
                                                 color: Color::BLACK,
-                                                ..default()
                                             },
                                         )]),
                                         KeyText::new(),
@@ -245,7 +244,6 @@ pub fn create_info_panel(
                                                     font: fonts.main_font.clone(),
                                                     font_size: INFO_PANEL_TEXT_SIZE,
                                                     color: Color::BLACK,
-                                                    ..default()
                                                 },
                                             ),
                                             TextSection::new(
@@ -254,7 +252,6 @@ pub fn create_info_panel(
                                                     font: fonts.main_font.clone(),
                                                     font_size: INFO_PANEL_TEXT_SIZE,
                                                     color: Color::BLACK,
-                                                    ..default()
                                                 },
                                             ),
                                         ]),
@@ -283,7 +280,6 @@ pub fn create_info_panel(
                                         TextureAtlas {
                                             layout: view_screen_images.mood_icons_layout.clone(),
                                             index: 5,
-                                            ..default()
                                         },
                                     ));
                                 });
@@ -331,7 +327,6 @@ pub fn create_info_panel(
                                 font: fonts.main_font.clone(),
                                 font_size: INFO_PANEL_TEXT_SIZE,
                                 color: Color::BLACK,
-                                ..default()
                             },
                         ),
                         KeyText::new().with(0, UI_PET_PANEL_NO_THOUGHT),
@@ -363,7 +358,6 @@ pub fn create_info_panel(
                                         font: fonts.main_font.clone(),
                                         font_size: INFO_PANEL_TEXT_SIZE,
                                         color: Color::BLACK,
-                                        ..default()
                                     },
                                 ),
                                 Label,
@@ -384,7 +378,6 @@ pub fn create_info_panel(
                                         font: fonts.main_font.clone(),
                                         font_size: INFO_PANEL_TEXT_SIZE,
                                         color: Color::BLACK,
-                                        ..default()
                                     },
                                 ),
                                 Label,
@@ -428,7 +421,6 @@ fn spawn_panel<T: Component + Default, J: Component + Default>(
                 TextureAtlas {
                     layout: view_screen_images.moods_layout.clone(),
                     index: icon_index,
-                    ..default()
                 },
             ));
 

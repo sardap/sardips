@@ -199,7 +199,7 @@ fn save_game(
             name: name.clone(),
             speed: speed.clone(),
             fact_db: fact_db.clone(),
-            kind: kind.clone(),
+            kind: *kind,
             age: age.clone(),
             breeds: breeds.cloned(),
             mood: mood.clone(),
@@ -303,7 +303,7 @@ fn load_game(
         }
     };
 
-    if save_compatibility(&version.version, VERSION) == false {
+    if !save_compatibility(&version.version, VERSION) {
         error!(
             "Save file version mismatch: {} != {}",
             version.version, VERSION

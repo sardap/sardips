@@ -157,9 +157,8 @@ fn mini_game_completed(
 struct Playing;
 
 fn set_minigame_pet(mut commands: Commands, pet: Query<Entity, With<Pet>>) {
-    for entity in pet.iter() {
+    if let Some(entity) = pet.iter().next() {
         commands.entity(entity).insert(Playing);
-        break;
     }
 }
 
@@ -196,7 +195,7 @@ impl MiniGameBackExitButton {
                     ..default()
                 },
                 BackButton,
-                ButtonHover::new()
+                ButtonHover::default()
                     .with_background(palettes::minigame_select::BUTTON_SET)
                     .with_border(palettes::minigame_select::BUTTON_BORDER_SET),
             ))
@@ -208,7 +207,6 @@ impl MiniGameBackExitButton {
                             font: fonts.main_font.clone(),
                             font_size: 40.,
                             color: Color::BLACK,
-                            ..default()
                         },
                     ),
                     KeyText::new().with(0, text_keys::BACK),

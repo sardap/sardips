@@ -63,9 +63,9 @@ impl MoodCategory {
     }
 }
 
-impl Into<MoodCategory> for SatisfactionRating {
-    fn into(self) -> MoodCategory {
-        match self {
+impl From<SatisfactionRating> for MoodCategory {
+    fn from(val: SatisfactionRating) -> Self {
+        match val {
             SatisfactionRating::VeryUnsatisfied => MoodCategory::Despairing,
             SatisfactionRating::Unsatisfied => MoodCategory::Sad,
             SatisfactionRating::Neutral => MoodCategory::Neutral,
