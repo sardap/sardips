@@ -48,7 +48,7 @@ pub struct FoodTemplate {
     pub name: String,
     pub sensations: HashSet<FoodSensationType>,
     pub texture: String,
-    pub texture_size: (f32, f32),
+    pub texture_size: (u32, u32),
     pub sprite_size: TemplateSize,
     pub fill_factor: f32,
 }

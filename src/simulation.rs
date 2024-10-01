@@ -20,7 +20,7 @@ impl Plugin for SimulationPlugin {
             .init_schedule(SimulationUpdate)
             .add_systems(RunSimulationUpdate, run_simulation_schedule);
 
-        app.world
+        app.world_mut()
             .resource_mut::<MainScheduleOrder>()
             .insert_after(RunFixedMainLoop, RunSimulationUpdate);
     }

@@ -1,8 +1,8 @@
-use bevy::{prelude::*, transform};
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    dynamic_dialogue::{self, Concept, FactDb},
+    dynamic_dialogue::{Concept, FactDb},
     food::{Food, FoodFillFactor},
     layering,
     name::SpeciesName,
@@ -159,7 +159,7 @@ fn eating_food(
         // Get percentage of timer complete
         let percent = eating.timer.elapsed().as_secs_f32() / eating.timer.duration().as_secs_f32();
         if let Ok((mut sprite, _, _)) = foods.get_mut(eating.target_food) {
-            sprite.color = Color::rgba(1.0, 1.0, 1.0, 1.0 - percent);
+            sprite.color = Color::srgba(1.0, 1.0, 1.0, 1.0 - percent);
         }
 
         if eating.timer.finished() {

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use bevy_turborand::{DelegatedRng, RngComponent};
 use serde::Deserialize;
 
 use crate::{

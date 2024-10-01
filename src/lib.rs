@@ -1,5 +1,4 @@
 #![feature(const_mut_refs)]
-#![feature(effects)]
 #![feature(const_trait_impl)]
 #![feature(const_for)]
 pub mod age;
@@ -42,7 +41,7 @@ use bevy_prototype_lyon::prelude::*;
 use bevy_turborand::prelude::*;
 use button_hover::ButtonHoverPlugin;
 use debug::DebugPlugin;
-use dynamic_dialogue::{DynamicDialoguePlugin, FactDb};
+use dynamic_dialogue::DynamicDialoguePlugin;
 use facts::FactsPlugin;
 use food::{template::FoodTemplatePlugin, FoodPlugin};
 use interaction::InteractionPlugin;
@@ -96,10 +95,13 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_state::<GameState>(GameState::default())
-            .insert_resource(AssetMetaCheck::Never)
-            .add_plugins((
-                DefaultPlugins.set(WindowPlugin {
+        app.add_plugins((
+            DefaultPlugins
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
+                    ..default()
+                })
+                .set(WindowPlugin {
                     primary_window: Some(Window {
                         resolution: WindowResolution::new(500.0, 700.0),
                         title: format!("{} v{}", NAME, VERSION),
@@ -109,41 +111,42 @@ impl Plugin for GamePlugin {
                     }),
                     ..default()
                 }),
-                ParallaxPlugin,
-                RngPlugin::default(),
-                AudioPlugin,
-                ShapePlugin,
-            ))
-            .add_plugins((
-                PetPlugin,
-                SardipSavePlugin,
-                SimulationPlugin,
-                AutoScrollPlugin,
-                TextDatabasePlugin,
-                ButtonHoverPlugin,
-                NamePlugin,
-                VelocityPlugin,
-                FoodTemplatePlugin,
-                InteractionPlugin,
-                MinigamePlugin,
-                MoneyPlugin,
-                PlayerPlugin,
-                AgePlugin,
-            ))
-            .add_plugins((
-                AnimePlugin,
-                ToolPlugin,
-                PoopScooperPlugin,
-                SoundsPlugin,
-                GameScenePlugin,
-                DynamicDialoguePlugin,
-                FactsPlugin,
-                ThinkingPlugin,
-                TextTranslationPlugin,
-                FoodPlugin,
-                StockMarketPlugin,
-                DipdexPlugin,
-            ));
+            ParallaxPlugin,
+            RngPlugin::default(),
+            AudioPlugin,
+            ShapePlugin,
+        ))
+        .insert_state(GameState::default())
+        .add_plugins((
+            PetPlugin,
+            SardipSavePlugin,
+            SimulationPlugin,
+            AutoScrollPlugin,
+            TextDatabasePlugin,
+            ButtonHoverPlugin,
+            NamePlugin,
+            VelocityPlugin,
+            FoodTemplatePlugin,
+            InteractionPlugin,
+            MinigamePlugin,
+            MoneyPlugin,
+            PlayerPlugin,
+            AgePlugin,
+        ))
+        .add_plugins((
+            AnimePlugin,
+            ToolPlugin,
+            PoopScooperPlugin,
+            SoundsPlugin,
+            GameScenePlugin,
+            DynamicDialoguePlugin,
+            FactsPlugin,
+            ThinkingPlugin,
+            TextTranslationPlugin,
+            FoodPlugin,
+            StockMarketPlugin,
+            DipdexPlugin,
+        ));
 
         // #[cfg(feature = "dev")]
         app.add_plugins(DebugPlugin);

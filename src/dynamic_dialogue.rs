@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{collections::HashMap, ops::Deref, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -483,13 +483,7 @@ impl<'a> FactQuery<'a> {
             return None;
         }
 
-        Some(
-            matches
-                .choose(&mut rand::thread_rng())
-                .unwrap()
-                .deref()
-                .clone(),
-        )
+        Some((*matches.choose(&mut rand::thread_rng()).unwrap()).clone())
     }
 
     pub fn single_criteria(&self, criteria: &Criteria) -> bool {
@@ -1154,7 +1148,8 @@ mod tests {
             (test_query, read_fact_inserts, apply_pending_action).chain(),
         );
 
-        app.world.spawn((TestTag, EntityFactDatabase::default()));
+        app.world_mut()
+            .spawn((TestTag, EntityFactDatabase::default()));
 
         app.update();
         app.update();

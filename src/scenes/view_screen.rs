@@ -128,20 +128,22 @@ fn setup_ui(
                     parent
                         .spawn(NodeBundle { ..default() })
                         .with_children(|parent| {
-                            parent.spawn(AtlasImageBundle {
-                                style: Style {
-                                    width: Val::Px(30.),
-                                    height: Val::Px(30.),
-                                    margin: UiRect::right(Val::Px(3.)),
+                            parent.spawn((
+                                ImageBundle {
+                                    style: Style {
+                                        width: Val::Px(30.),
+                                        height: Val::Px(30.),
+                                        margin: UiRect::right(Val::Px(3.)),
+                                        ..default()
+                                    },
+                                    image: UiImage::new(view_screen_images.top_icons.clone()),
                                     ..default()
                                 },
-                                texture_atlas: TextureAtlas {
+                                TextureAtlas {
                                     layout: view_screen_images.top_icons_layout.clone(),
                                     index: 0,
                                 },
-                                image: UiImage::new(view_screen_images.top_icons.clone()),
-                                ..default()
-                            });
+                            ));
 
                             parent.spawn((
                                 TextBundle::from_section(
@@ -194,20 +196,22 @@ fn setup_ui(
                         ButtonHover::new().with_border(palettes::view_screen::BUTTON_BORDER_SET),
                     ))
                     .with_children(|button| {
-                        button.spawn((AtlasImageBundle {
-                            style: Style {
-                                width: Val::Percent(100.),
-                                height: Val::Percent(100.),
+                        button.spawn((
+                            ImageBundle {
+                                style: Style {
+                                    width: Val::Percent(100.),
+                                    height: Val::Percent(100.),
+                                    ..default()
+                                },
+                                image: UiImage::new(view_screen_images.view_buttons.clone()),
                                 ..default()
                             },
-                            texture_atlas: TextureAtlas {
+                            TextureAtlas {
                                 layout: view_screen_images.view_buttons_layout.clone(),
                                 index: option.get_index(),
+                                ..default()
                             },
-                            background_color: BackgroundColor(Color::WHITE),
-                            image: UiImage::new(view_screen_images.view_buttons.clone()),
-                            ..default()
-                        },));
+                        ));
                     });
             }
         });

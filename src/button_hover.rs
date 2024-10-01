@@ -184,11 +184,11 @@ fn toggle_disabled_colors(
 ) {
     for (background, border) in buttons.iter_mut() {
         if let Some(mut background) = background {
-            *background = BackgroundColor(Color::DARK_GRAY);
+            *background = BackgroundColor(Color::Srgba(bevy::color::palettes::css::DARK_GRAY));
         }
 
         if let Some(mut border) = border {
-            *border = BorderColor(Color::DARK_GRAY);
+            *border = BorderColor(Color::Srgba(bevy::color::palettes::css::DARK_GRAY));
         }
     }
 }

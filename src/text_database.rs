@@ -2,7 +2,7 @@ use std::{collections::HashMap, str::FromStr};
 
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use rand::{seq::SliceRandom, Rng};
+use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 

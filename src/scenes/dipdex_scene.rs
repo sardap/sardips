@@ -1,23 +1,21 @@
-use bevy::{log::tracing_subscriber::fmt::format, prelude::*, text::TextLayoutInfo};
+use bevy::prelude::*;
 use strum::IntoEnumIterator;
 
 use crate::{
     assets::{DipdexImageAssets, FontAssets, ViewScreenImageAssets},
     button_hover::ButtonHover,
     food::preferences::FoodSensationRating,
-    interaction,
     name::SpeciesName,
     palettes,
     pet::{
         dipdex::DipdexDiscoveredEntries,
         mood::{AutoSetMoodImage, MoodCategory, MoodImages, SatisfactionRating},
-        poop::Cleanliness,
         template::{PetTemplate, PetTemplateDatabase},
     },
     player::Player,
     text_database::{
-        text_keys::{self, BACK, DIPDEX_FOOD_SENSATION_TITLE},
-        Language, TextDatabase,
+        text_keys::{self, BACK},
+        TextDatabase,
     },
     text_translation::KeyText,
     GameState,
@@ -308,7 +306,7 @@ fn make_dipdex_list_entry(
                 ..default()
             },
             border_color: BorderColor(Color::BLACK),
-            background_color: BackgroundColor(Color::DARK_GRAY),
+            background_color: BackgroundColor(Color::Srgba(bevy::color::palettes::css::DARK_GRAY)),
             ..default()
         })
         .with_children(|parent| {
@@ -320,19 +318,21 @@ fn make_dipdex_list_entry(
                 } else {
                     (Val::Auto, Val::Percent(60.))
                 };
-                parent.spawn(AtlasImageBundle {
-                    style: Style {
-                        width: w,
-                        height: h,
+                parent.spawn((
+                    ImageBundle {
+                        style: Style {
+                            width: w,
+                            height: h,
+                            ..default()
+                        },
+                        image: UiImage::new(dipdex_assets.screen_noise.clone()),
                         ..default()
                     },
-                    texture_atlas: TextureAtlas {
+                    TextureAtlas {
                         layout: template.pre_calculated.layout.clone(),
                         ..default()
                     },
-                    image: UiImage::new(template.pre_calculated.texture.clone()),
-                    ..default()
-                });
+                ));
 
                 // Spawn overlay
                 parent.spawn(ImageBundle {
@@ -342,7 +342,7 @@ fn make_dipdex_list_entry(
                         height: Val::Percent(90.),
                         ..default()
                     },
-                    background_color: BackgroundColor(Color::rgba(0., 1., 0., 0.1)),
+                    background_color: BackgroundColor(Color::srgba(0., 1., 0., 0.1)),
                     image: UiImage::new(dipdex_assets.screen_noise.clone()),
                     ..default()
                 });
@@ -622,7 +622,9 @@ fn update_dipdex_entry_view(
                         align_items: AlignItems::Center,
                         ..default()
                     },
-                    background_color: BackgroundColor(Color::GRAY),
+                    background_color: BackgroundColor(Color::Srgba(
+                        bevy::color::palettes::css::GRAY,
+                    )),
                     border_color: BorderColor(Color::BLACK),
                     ..default()
                 })
@@ -650,17 +652,17 @@ fn update_dipdex_entry_view(
                             };
 
                             parent.spawn((
-                                AtlasImageBundle {
+                                ImageBundle {
                                     style: Style {
                                         width: w,
                                         height: h,
                                         ..default()
                                     },
-                                    texture_atlas: TextureAtlas {
-                                        layout: template.pre_calculated.layout.clone(),
-                                        ..default()
-                                    },
-                                    image: UiImage::new(template.pre_calculated.texture.clone()),
+                                    image: UiImage::new(dipdex_assets.screen_noise.clone()),
+                                    ..default()
+                                },
+                                TextureAtlas {
+                                    layout: template.pre_calculated.layout.clone(),
                                     ..default()
                                 },
                                 MoodImages::new(&template.image_set.column_mood_map),
@@ -677,7 +679,7 @@ fn update_dipdex_entry_view(
                             height: Val::Percent(95.),
                             ..default()
                         },
-                        background_color: BackgroundColor(Color::rgba(0., 1., 0., 0.1)),
+                        background_color: BackgroundColor(Color::srgba(0., 1., 0., 0.1)),
                         image: UiImage::new(dipdex_assets.screen_noise.clone()),
                         ..default()
                     });
@@ -733,15 +735,17 @@ fn update_dipdex_entry_view(
                                 button,
                             ))
                             .with_children(|parent| {
-                                parent.spawn((AtlasImageBundle {
-                                    texture_atlas: TextureAtlas {
+                                parent.spawn((
+                                    ImageBundle {
+                                        image: UiImage::new(view_screen_images.moods.clone()),
+                                        ..default()
+                                    },
+                                    TextureAtlas {
                                         layout: view_screen_images.moods_layout.clone(),
                                         index: satisfaction.atlas_index(),
                                         ..default()
                                     },
-                                    image: UiImage::new(view_screen_images.moods.clone()),
-                                    ..default()
-                                },));
+                                ));
                             });
                     }
                 });

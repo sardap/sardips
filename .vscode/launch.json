@@ -9,7 +9,7 @@
             "name": "Quick Launch",
             "type": "node-terminal",
             "request": "launch",
-            "command": "cargo run --features dev",
+            "command": "cargo run --features dev --features bevy/dynamic_linking",
             "env": {
                 "RUST_LOG": "warn,sardips=debug"
             }
@@ -24,7 +24,9 @@
                     "--bin=sardips",
                     "--package=sardips",
                     "--features",
-                    "dev"
+                    "dev",
+                    "--features",
+                    "bevy/dynamic_linking"
                 ],
                 "filter": {
                     "name": "sardips",
@@ -40,7 +42,7 @@
                 "env": {
                     // platform-specific launch config overwrites (rather than merges with) existing config, so need to specify CARGO_MANIFEST_DIR again
                     "CARGO_MANIFEST_DIR": "${workspaceFolder}",
-                    "LD_LIBRARY_PATH": "${env:LD_LIBRARY_PATH}:${workspaceFolder}/target/debug:${env:HOME}/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib:${env:HOME}/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib"
+                    "LD_LIBRARY_PATH": "${env:LD_LIBRARY_PATH}:${workspaceFolder}/target/debug:${workspaceFolder}/target/debug/deps:${env:HOME}/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib:${env:HOME}/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib"
                 }
             }
         },
@@ -66,7 +68,7 @@
             "cwd": "${workspaceFolder}",
             "env": {
                 "CARGO_MANIFEST_DIR": "${workspaceFolder}",
-                "LD_LIBRARY_PATH": "${env:LD_LIBRARY_PATH}:${workspaceFolder}/target/debug:${env:HOME}/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib:${env:HOME}/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib"
+                "LD_LIBRARY_PATH": "${env:LD_LIBRARY_PATH}:${workspaceFolder}/target/debug:${workspaceFolder}/target/debug/deps:${env:HOME}/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/lib:${env:HOME}/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib"
             }
         }
     ]

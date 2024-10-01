@@ -325,7 +325,7 @@ mod test {
                 kind,
                 possible_evolutions: vec![],
                 image_set: PetTemplateImageSet::default(),
-                size: TemplateSize::XY(1.0, 1.0),
+                size: TemplateSize::XY(1, 1),
                 speed: TemplateSpeed::Medium,
                 breeds: false,
                 stomach: None,

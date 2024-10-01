@@ -1,7 +1,6 @@
 use core::fmt;
 
 use bevy::prelude::*;
-use bevy_turborand::RngComponent;
 use serde::{Deserialize, Serialize};
 
 use crate::{assets::FontAssets, text_database::TextDatabase, text_translation::KeyText};

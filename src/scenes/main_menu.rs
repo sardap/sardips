@@ -42,7 +42,7 @@ fn setup_background(mut commands: Commands, mut create_parallax: EventWriter<Cre
         layers_data: vec![LayerData {
             speed: LayerSpeed::Bidirectional(0.9, 0.9),
             path: assets::BackgroundTexturesAssets::MENU_BACKGROUND.to_string(),
-            tile_size: Vec2::new(53.0, 53.0),
+            tile_size: UVec2::new(53, 53),
             cols: 1,
             rows: 1,
             scale: Vec2::splat(1.0),
@@ -130,7 +130,7 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
             TextStyle {
                 font: fonts.main_font.clone(),
                 font_size: 50.0,
-                color: Color::DARK_GREEN,
+                color: bevy::color::palettes::css::DARK_GREEN.into(),
                 ..default()
             },
         )

@@ -51,7 +51,7 @@ AssetPetTemplateSet(
 
                 },
             ),
-            size: X(40.),
+            size: X(40),
             speed: Slow,
             breeds: false,
             stomach: Some(TemplateStomach(

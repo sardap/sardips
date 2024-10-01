@@ -1,6 +1,6 @@
-use std::{collections::HashSet, path::Path};
+use std::path::Path;
 
-use bevy::{prelude::*, text};
+use bevy::prelude::*;
 use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -20,7 +20,7 @@ use crate::{
         hunger::Hunger,
         mood::{Mood, MoodCategoryHistory},
         poop::{poop_scale, spawn_poop, Cleanliness, Poop, Pooper},
-        template::{PetTemplateDatabase, SpawnPetEvent},
+        template::SpawnPetEvent,
         Pet, PetKind,
     },
     player::Player,

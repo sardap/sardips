@@ -71,8 +71,8 @@ fn load_templates(
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PetTemplateImageSet {
     pub sprite_sheet: String,
-    pub tile_size: (f32, f32),
-    pub columns: usize,
+    pub tile_size: (u32, u32),
+    pub columns: u32,
     pub column_mood_map: HashMap<MoodCategory, u32>,
 }
 
@@ -227,29 +227,31 @@ fn default_breeds() -> bool {
 
 #[derive(Serialize, Deserialize)]
 pub enum TemplateSize {
-    X(f32),
-    Y(f32),
-    XY(f32, f32),
+    X(u32),
+    Y(u32),
+    XY(u32, u32),
 }
 
 impl TemplateSize {
-    pub fn vec2(&self, image_size: (f32, f32)) -> Vec2 {
+    pub fn vec2(&self, image_size: (u32, u32)) -> Vec2 {
         match self {
             TemplateSize::X(x) => {
-                let ratio = x / image_size.0;
-                let y = image_size.1 * ratio;
+                let x = *x as f32;
+                let ratio = x / image_size.0 as f32;
+                let y = image_size.1 as f32 * ratio;
 
-                Vec2::new(*x, y)
+                Vec2::new(x, y)
             }
             TemplateSize::Y(y) => {
+                let y = *y as f32;
                 let max = y.max(image_size.1 as f32);
                 let min = y.min(image_size.1 as f32);
                 let ratio = min / max;
-                let x = image_size.0 * ratio;
+                let x = image_size.0 as f32 * ratio;
 
-                Vec2::new(x, *y)
+                Vec2::new(x, y)
             }
-            TemplateSize::XY(x, y) => Vec2::new(*x, *y),
+            TemplateSize::XY(x, y) => Vec2::new(*x as f32, *y as f32),
         }
     }
 }
@@ -425,17 +427,17 @@ impl PetTemplate {
                 mood_category_history: saved.mood_history.clone(),
                 fact_db: saved.fact_db.clone(),
                 kind: saved.kind.clone(),
-                sprite: SpriteSheetBundle {
+                sprite: SpriteBundle {
                     transform,
                     sprite: Sprite {
                         custom_size: Some(custom_size.clone()),
                         ..default()
                     },
-                    atlas: TextureAtlas {
-                        layout: self.pre_calculated.layout.clone(),
-                        ..default()
-                    },
                     texture: self.pre_calculated.texture.clone(),
+                    ..default()
+                },
+                atlas: TextureAtlas {
+                    layout: self.pre_calculated.layout.clone(),
                     ..default()
                 },
                 speed: saved.speed.clone(),
@@ -528,7 +530,7 @@ impl PetTemplateDatabase {
     ) {
         for (i, template) in self.templates.iter_mut().enumerate() {
             let layout = TextureAtlasLayout::from_grid(
-                Vec2::new(
+                UVec2::new(
                     template.image_set.tile_size.0,
                     template.image_set.tile_size.1,
                 ),

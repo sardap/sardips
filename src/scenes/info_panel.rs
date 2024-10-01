@@ -272,15 +272,20 @@ pub fn create_info_panel(
                                     PetInfoPanelReadyToBreedImage,
                                 ))
                                 .with_children(|parent| {
-                                    parent.spawn(AtlasImageBundle {
-                                        style: SMALL_ICON_STYLE.clone(),
-                                        texture_atlas: TextureAtlas {
+                                    parent.spawn((
+                                        ImageBundle {
+                                            style: SMALL_ICON_STYLE.clone(),
+                                            image: UiImage::new(
+                                                view_screen_images.mood_icons.clone(),
+                                            ),
+                                            ..default()
+                                        },
+                                        TextureAtlas {
                                             layout: view_screen_images.mood_icons_layout.clone(),
                                             index: 5,
+                                            ..default()
                                         },
-                                        image: UiImage::new(view_screen_images.mood_icons.clone()),
-                                        ..default()
-                                    });
+                                    ));
                                 });
 
                             spawn_panel::<PetInfoPanelOverallMood, PetInfoPanelOverallMoodImage>(
@@ -414,24 +419,27 @@ fn spawn_panel<T: Component + Default, J: Component + Default>(
             T::default(),
         ))
         .with_children(|parent| {
-            parent.spawn(AtlasImageBundle {
-                style: SMALL_ICON_STYLE.clone(),
-                texture_atlas: TextureAtlas {
-                    layout: view_screen_images.mood_icons_layout.clone(),
-                    index: icon_index,
+            parent.spawn((
+                ImageBundle {
+                    style: SMALL_ICON_STYLE.clone(),
+                    image: UiImage::new(view_screen_images.mood_icons.clone()),
+                    ..default()
                 },
-                image: UiImage::new(view_screen_images.mood_icons.clone()),
-                ..default()
-            });
+                TextureAtlas {
+                    layout: view_screen_images.moods_layout.clone(),
+                    index: icon_index,
+                    ..default()
+                },
+            ));
 
             parent.spawn((
-                AtlasImageBundle {
+                ImageBundle {
                     style: SMALL_ICON_STYLE.clone(),
-                    texture_atlas: TextureAtlas {
-                        layout: view_screen_images.moods_layout.clone(),
-                        ..default()
-                    },
                     image: UiImage::new(view_screen_images.moods.clone()),
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: view_screen_images.moods_layout.clone(),
                     ..default()
                 },
                 J::default(),
@@ -455,7 +463,7 @@ fn update_info_panel(
         // Update name tags
         if let Ok(has_name_tag) = has_name_tag.get(event.entity) {
             if let Ok((_, mut text)) = name_tags.get_mut(has_name_tag.name_tag_entity) {
-                text.color = Color::RED;
+                text.color = Color::Srgba(bevy::color::palettes::css::RED);
             }
         }
 

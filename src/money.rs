@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct MoneyPlugin;
 
 impl Plugin for MoneyPlugin {
-    fn build(&self, app: &mut App) {}
+    fn build(&self, _: &mut App) {}
 }
 
 pub type Money = i32;

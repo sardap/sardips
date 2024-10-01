@@ -2,13 +2,11 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_turborand::{DelegatedRng, RngComponent};
 
 use crate::{
-    dynamic_dialogue::{self, FactDb},
     food::{
         preferences::{FoodPreference, FoodSensationRating},
         Food, FoodSensations,
     },
     name::EntityName,
-    thinking::TryThinkEvent,
     SimulationState,
 };
 

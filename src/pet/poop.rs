@@ -107,17 +107,17 @@ pub fn spawn_poop(
 
     commands
         .spawn((
-            SpriteSheetBundle {
+            SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(64., 50.)),
                     ..default()
                 },
                 transform: Transform::from_translation(Vec3::new(0., size_half, 0.)),
-                atlas: TextureAtlas {
-                    layout: game_image_assets.stink_line_layout.clone(),
-                    ..default()
-                },
                 texture: game_image_assets.stink_lines.clone(),
+                ..default()
+            },
+            TextureAtlas {
+                layout: game_image_assets.stink_line_layout.clone(),
                 ..default()
             },
             AnimeBundle {

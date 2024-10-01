@@ -1,4 +1,4 @@
-use bevy::render::color::Color;
+use bevy::color::Color;
 
 #[macro_export]
 macro_rules! rgb_to_color {
@@ -8,7 +8,12 @@ macro_rules! rgb_to_color {
         let normalized_g = $g as f32 / 255.0;
         let normalized_b = $b as f32 / 255.0;
 
-        bevy::render::color::Color::rgb(normalized_r, normalized_g, normalized_b)
+        bevy::color::Color::Srgba(bevy::color::Srgba {
+            red: normalized_r,
+            green: normalized_g,
+            blue: normalized_b,
+            alpha: 1.0,
+        })
     }};
 }
 
@@ -37,18 +42,21 @@ pub const OFF_WHITE: Color = rgb_to_color!(245, 245, 240);
 pub const LIGHT_DARK_GREEN: Color = rgb_to_color!(90, 132, 90);
 
 pub mod ui {
-    use bevy::render::color::Color;
+    use bevy::color::Color;
 
     use crate::button_hover::ButtonColorSet;
 
     pub const BUTTON_SET: ButtonColorSet =
         ButtonColorSet::new(super::PALE_PINK, super::VERY_LIGHT_PINK_RED, Color::WHITE);
-    pub const BUTTON_BORDER_SET: ButtonColorSet =
-        ButtonColorSet::new(super::LIGHT_PINK, Color::WHITE, Color::LIME_GREEN);
+    pub const BUTTON_BORDER_SET: ButtonColorSet = ButtonColorSet::new(
+        super::LIGHT_PINK,
+        Color::WHITE,
+        Color::Srgba(bevy::color::palettes::css::LIMEGREEN),
+    );
 }
 
 pub mod view_screen {
-    use bevy::render::color::Color;
+    use bevy::color::Color;
 
     use crate::button_hover::ButtonColorSet;
 
@@ -63,12 +71,12 @@ pub mod view_screen {
     pub const BUTTON_BORDER_SET: ButtonColorSet = ButtonColorSet::new(
         STATUS_BAR_BORDER,
         super::VERY_LIGHT_PINK_RED,
-        Color::LIME_GREEN,
+        Color::Srgba(bevy::color::palettes::css::LIMEGREEN),
     );
 }
 
 pub mod minigame_select {
-    use bevy::render::color::Color;
+    use bevy::color::Color;
 
     use crate::button_hover::ButtonColorSet;
 
@@ -84,7 +92,7 @@ pub mod minigame_select {
 }
 
 pub mod dipdex_view {
-    use bevy::render::color::Color;
+    use bevy::color::Color;
 
     use crate::button_hover::ButtonColorSet;
 
@@ -96,13 +104,13 @@ pub mod dipdex_view {
         super::MEDIUM_SPRING_GREEN,
         super::PASTEL_GREEN,
     )
-    .with_disabled(Color::GRAY);
+    .with_disabled(Color::Srgba(bevy::color::palettes::css::GRAY));
     pub const BUTTON_ENTRY_BORDER_SET: ButtonColorSet = ButtonColorSet::new(
         super::VERY_LIGHT_GREEN,
         Color::WHITE,
         super::VERY_LIGHT_GREEN,
     )
-    .with_disabled(Color::DARK_GRAY);
+    .with_disabled(Color::Srgba(bevy::color::palettes::css::DARK_GRAY));
 
     pub const BUTTON_SET: ButtonColorSet = ButtonColorSet::new(
         super::PALE_PINK,

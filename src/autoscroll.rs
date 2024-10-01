@@ -28,7 +28,8 @@ pub fn auto_scroll_system(
     for (camera, auto_scroll) in query.iter() {
         move_event_writer.send(ParallaxMoveEvent {
             camera,
-            camera_move_speed: auto_scroll.speed * time.delta_seconds(),
+            translation: auto_scroll.speed * time.delta_seconds(),
+            rotation: 0.,
         });
     }
 }

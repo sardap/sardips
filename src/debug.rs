@@ -1,22 +1,17 @@
 use std::{collections::HashMap, str::FromStr};
 
-use bevy::{
-    input::keyboard::{Key, NativeKeyCode},
-    prelude::*,
-};
+use bevy::prelude::*;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
 use crate::{
     food::{template::FoodTemplateDatabase, Food, SpawnFoodEvent},
-    money::Wallet,
     pet::{
         dipdex::DipdexDiscoveredEntries,
         template::{PetTemplateDatabase, SpawnPetEvent},
         Pet,
     },
-    player::Player,
-    simulation::{SimTimeScale, SimulationState},
+    simulation::SimTimeScale,
     text_database::Language,
     text_translation::SelectedLanguageTag,
     GameState,
@@ -29,7 +24,7 @@ impl Plugin for DebugPlugin {
         // Sim time scale
         app.insert_state(DevConsoleState::default())
             .add_event::<DevConsoleCommand>()
-            .add_systems(OnExit(GameState::Loading), (setup_debug_text))
+            .add_systems(OnExit(GameState::Loading), setup_debug_text)
             .add_systems(
                 Update,
                 (
@@ -65,12 +60,12 @@ fn setup_debug_text(mut commands: Commands) {
 
     let title_text_style = TextStyle {
         font_size: SIZE,
-        color: Color::DARK_GREEN,
+        color: Color::Srgba(bevy::color::palettes::css::DARK_GREEN),
         ..default()
     };
     let value_text_style = TextStyle {
         font_size: SIZE,
-        color: Color::GREEN,
+        color: Color::Srgba(bevy::color::palettes::css::GREEN),
         ..default()
     };
 
@@ -108,35 +103,6 @@ fn update_sim_time_scale_debug_text(
     debug_text.sections[SIM_TIME_TEXT_SECTION as usize].value = format!("{:.1}", sim_time_scale.0);
 }
 
-fn change_language(
-    mut language: Query<&mut Language, With<SelectedLanguageTag>>,
-    buttons: Res<ButtonInput<KeyCode>>,
-) {
-    if buttons.just_pressed(KeyCode::KeyL) {
-        let mut selected_language = language.single_mut();
-
-        let languages = Language::iter().collect::<Vec<_>>();
-        // Find the current language index
-        let current_language_index = languages
-            .iter()
-            .position(|&lang| lang == *selected_language)
-            .unwrap();
-        // Cycle to the next language
-        let next_language_index = (current_language_index + 1) % languages.len();
-        *selected_language = languages[next_language_index];
-    }
-}
-
-fn free_money(
-    mut wallet: Query<&mut Wallet, With<Player>>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-) {
-    if keyboard_input.just_pressed(KeyCode::KeyM) {
-        let mut wallet = wallet.single_mut();
-        wallet.balance += 1000;
-    }
-}
-
 // Dev console
 fn toggle_dev_console(
     mut next_state: ResMut<NextState<DevConsoleState>>,
@@ -172,10 +138,6 @@ struct DevConsoleHistory {
 }
 
 impl DevConsoleHistory {
-    pub fn push_user_input(&mut self, input: String) {
-        self.history.push(DevConsoleHistoryEntry::UserInput(input));
-    }
-
     pub fn push_command_output(&mut self, output: String) {
         self.history
             .push(DevConsoleHistoryEntry::CommandOutput(output));
@@ -201,7 +163,7 @@ fn spawn_dev_console(mut commands: Commands) {
                     border: UiRect::top(Val::Px(5.)),
                     ..default()
                 },
-                background_color: BackgroundColor(Color::rgba(0., 0., 0., 0.75)),
+                background_color: BackgroundColor(Color::srgba(0., 0., 0., 0.75)),
                 border_color: BorderColor(Color::BLACK),
                 ..default()
             },
@@ -214,7 +176,7 @@ fn spawn_dev_console(mut commands: Commands) {
                         "",
                         TextStyle {
                             font_size: 20.0,
-                            color: Color::GREEN,
+                            color: Color::Srgba(bevy::color::palettes::css::GREEN),
                             ..default()
                         },
                     ),
@@ -222,7 +184,7 @@ fn spawn_dev_console(mut commands: Commands) {
                         "",
                         TextStyle {
                             font_size: 20.0,
-                            color: Color::GREEN,
+                            color: Color::Srgba(bevy::color::palettes::css::DARK_GRAY),
                             ..default()
                         },
                     ),
@@ -230,7 +192,7 @@ fn spawn_dev_console(mut commands: Commands) {
                         "",
                         TextStyle {
                             font_size: 20.0,
-                            color: Color::GREEN,
+                            color: Color::Srgba(bevy::color::palettes::css::GREEN),
                             ..default()
                         },
                     ),
@@ -238,7 +200,7 @@ fn spawn_dev_console(mut commands: Commands) {
                         "",
                         TextStyle {
                             font_size: 20.0,
-                            color: Color::GREEN,
+                            color: Color::Srgba(bevy::color::palettes::css::GREEN),
                             ..default()
                         },
                     ),
@@ -253,7 +215,7 @@ fn spawn_dev_console(mut commands: Commands) {
                         "",
                         TextStyle {
                             font_size: 20.0,
-                            color: Color::GREEN,
+                            color: Color::Srgba(bevy::color::palettes::css::GREEN),
                             ..default()
                         },
                     ),
@@ -261,7 +223,7 @@ fn spawn_dev_console(mut commands: Commands) {
                         "",
                         TextStyle {
                             font_size: 20.0,
-                            color: Color::LIME_GREEN,
+                            color: Color::Srgba(bevy::color::palettes::css::LIMEGREEN),
                             ..default()
                         },
                     ),
@@ -312,7 +274,7 @@ fn update_dev_console_text(
         match entry {
             DevConsoleHistoryEntry::UserInput(input) => {
                 text.sections[i].value = input.clone();
-                text.sections[i].style.color = Color::DARK_GREEN;
+                text.sections[i].style.color = Color::Srgba(bevy::color::palettes::css::DARK_GREEN);
             }
             DevConsoleHistoryEntry::CommandOutput(output) => {
                 text.sections[i].value = output.clone();
