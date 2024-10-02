@@ -118,11 +118,16 @@ jobs:
     needs: get-version
     env:
       VERSION: ${{needs.get-version.outputs.version}}
-      NUGET_VERSION: ${{ needs.get-version.outputs.version && needs.get-version.outputs.version.startsWith('v') && format('{0}', needs.get-version.outputs.version[1:]) || needs.get-version.outputs.version }}
       BUILD_INSTALLER: ${{ false }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: Set NUGET_VERSION without 'v' prefix
+        run: |
+          NUGET_VERSION=${VERSION#v}
+          echo "NUGET_VERSION=$NUGET_VERSION" >> $GITHUB_ENV
+        env:
+          VERSION: ${{ needs.get-version.outputs.version }}
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
