@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use regex::Regex;
 
 use crate::{
     text_database::{Language, TextDatabase},
@@ -25,9 +26,74 @@ fn setup(mut commands: Commands) {
 #[derive(Component)]
 pub struct SelectedLanguageTag;
 
+#[derive(PartialEq, Eq)]
+pub enum KeyString {
+    Direct(String),
+    Format(String),
+}
+
+lazy_static! {
+    static ref FORMAT_RE: Regex = Regex::new(r"~(.*?)~").unwrap();
+}
+
+impl KeyString {
+    pub fn resolve_string(&self, text_database: &TextDatabase, language: Language) -> String {
+        match self {
+            KeyString::Direct(key) => text_database.get(language, key),
+            KeyString::Format(str) => {
+                let result = FORMAT_RE
+                    .replace_all(str, |caps: &regex::Captures| {
+                        let key = caps.get(1).unwrap().as_str();
+                        text_database.get(language, key)
+                    })
+                    .to_string();
+                result
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::text_database::{Language, TextDatabase};
+
+    #[test]
+    fn test_resolve_format_string() {
+        let mut text_db = TextDatabase::default();
+        text_db.values.insert(
+            Language::English,
+            vec![
+                ("global.foo".to_string(), "foo".to_string()),
+                ("global.bar".to_string(), "bar".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+        );
+        text_db.values.insert(
+            Language::Korean,
+            vec![("global.bar".to_string(), "바".to_string())]
+                .into_iter()
+                .collect(),
+        );
+
+        let string = "~global.foo~: ~global.bar~";
+
+        let key_string = super::KeyString::Format(string.to_string());
+
+        assert_eq!(
+            key_string.resolve_string(&text_db, Language::English),
+            "foo: bar"
+        );
+        assert_eq!(
+            key_string.resolve_string(&text_db, Language::Korean),
+            "foo: 바"
+        );
+    }
+}
+
 #[derive(Component, Default)]
 pub struct KeyText {
-    pub keys: HashMap<usize, String>,
+    pub keys: HashMap<usize, KeyString>,
 }
 
 impl KeyText {
@@ -38,12 +104,17 @@ impl KeyText {
     }
 
     pub fn with<T: ToString>(mut self, index: usize, key: T) -> Self {
-        self.keys.insert(index, key.to_string());
+        self.keys.insert(index, KeyString::Direct(key.to_string()));
+        self
+    }
+
+    pub fn with_format<T: ToString>(mut self, index: usize, str: T) -> Self {
+        self.keys.insert(index, KeyString::Format(str.to_string()));
         self
     }
 
     pub fn set<T: ToString>(&mut self, index: usize, key: T) {
-        self.keys.insert(index, key.to_string());
+        self.keys.insert(index, KeyString::Direct(key.to_string()));
     }
 }
 
@@ -59,7 +130,7 @@ fn translate_text(
         if let Ok(mut text) = text.get_mut(entity) {
             for (i, section) in text.sections.iter_mut().enumerate() {
                 if let Some(key) = key_text.keys.get(&i) {
-                    section.value = text_database.get(*selected_language, key);
+                    section.value = key.resolve_string(&text_database, *selected_language);
                 }
             }
         }
@@ -72,18 +143,18 @@ fn language_changed(
     mut text: Query<&mut Text>,
     keys: Query<(Entity, &KeyText)>,
 ) {
-    let language = match changed_languages.get_single() {
+    let selected_language = match changed_languages.get_single() {
         Ok(language) => *language,
         Err(_) => return,
     };
 
-    debug!("Language changed to {:?}", language);
+    debug!("Language changed to {:?}", selected_language);
 
     for (entity, key) in &keys {
         if let Ok(mut text) = text.get_mut(entity) {
             for (i, section) in text.sections.iter_mut().enumerate() {
                 if let Some(key) = key.keys.get(&i) {
-                    section.value = text_database.get(language, key);
+                    section.value = key.resolve_string(&text_database, selected_language);
                 }
             }
         }

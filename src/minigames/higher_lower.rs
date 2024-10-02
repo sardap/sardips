@@ -108,7 +108,7 @@ fn setup_camera(mut commands: Commands, mut create_parallax: EventWriter<CreateP
         layers_data: vec![LayerData {
             speed: LayerSpeed::Horizontal(0.5),
             path: assets::HigherLowerAssets::BACKGROUND.to_string(),
-            tile_size: Vec2::new(30.0, 30.0),
+            tile_size: UVec2::new(30, 30),
             cols: 1,
             rows: 1,
             scale: Vec2::splat(1.0),
@@ -147,17 +147,17 @@ fn setup_game(
 
     commands
         .spawn((
-            SpriteSheetBundle {
+            SpriteBundle {
                 transform: Transform::from_translation(Vec3::new(0., -50., 0.)),
                 sprite: Sprite {
                     custom_size: sprite.custom_size,
                     ..default()
                 },
                 texture: image.clone(),
-                atlas: atlas.clone(),
                 ..default()
             },
-            mood_images.clone(),
+            atlas.clone(),
+            *mood_images,
             MoodCategory::Neutral,
             AutoSetMoodImage,
             RenderLayers::layer(1),
@@ -176,13 +176,13 @@ fn setup_game(
                 ))
                 .with_children(|parent| {
                     parent.spawn((
-                        SpriteSheetBundle {
+                        SpriteBundle {
                             transform: Transform::from_translation(Vec3::new(0., 60., 2.)),
                             texture: assets.sprites.clone(),
-                            atlas: TextureAtlas {
-                                layout: assets.layout.clone(),
-                                ..default()
-                            },
+                            ..default()
+                        },
+                        TextureAtlas {
+                            layout: assets.layout.clone(),
                             ..default()
                         },
                         RenderLayers::layer(1),
@@ -232,14 +232,18 @@ fn setup_game(
                             },
                             ..default()
                         },
-                        ButtonHover::new()
+                        ButtonHover::default()
                             .with_background(
-                                ButtonColorSet::new(Color::BEIGE, Color::WHITE, Color::BEIGE)
-                                    .with_disabled(Color::GRAY),
+                                ButtonColorSet::new(
+                                    Color::Srgba(bevy::color::palettes::css::BEIGE),
+                                    Color::WHITE,
+                                    Color::Srgba(bevy::color::palettes::css::BEIGE),
+                                )
+                                .with_disabled(Color::Srgba(bevy::color::palettes::css::GRAY)),
                             )
                             .with_border(
                                 ButtonColorSet::new(Color::BLACK, Color::WHITE, Color::WHITE)
-                                    .with_disabled(Color::GRAY),
+                                    .with_disabled(Color::Srgba(bevy::color::palettes::css::GRAY)),
                             ),
                         TargetNumber(number),
                     ))
@@ -251,7 +255,6 @@ fn setup_game(
                                     font: fonts.main_font.clone(),
                                     color: Color::BLACK,
                                     font_size: 30.,
-                                    ..default()
                                 },
                             ),
                             ..default()
@@ -307,13 +310,13 @@ fn update_buttons(
     for (target, mut background, mut border, guessed) in buttons.iter_mut() {
         // Should be grey if never guessed
         if target.0 == goal.0 {
-            *background = BackgroundColor(Color::GREEN);
-            *border = BorderColor(Color::DARK_GREEN);
+            *background = BackgroundColor(Color::Srgba(bevy::color::palettes::css::GREEN));
+            *border = BorderColor(Color::Srgba(bevy::color::palettes::css::DARK_GREEN));
         } else if guessed.is_some() {
-            *background = BackgroundColor(Color::RED);
-            *border = BorderColor(Color::ORANGE_RED);
+            *background = BackgroundColor(Color::Srgba(bevy::color::palettes::css::RED));
+            *border = BorderColor(Color::Srgba(bevy::color::palettes::css::ORANGE_RED));
         } else {
-            *background = BackgroundColor(Color::GRAY);
+            *background = BackgroundColor(Color::Srgba(bevy::color::palettes::css::GRAY));
             *border = BorderColor(Color::WHITE);
         }
     }
@@ -447,7 +450,7 @@ fn setup_game_over(
             } else {
                 assets::HigherLowerAssets::LOSE_BACKGROUND.to_string()
             },
-            tile_size: Vec2::new(30.0, 30.0),
+            tile_size: UVec2::new(30, 30),
             cols: 1,
             rows: 1,
             scale: Vec2::splat(1.0),

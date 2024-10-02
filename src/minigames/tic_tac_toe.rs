@@ -74,7 +74,7 @@ fn setup_camera(mut commands: Commands, mut create_parallax: EventWriter<CreateP
         layers_data: vec![LayerData {
             speed: LayerSpeed::Vertical(0.5),
             path: assets::TicTacToeAssets::BACKGROUND.to_string(),
-            tile_size: Vec2::new(30.0, 30.0),
+            tile_size: UVec2::new(30, 30),
             cols: 1,
             rows: 1,
             scale: Vec2::splat(1.0),
@@ -113,18 +113,18 @@ fn setup_game(
         ))
         .with_children(|parent| {
             parent.spawn((
-                AtlasImageBundle {
+                ImageBundle {
                     style: Style {
                         width: Val::Px(80.),
                         margin: UiRect::bottom(Val::Px(50.)),
                         ..default()
                     },
-                    texture_atlas: atlas.clone(),
                     image: UiImage::new(image.clone()),
                     ..default()
                 },
+                atlas.clone(),
                 UiPetImage,
-                mood_images.clone(),
+                *mood_images,
                 MoodCategory::Neutral,
                 AutoSetMoodImage,
             ));
@@ -162,27 +162,27 @@ fn setup_game(
                                     },
                                     ..default()
                                 },
-                                ButtonHover::new().with_background(ButtonColorSet::new(
-                                    Color::BEIGE,
+                                ButtonHover::default().with_background(ButtonColorSet::new(
+                                    Color::Srgba(bevy::color::palettes::css::BEIGE),
                                     Color::WHITE,
-                                    Color::BEIGE,
+                                    Color::Srgba(bevy::color::palettes::css::BEIGE),
                                 )),
                                 SquareButton(square),
                             ))
                             .with_children(|parent| {
                                 parent.spawn((
-                                    AtlasImageBundle {
+                                    ImageBundle {
+                                        image: UiImage::new(assets.sprites.clone()),
                                         style: Style {
                                             width: Val::Percent(100.0),
                                             height: Val::Percent(100.0),
                                             ..default()
                                         },
-                                        texture_atlas: TextureAtlas {
-                                            layout: assets.layout.clone(),
-                                            index: 0,
-                                        },
-                                        image: UiImage::new(assets.sprites.clone()),
                                         ..default()
+                                    },
+                                    TextureAtlas {
+                                        layout: assets.layout.clone(),
+                                        index: 0,
                                     },
                                     SquareImage,
                                 ));
@@ -269,7 +269,7 @@ fn setup_game_over(
                     Side::O => assets::TicTacToeAssets::LOSE_BACKGROUND.to_string(),
                 },
             },
-            tile_size: Vec2::new(30.0, 30.0),
+            tile_size: UVec2::new(30, 30),
             cols: 1,
             rows: 1,
             scale: Vec2::splat(1.0),
@@ -292,7 +292,9 @@ fn setup_game_over(
                     border: UiRect::all(Val::Px(5.)),
                     ..default()
                 },
-                background_color: BackgroundColor(Color::ANTIQUE_WHITE),
+                background_color: BackgroundColor(Color::Srgba(
+                    bevy::color::palettes::css::ANTIQUE_WHITE,
+                )),
                 border_color: BorderColor(Color::BLACK),
                 ..default()
             },))
@@ -304,7 +306,6 @@ fn setup_game_over(
                             font: fonts.main_font.clone(),
                             font_size: 60.,
                             color: Color::BLACK,
-                            ..default()
                         },
                     )]),
                     KeyText::new().with(
@@ -354,10 +355,10 @@ fn update_board(
 
     *board_border = BorderColor(match game.status {
         BoardStatus::InProgress => Color::BLACK,
-        BoardStatus::Draw => Color::ORANGE,
+        BoardStatus::Draw => Color::Srgba(bevy::color::palettes::css::ORANGE),
         BoardStatus::Win(info) => match info.side {
-            Side::X => Color::DARK_GREEN,
-            Side::O => Color::TOMATO,
+            Side::X => Color::Srgba(bevy::color::palettes::css::DARK_GREEN),
+            Side::O => Color::Srgba(bevy::color::palettes::css::TOMATO),
         },
     });
 
@@ -373,8 +374,8 @@ fn update_board(
             if *win_board & *BitBoard::from_square(button.0) != 0 {
                 *background_color = BackgroundColor(match game.status {
                     BoardStatus::Win(info) => match info.side {
-                        Side::X => Color::LIME_GREEN,
-                        Side::O => Color::RED,
+                        Side::X => Color::Srgba(bevy::color::palettes::css::LIMEGREEN),
+                        Side::O => Color::Srgba(bevy::color::palettes::css::RED),
                     },
                     _ => Color::BLACK,
                 });
@@ -519,7 +520,7 @@ enum Side {
 }
 
 impl Side {
-    fn to_index(&self) -> usize {
+    fn to_index(self) -> usize {
         match self {
             Side::X => 0,
             Side::O => 1,
@@ -736,12 +737,16 @@ fn best_moves(board: &Board) -> Vec<Square> {
     for square in moves.iter() {
         let new_board = board.make_move_new(*square);
         let score = -nega_max(&new_board, 9);
-        if score > best_rating {
-            best_moves.clear();
-            best_rating = score;
-            best_moves.push(*square);
-        } else if score == best_rating {
-            best_moves.push(*square);
+        match score.cmp(&best_rating) {
+            std::cmp::Ordering::Greater => {
+                best_moves.clear();
+                best_rating = score;
+                best_moves.push(*square);
+            }
+            std::cmp::Ordering::Equal => {
+                best_moves.push(*square);
+            }
+            _ => {}
         }
     }
 

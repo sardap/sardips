@@ -1,20 +1,19 @@
 use bevy::prelude::*;
-use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use bevy_turborand::{DelegatedRng, RngComponent};
 use serde::Deserialize;
 
 use crate::{
     age::Age,
-    dynamic_dialogue::{
-        Concept, Criteria, Criterion, EntityFactDatabase, FactQuery, GlobalFactDatabase,
-    },
+    dynamic_dialogue::{Concept, Criteria, Criterion, FactQuery},
+    facts::{EntityFactDatabase, GlobalFactDatabase},
     name::{EntityName, SpeciesName},
     simulation::{SimulationState, SimulationUpdate},
 };
 
 use super::{
     mood::MoodCategoryHistory,
-    template::{EvolvingPet, PetTemplateDatabase},
-    Pet,
+    template::{EvolvingPet, PetTemplateDatabase, SpawnPetEvent},
+    Pet, PetKind,
 };
 
 pub struct EvolvePlugin;
@@ -72,7 +71,13 @@ fn check_evolve(
     global_fact_db: Res<GlobalFactDatabase>,
     pet_template_db: Res<PetTemplateDatabase>,
     mut possible_evolvers: Query<
-        (Entity, &SpeciesName, &EntityFactDatabase, &mut RngComponent),
+        (
+            Entity,
+            &SpeciesName,
+            &EntityFactDatabase,
+            &mut RngComponent,
+            &PetKind,
+        ),
         (With<Pet>, Without<ShouldEvolve>),
     >,
 ) {
@@ -80,8 +85,8 @@ fn check_evolve(
         return;
     }
 
-    for (entity, species_name, entity_fact_db, mut rng) in possible_evolvers.iter_mut() {
-        let template = pet_template_db.get(&species_name.0).unwrap();
+    for (entity, species_name, entity_fact_db, mut rng, pet_kind) in possible_evolvers.iter_mut() {
+        let template = pet_template_db.get_by_name(&species_name.0).unwrap();
 
         let fact_query = FactQuery::new(Concept::Evolve)
             .add_fact_db(&global_fact_db.0)
@@ -89,8 +94,12 @@ fn check_evolve(
 
         for possible_evolution in &template.possible_evolutions {
             if fact_query.single_criteria(&possible_evolution.criteria()) {
-                let selected =
-                    &possible_evolution.species[rng.usize(0..possible_evolution.species.len())];
+                let selected = if *pet_kind == PetKind::Blob {
+                    let starters: Vec<_> = pet_template_db.iter().filter(|t| t.starter).collect();
+                    &starters[rng.usize(0..starters.len())].species_name
+                } else {
+                    &possible_evolution.species[rng.usize(0..possible_evolution.species.len())]
+                };
 
                 commands.entity(entity).insert(ShouldEvolve::new(selected));
             }
@@ -99,10 +108,7 @@ fn check_evolve(
 }
 
 fn evolve_pending(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut global_rng: ResMut<GlobalRng>,
-    mut text_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut spawn_pets: EventWriter<SpawnPetEvent>,
     evolvers: Query<
         (
             Entity,
@@ -115,7 +121,6 @@ fn evolve_pending(
         ),
         With<Pet>,
     >,
-    pet_template_db: Res<PetTemplateDatabase>,
 ) {
     for (entity, should_evolve, transform, entity_name, age, mood_history, fact_db) in
         evolvers.iter()
@@ -126,8 +131,6 @@ fn evolve_pending(
             should_evolve.species
         );
 
-        let template = pet_template_db.get(&should_evolve.species).unwrap();
-
         let evolve = EvolvingPet {
             entity,
             location: transform.translation().xy(),
@@ -136,13 +139,9 @@ fn evolve_pending(
             mood_history: mood_history.clone(),
             fact_db: fact_db.clone(),
         };
-
-        template.evolve(
-            &mut commands,
-            &asset_server,
-            &mut global_rng,
-            &mut text_atlas_layouts,
+        spawn_pets.send(SpawnPetEvent::Evolve((
+            should_evolve.species.clone(),
             evolve,
-        );
+        )));
     }
 }

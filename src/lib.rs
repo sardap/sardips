@@ -1,5 +1,6 @@
-#![feature(const_mut_refs)]
-#![feature(effects)]
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::type_complexity)]
 #![feature(const_trait_impl)]
 #![feature(const_for)]
 pub mod age;
@@ -9,6 +10,7 @@ pub mod autoscroll;
 pub mod button_hover;
 pub mod debug;
 pub mod dynamic_dialogue;
+pub mod facts;
 pub mod food;
 pub mod game_zone;
 pub mod interaction;
@@ -23,6 +25,7 @@ pub mod sardip_save;
 pub mod scenes;
 pub mod simulation;
 pub mod sounds;
+pub mod stock_market;
 pub mod text_database;
 pub mod text_translation;
 pub mod thinking;
@@ -41,16 +44,18 @@ use bevy_turborand::prelude::*;
 use button_hover::ButtonHoverPlugin;
 use debug::DebugPlugin;
 use dynamic_dialogue::DynamicDialoguePlugin;
-use food::template::FoodTemplatePlugin;
+use facts::FactsPlugin;
+use food::{template::FoodTemplatePlugin, FoodPlugin};
 use interaction::InteractionPlugin;
 use minigames::MinigamePlugin;
 use money::MoneyPlugin;
-use pet::PetPlugin;
+use pet::{dipdex::DipdexPlugin, PetPlugin};
 use player::PlayerPlugin;
 use sardip_save::SardipSavePlugin;
 use scenes::GameScenePlugin;
 use simulation::{SimulationPlugin, SimulationState};
 use sounds::SoundsPlugin;
+use stock_market::StockMarketPlugin;
 use text_database::TextDatabasePlugin;
 use text_translation::TextTranslationPlugin;
 use thinking::ThinkingPlugin;
@@ -74,6 +79,7 @@ pub enum GameState {
     LoadViewScreen,
     ViewScreen,
     MiniGame,
+    DipdexView,
 }
 
 pub fn despawn_all<C: Component>(mut commands: Commands, query: Query<Entity, With<C>>) {
@@ -91,10 +97,13 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_state::<GameState>(GameState::default())
-            .insert_resource(AssetMetaCheck::Never)
-            .add_plugins((
-                DefaultPlugins.set(WindowPlugin {
+        app.add_plugins((
+            DefaultPlugins
+                .set(AssetPlugin {
+                    meta_check: AssetMetaCheck::Never,
+                    ..default()
+                })
+                .set(WindowPlugin {
                     primary_window: Some(Window {
                         resolution: WindowResolution::new(500.0, 700.0),
                         title: format!("{} v{}", NAME, VERSION),
@@ -104,39 +113,44 @@ impl Plugin for GamePlugin {
                     }),
                     ..default()
                 }),
-                ParallaxPlugin,
-                RngPlugin::default(),
-                AudioPlugin,
-                ShapePlugin,
-            ))
-            .add_plugins((
-                SardipSavePlugin,
-                SimulationPlugin,
-                AutoScrollPlugin,
-                TextDatabasePlugin,
-                ButtonHoverPlugin,
-                PetPlugin,
-                NamePlugin,
-                VelocityPlugin,
-                FoodTemplatePlugin,
-                InteractionPlugin,
-                MinigamePlugin,
-                MoneyPlugin,
-                PlayerPlugin,
-                AgePlugin,
-            ))
-            .add_plugins((
-                AnimePlugin,
-                ToolPlugin,
-                PoopScooperPlugin,
-                SoundsPlugin,
-                GameScenePlugin,
-                DynamicDialoguePlugin,
-                ThinkingPlugin,
-                TextTranslationPlugin,
-            ));
+            ParallaxPlugin,
+            RngPlugin::default(),
+            AudioPlugin,
+            ShapePlugin,
+        ))
+        .insert_state(GameState::default())
+        .add_plugins((
+            PetPlugin,
+            SardipSavePlugin,
+            SimulationPlugin,
+            AutoScrollPlugin,
+            TextDatabasePlugin,
+            ButtonHoverPlugin,
+            NamePlugin,
+            VelocityPlugin,
+            FoodTemplatePlugin,
+            InteractionPlugin,
+            MinigamePlugin,
+            MoneyPlugin,
+            PlayerPlugin,
+            AgePlugin,
+        ))
+        .add_plugins((
+            AnimePlugin,
+            ToolPlugin,
+            PoopScooperPlugin,
+            SoundsPlugin,
+            GameScenePlugin,
+            DynamicDialoguePlugin,
+            FactsPlugin,
+            ThinkingPlugin,
+            TextTranslationPlugin,
+            FoodPlugin,
+            StockMarketPlugin,
+            DipdexPlugin,
+        ));
 
-        #[cfg(feature = "dev")]
+        // #[cfg(feature = "dev")]
         app.add_plugins(DebugPlugin);
     }
 }

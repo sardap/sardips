@@ -1,6 +1,6 @@
 use bevy::{
-    asset::Handle, ecs::system::Resource, math::Vec2, render::texture::Image,
-    sprite::TextureAtlasLayout, text::Font,
+    asset::Handle, ecs::system::Resource, render::texture::Image, sprite::TextureAtlasLayout,
+    text::Font,
 };
 use bevy_asset_loader::asset_collection::AssetCollection;
 use bevy_kira_audio::prelude::*;
@@ -48,22 +48,22 @@ pub struct AudioAssets {
 
 #[derive(AssetCollection, Resource)]
 pub struct ViewScreenImageAssets {
-    #[asset(texture_atlas_layout(tile_size_x = 70., tile_size_y = 70., columns = 4, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 70, tile_size_y = 70, columns = 4, rows = 1,))]
     pub view_buttons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/view_buttons.png")]
     pub view_buttons: Handle<Image>,
 
-    #[asset(texture_atlas_layout(tile_size_x = 30., tile_size_y = 30., columns = 5, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 30, tile_size_y = 30, columns = 5, rows = 1,))]
     pub moods_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/moods.png")]
     pub moods: Handle<Image>,
 
-    #[asset(texture_atlas_layout(tile_size_x = 30., tile_size_y = 30., columns = 5, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 30, tile_size_y = 30, columns = 10, rows = 1,))]
     pub mood_icons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/mood_icons.png")]
     pub mood_icons: Handle<Image>,
 
-    #[asset(texture_atlas_layout(tile_size_x = 60., tile_size_y = 60., columns = 1, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 60, tile_size_y = 60, columns = 1, rows = 1,))]
     pub top_icons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/top_icons.png")]
     pub top_icons: Handle<Image>,
@@ -76,16 +76,19 @@ pub struct GameImageAssets {
 
     #[asset(path = "textures/game/stink_lines.png")]
     pub stink_lines: Handle<Image>,
-    #[asset(texture_atlas_layout(tile_size_x = 64., tile_size_y = 30., columns = 1, rows = 2,))]
+    #[asset(texture_atlas_layout(tile_size_x = 64, tile_size_y = 30, columns = 1, rows = 2,))]
     pub stink_line_layout: Handle<TextureAtlasLayout>,
 
     #[asset(path = "textures/game/poop_scooper.png")]
     pub poop_scooper: Handle<Image>,
+
+    #[asset(path = "textures/game/egg.png")]
+    pub egg: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
 pub struct TicTacToeAssets {
-    #[asset(texture_atlas_layout(tile_size_x = 120., tile_size_y = 120., columns = 3, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 120, tile_size_y = 120, columns = 3, rows = 1,))]
     pub layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/mini_games/tic_tac_toe/sprites.png")]
     pub sprites: Handle<Image>,
@@ -110,7 +113,7 @@ impl SprintAssets {
 
 #[derive(AssetCollection, Resource)]
 pub struct HigherLowerAssets {
-    #[asset(texture_atlas_layout(tile_size_x = 100., tile_size_y = 80., columns = 5, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 100, tile_size_y = 80, columns = 5, rows = 1,))]
     pub layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/mini_games/higher_lower/sprites.png")]
     pub sprites: Handle<Image>,
@@ -127,7 +130,7 @@ impl HigherLowerAssets {
 
 #[derive(AssetCollection, Resource)]
 pub struct FourInRowAssets {
-    #[asset(texture_atlas_layout(tile_size_x = 60., tile_size_y = 60., columns = 3, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 60, tile_size_y = 60, columns = 3, rows = 1,))]
     pub layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/mini_games/four_in_row/discs.png")]
     pub discs: Handle<Image>,
@@ -135,4 +138,12 @@ pub struct FourInRowAssets {
     pub board_tile: Handle<Image>,
     #[asset(path = "textures/mini_games/four_in_row/background.png")]
     pub background: Handle<Image>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct DipdexImageAssets {
+    #[asset(path = "textures/dipdex/unknown.png")]
+    pub unknown: Handle<Image>,
+    #[asset(path = "textures/dipdex/screen_noise.png")]
+    pub screen_noise: Handle<Image>,
 }

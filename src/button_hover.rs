@@ -40,20 +40,13 @@ impl ButtonColorSet {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ButtonHover {
     pub background: Option<ButtonColorSet>,
     pub border: Option<ButtonColorSet>,
 }
 
 impl ButtonHover {
-    pub fn new() -> Self {
-        Self {
-            background: None,
-            border: None,
-        }
-    }
-
     pub fn with_background(mut self, background: ButtonColorSet) -> Self {
         self.background = Some(background);
         self
@@ -96,41 +89,32 @@ fn update(
             Option<&mut BorderColor>,
             &ButtonHover,
         ),
-        (With<Button>, Without<Disabled>, Without<Selected>),
+        (With<Button>, Without<Selected>),
     >,
 ) {
     for (interaction, background_color, border_color, button_hover) in interaction_query.iter_mut()
     {
         let (background, border) = match *interaction {
             Interaction::Hovered => (
-                match &button_hover.background {
-                    Some(background) => Some(background.hover),
-                    None => None,
-                },
-                match &button_hover.border {
-                    Some(border) => Some(border.hover),
-                    None => None,
-                },
+                button_hover
+                    .background
+                    .as_ref()
+                    .map(|background| background.hover),
+                button_hover.border.as_ref().map(|border| border.hover),
             ),
             Interaction::None => (
-                match &button_hover.background {
-                    Some(background) => Some(background.normal),
-                    None => None,
-                },
-                match &button_hover.border {
-                    Some(border) => Some(border.normal),
-                    None => None,
-                },
+                button_hover
+                    .background
+                    .as_ref()
+                    .map(|background| background.normal),
+                button_hover.border.as_ref().map(|border| border.normal),
             ),
             Interaction::Pressed => (
-                match &button_hover.background {
-                    Some(background) => Some(background.pressed),
-                    None => None,
-                },
-                match &button_hover.border {
-                    Some(border) => Some(border.pressed),
-                    None => None,
-                },
+                button_hover
+                    .background
+                    .as_ref()
+                    .map(|background| background.pressed),
+                button_hover.border.as_ref().map(|border| border.pressed),
             ),
         };
 
@@ -176,22 +160,19 @@ fn toggle_selected_colors(
     }
 }
 
-#[derive(Component)]
-pub struct Disabled;
-
 fn toggle_disabled_colors(
     mut buttons: Query<
         (Option<&mut BackgroundColor>, Option<&mut BorderColor>),
-        (With<ButtonHover>, With<Disabled>),
+        (With<ButtonHover>, Without<Interaction>),
     >,
 ) {
     for (background, border) in buttons.iter_mut() {
         if let Some(mut background) = background {
-            *background = BackgroundColor(Color::DARK_GRAY);
+            *background = BackgroundColor(Color::Srgba(bevy::color::palettes::css::DARK_GRAY));
         }
 
         if let Some(mut border) = border {
-            *border = BorderColor(Color::DARK_GRAY);
+            *border = BorderColor(Color::Srgba(bevy::color::palettes::css::DARK_GRAY));
         }
     }
 }

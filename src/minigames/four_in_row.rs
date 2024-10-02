@@ -209,17 +209,17 @@ fn setup_game(
     let (image, atlas, sprite, mood_images) = pet_sheet.single();
 
     commands.spawn((
-        SpriteSheetBundle {
+        SpriteBundle {
             transform: Transform::from_translation(Vec3::new(0., -255., DISC_LAYER)),
             sprite: Sprite {
                 custom_size: sprite.custom_size,
                 ..default()
             },
             texture: image.clone(),
-            atlas: atlas.clone(),
             ..default()
         },
-        mood_images.clone(),
+        atlas.clone(),
+        *mood_images,
         MoodCategory::Neutral,
         AutoSetMoodImage,
         FourInRowPet,
@@ -227,7 +227,7 @@ fn setup_game(
     ));
 
     commands.spawn((
-        SpriteSheetBundle {
+        SpriteBundle {
             transform: Transform::from_translation(Vec3::new(0., 0., DISC_LAYER))
                 .with_scale(Vec3::new(0.75, 0.75, 1.)),
             sprite: Sprite {
@@ -235,12 +235,11 @@ fn setup_game(
                 ..default()
             },
             texture: assets.discs.clone(),
-            atlas: TextureAtlas {
-                layout: assets.layout.clone(),
-                index: player_color.to_sprite_index(),
-                ..default()
-            },
             ..default()
+        },
+        TextureAtlas {
+            layout: assets.layout.clone(),
+            index: player_color.to_sprite_index(),
         },
         AttachToCursor,
         InputDisc,
@@ -263,15 +262,14 @@ fn setup_game(
         ))
         .with_children(|parent| {
             parent.spawn((
-                AtlasImageBundle {
+                ImageBundle {
                     transform: Transform::from_translation(Vec3::new(0., 0., 0.))
                         .with_scale(Vec3::new(0.5, 0.5, 1.)),
                     image: UiImage::new(assets.discs.clone()),
-                    texture_atlas: TextureAtlas {
-                        layout: assets.layout.clone(),
-                        index: player_color.to_sprite_index(),
-                        ..default()
-                    },
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: assets.layout.clone(),
                     ..default()
                 },
                 TurnDiscDisplay,
@@ -377,8 +375,8 @@ fn setup_game_over(
                     },
                     ..default()
                 },
-                Stroke::new(Color::LIME_GREEN, 3.0),
-                Fill::color(Color::LIME_GREEN),
+                Stroke::new(Color::Srgba(bevy::color::palettes::css::LIMEGREEN), 3.0),
+                Fill::color(Color::Srgba(bevy::color::palettes::css::LIMEGREEN)),
                 FourInRow,
             ));
         }
@@ -437,12 +435,11 @@ fn process_move(
     let (mut board, board_trans) = board.single_mut();
 
     for move_event in moves.read() {
-        if board
+        if !board
             .0
             .possible_moves()
             .iter()
-            .find(|&&col| col == move_event.col)
-            .is_none()
+            .any(|&col| col == move_event.col)
         {
             error!("Column full");
             continue;
@@ -474,7 +471,7 @@ fn process_move(
         };
 
         commands.spawn((
-            SpriteSheetBundle {
+            SpriteBundle {
                 transform: Transform::from_translation(Vec3::new(source.x, source.y, DISC_LAYER))
                     .with_scale(board_trans.scale),
                 sprite: Sprite {
@@ -482,12 +479,11 @@ fn process_move(
                     ..default()
                 },
                 texture: assets.discs.clone(),
-                atlas: TextureAtlas {
-                    layout: assets.layout.clone(),
-                    index: current_player.to_sprite_index(),
-                    ..default()
-                },
                 ..default()
+            },
+            TextureAtlas {
+                layout: assets.layout.clone(),
+                index: current_player.to_sprite_index(),
             },
             Speed(250.),
             MovementDirection {
@@ -765,14 +761,14 @@ enum Side {
 }
 
 impl Side {
-    fn to_index(&self) -> usize {
+    fn to_index(self) -> usize {
         match self {
             Side::Red => 0,
             Side::Yellow => 1,
         }
     }
 
-    fn to_sprite_index(&self) -> usize {
+    fn to_sprite_index(self) -> usize {
         match self {
             Side::Red => 1,
             Side::Yellow => 2,
@@ -960,7 +956,7 @@ fn nega_max(board: &Board, depth: i32) -> f32 {
         }
     }
 
-    return max;
+    max
 }
 
 fn any_move_results_in_win(board: &Board) -> Option<Player> {

@@ -5,7 +5,7 @@ pub struct VelocityPlugin;
 
 impl Plugin for VelocityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, apply_direction);
+        app.add_systems(FixedUpdate, apply_direction);
     }
 }
 

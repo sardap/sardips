@@ -7,13 +7,12 @@ use crate::{
     name::{HasNameTag, NameTag, SpeciesName},
     palettes,
     pet::{
+        breeding::ReadyToBreed,
         mood::{Mood, MoodCategory, SatisfactionRating},
         Pet,
     },
-    text_database::text_keys::{
-        UI_PET_INFO_PANEL_AGE, UI_PET_INFO_PANEL_SPECIES, UI_PET_PANEL_NO_THOUGHT,
-    },
-    text_translation::KeyText,
+    text_database::text_keys::{UI_PET_INFO_PANEL_AGE, UI_PET_PANEL_NO_THOUGHT},
+    text_translation::{KeyString, KeyText},
     thinking::Thought,
     GameState,
 };
@@ -42,6 +41,8 @@ impl Plugin for InfoPanelPlugin {
                     update_pet_thought,
                     update_pet_age,
                     update_overall_mood,
+                    update_pet_panel_money_mood,
+                    update_ready_to_breed,
                 ),
             )
                 .chain()
@@ -111,6 +112,9 @@ struct PetInfoPanelThought;
 #[derive(Component)]
 struct PetInfoPanelAgeText;
 
+#[derive(Component)]
+struct PetInfoPanelReadyToBreedImage;
+
 #[derive(Component, Default)]
 struct PetInfoPanelOverallMood;
 
@@ -134,6 +138,12 @@ struct PetInfoPanelMoodFun;
 
 #[derive(Component, Default)]
 struct PetInfoPanelMoodFunImage;
+
+#[derive(Component, Default)]
+struct PetInfoPanelMoodMoney;
+
+#[derive(Component, Default)]
+struct PetInfoPanelMoodMoneyImage;
 
 pub fn create_info_panel(
     commands: &mut Commands,
@@ -212,7 +222,6 @@ pub fn create_info_panel(
                                                 font: fonts.main_font.clone(),
                                                 font_size: INFO_PANEL_TEXT_SIZE,
                                                 color: Color::BLACK,
-                                                ..default()
                                             },
                                         )]),
                                         KeyText::new(),
@@ -235,7 +244,6 @@ pub fn create_info_panel(
                                                     font: fonts.main_font.clone(),
                                                     font_size: INFO_PANEL_TEXT_SIZE,
                                                     color: Color::BLACK,
-                                                    ..default()
                                                 },
                                             ),
                                             TextSection::new(
@@ -244,12 +252,35 @@ pub fn create_info_panel(
                                                     font: fonts.main_font.clone(),
                                                     font_size: INFO_PANEL_TEXT_SIZE,
                                                     color: Color::BLACK,
-                                                    ..default()
                                                 },
                                             ),
                                         ]),
                                         KeyText::new().with(0, UI_PET_INFO_PANEL_AGE),
                                         PetInfoPanelAgeText,
+                                    ));
+                                });
+
+                            parent
+                                .spawn((
+                                    NodeBundle {
+                                        style: child_element_style.clone(),
+                                        ..default()
+                                    },
+                                    PetInfoPanelReadyToBreedImage,
+                                ))
+                                .with_children(|parent| {
+                                    parent.spawn((
+                                        ImageBundle {
+                                            style: SMALL_ICON_STYLE.clone(),
+                                            image: UiImage::new(
+                                                view_screen_images.mood_icons.clone(),
+                                            ),
+                                            ..default()
+                                        },
+                                        TextureAtlas {
+                                            layout: view_screen_images.mood_icons_layout.clone(),
+                                            index: 5,
+                                        },
                                     ));
                                 });
 
@@ -280,6 +311,13 @@ pub fn create_info_panel(
                                 view_screen_images,
                                 3,
                             );
+
+                            spawn_panel::<PetInfoPanelMoodMoney, PetInfoPanelMoodMoneyImage>(
+                                parent,
+                                &child_element_style,
+                                view_screen_images,
+                                4,
+                            );
                         });
 
                     parent.spawn((
@@ -289,7 +327,6 @@ pub fn create_info_panel(
                                 font: fonts.main_font.clone(),
                                 font_size: INFO_PANEL_TEXT_SIZE,
                                 color: Color::BLACK,
-                                ..default()
                             },
                         ),
                         KeyText::new().with(0, UI_PET_PANEL_NO_THOUGHT),
@@ -321,7 +358,6 @@ pub fn create_info_panel(
                                         font: fonts.main_font.clone(),
                                         font_size: INFO_PANEL_TEXT_SIZE,
                                         color: Color::BLACK,
-                                        ..default()
                                     },
                                 ),
                                 Label,
@@ -342,7 +378,6 @@ pub fn create_info_panel(
                                         font: fonts.main_font.clone(),
                                         font_size: INFO_PANEL_TEXT_SIZE,
                                         color: Color::BLACK,
-                                        ..default()
                                     },
                                 ),
                                 Label,
@@ -354,18 +389,20 @@ pub fn create_info_panel(
         .id()
 }
 
+lazy_static! {
+    static ref SMALL_ICON_STYLE: Style = Style {
+        width: Val::Px(20.0),
+        margin: UiRect::all(Val::Px(5.0)),
+        ..default()
+    };
+}
+
 fn spawn_panel<T: Component + Default, J: Component + Default>(
     parent: &mut ChildBuilder,
     child_element_style: &Style,
     view_screen_images: &ViewScreenImageAssets,
     icon_index: usize,
 ) {
-    let image_style = Style {
-        width: Val::Px(20.0),
-        margin: UiRect::all(Val::Px(5.0)),
-        ..default()
-    };
-
     parent
         .spawn((
             NodeBundle {
@@ -375,24 +412,26 @@ fn spawn_panel<T: Component + Default, J: Component + Default>(
             T::default(),
         ))
         .with_children(|parent| {
-            parent.spawn(AtlasImageBundle {
-                style: image_style.clone(),
-                texture_atlas: TextureAtlas {
-                    layout: view_screen_images.mood_icons_layout.clone(),
+            parent.spawn((
+                ImageBundle {
+                    style: SMALL_ICON_STYLE.clone(),
+                    image: UiImage::new(view_screen_images.mood_icons.clone()),
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: view_screen_images.moods_layout.clone(),
                     index: icon_index,
                 },
-                image: UiImage::new(view_screen_images.mood_icons.clone()),
-                ..default()
-            });
+            ));
 
             parent.spawn((
-                AtlasImageBundle {
-                    style: image_style.clone(),
-                    texture_atlas: TextureAtlas {
-                        layout: view_screen_images.moods_layout.clone(),
-                        ..default()
-                    },
+                ImageBundle {
+                    style: SMALL_ICON_STYLE.clone(),
                     image: UiImage::new(view_screen_images.moods.clone()),
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: view_screen_images.moods_layout.clone(),
                     ..default()
                 },
                 J::default(),
@@ -416,7 +455,7 @@ fn update_info_panel(
         // Update name tags
         if let Ok(has_name_tag) = has_name_tag.get(event.entity) {
             if let Ok((_, mut text)) = name_tags.get_mut(has_name_tag.name_tag_entity) {
-                text.color = Color::RED;
+                text.color = Color::Srgba(bevy::color::palettes::css::RED);
             }
         }
 
@@ -584,7 +623,7 @@ fn update_pet_panel_species(
 
     let species_name = pets.get(pet_entity).unwrap();
 
-    text.set(0, species_name.key());
+    text.set(0, species_name.name_key());
 }
 
 macro_rules! update_pet_panel_mood {
@@ -667,6 +706,40 @@ update_pet_panel_mood!(
     PetInfoPanelMoodFunImage
 );
 
+update_pet_panel_mood!(
+    update_pet_panel_money_mood,
+    money,
+    PetInfoPanelMoodMoney,
+    PetInfoPanelMoodMoneyImage
+);
+
+fn update_ready_to_breed(
+    pet_info_panel: Query<&PetInfoPanel>,
+    pets_ready_to_breed: Query<Entity, With<ReadyToBreed>>,
+    mut node: Query<&mut Style, With<PetInfoPanelReadyToBreedImage>>,
+) {
+    let pet_info_panel = match pet_info_panel.get_single() {
+        Ok(val) => val,
+        Err(_) => return,
+    };
+
+    let pet_entity = match pet_info_panel.target {
+        Some(entity) => entity,
+        None => return,
+    };
+
+    let mut node_style = match node.get_single_mut() {
+        Ok(val) => val,
+        Err(_) => return,
+    };
+
+    if pets_ready_to_breed.get(pet_entity).is_ok() {
+        node_style.display = Display::DEFAULT;
+    } else {
+        node_style.display = Display::None;
+    }
+}
+
 fn update_pet_thought(
     pet_info_panel: Query<&PetInfoPanel, Changed<PetInfoPanel>>,
     pets: Query<&Thought, With<Pet>>,
@@ -686,11 +759,13 @@ fn update_pet_thought(
 
     let thought = pets.get(pet_entity).unwrap();
 
-    let next_text = match &thought.text {
-        Some(thought) => thought,
-        None => UI_PET_PANEL_NO_THOUGHT,
-    }
-    .to_string();
+    let next_text = KeyString::Direct(
+        match &thought.text {
+            Some(thought) => thought,
+            None => UI_PET_PANEL_NO_THOUGHT,
+        }
+        .to_string(),
+    );
 
     if text.keys[&0] != next_text {
         text.keys.insert(0, next_text);

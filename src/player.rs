@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::money::Wallet;
+use crate::{money::Wallet, pet::dipdex::DipdexDiscoveredEntries};
 
 pub struct PlayerPlugin;
 
@@ -12,6 +12,7 @@ impl Plugin for PlayerPlugin {
 pub struct PlayerBundle {
     pub player: Player,
     pub wallet: Wallet,
+    pub entries: DipdexDiscoveredEntries,
 }
 
 #[derive(Component, Default)]

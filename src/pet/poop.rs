@@ -27,7 +27,11 @@ impl Plugin for PoopPlugin {
 }
 
 #[derive(Component, Default)]
-pub struct Poop;
+pub struct Poop {
+    // Fuck it
+    // Probably should define poops in the pet tempalte file I guess I don't know
+    pub texture_path: String,
+}
 
 #[derive(Bundle, Default)]
 pub struct PoopBundle {
@@ -41,24 +45,33 @@ pub struct PoopBundle {
 #[derive(Component, Default, Serialize, Deserialize, Clone)]
 pub struct Cleanliness;
 
+#[derive(Component, Default, Serialize, Deserialize, Clone)]
+pub struct Diarrhea;
+
 #[derive(Component, Clone, Serialize, Deserialize)]
 pub struct Pooper {
+    pub interval: Duration,
     pub poop_timer: Timer,
+    pub texture: String,
 }
 
 impl Pooper {
-    pub fn new(poop_interval: Duration) -> Self {
+    pub fn new(poop_interval: Duration, texture: impl ToString) -> Self {
         Self {
+            interval: poop_interval,
             poop_timer: Timer::new(poop_interval, TimerMode::Repeating),
+            texture: texture.to_string(),
         }
     }
 }
 
 pub fn spawn_poop(
     commands: &mut Commands,
+    asset_server: &AssetServer,
     game_image_assets: &GameImageAssets,
     scale: f32,
     location: Vec2,
+    texture: &str,
 ) {
     const MAX_SIZE: f32 = 64.;
     let size = MAX_SIZE * scale;
@@ -66,6 +79,9 @@ pub fn spawn_poop(
 
     let entity_id = commands
         .spawn(PoopBundle {
+            poop: Poop {
+                texture_path: texture.to_owned(),
+            },
             clickable: Clickable::new(
                 Vec2::new(-size_half, size_half),
                 Vec2::new(-size_half, size_half),
@@ -81,7 +97,7 @@ pub fn spawn_poop(
                     custom_size: Some(Vec2::new(MAX_SIZE, MAX_SIZE)),
                     ..default()
                 },
-                texture: game_image_assets.poop.clone(),
+                texture: asset_server.load(texture.to_owned()),
                 ..default()
             },
             entity_name: EntityName::new(text_keys::POOP),
@@ -91,17 +107,17 @@ pub fn spawn_poop(
 
     commands
         .spawn((
-            SpriteSheetBundle {
+            SpriteBundle {
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(64., 50.)),
                     ..default()
                 },
                 transform: Transform::from_translation(Vec3::new(0., size_half, 0.)),
-                atlas: TextureAtlas {
-                    layout: game_image_assets.stink_line_layout.clone(),
-                    ..default()
-                },
                 texture: game_image_assets.stink_lines.clone(),
+                ..default()
+            },
+            TextureAtlas {
+                layout: game_image_assets.stink_line_layout.clone(),
                 ..default()
             },
             AnimeBundle {
@@ -125,22 +141,37 @@ fn tick_poopers(
     mut commands: Commands,
     mut play_sounds: EventWriter<PlaySoundEffect>,
     time: Res<Time>,
+    asset_server: Res<AssetServer>,
     game_image_assets: Res<GameImageAssets>,
-    mut poopers: Query<(&mut Pooper, &mut RngComponent, Option<&Hunger>, &Transform)>,
+    mut poopers: Query<(
+        &mut Pooper,
+        &mut RngComponent,
+        Option<&Hunger>,
+        &Transform,
+        Option<&Diarrhea>,
+    )>,
 ) {
-    for (mut pooper, mut rng, hunger, transform) in poopers.iter_mut() {
+    for (mut pooper, mut rng, hunger, transform, diarrhea) in poopers.iter_mut() {
         // Only poop if hunger is over 50% full
         if hunger.map_or(true, |hunger| hunger.filled_percent() > 0.5) {
-            if pooper.poop_timer.tick(time.delta()).just_finished() {
+            let tick_mul = if diarrhea.is_some() { 1.0 } else { 2.0 };
+
+            if pooper
+                .poop_timer
+                .tick(time.delta().mul_f32(tick_mul))
+                .just_finished()
+            {
                 let scale = poop_scale(&mut rng.fork());
 
                 play_sounds.send(PlaySoundEffect::new(SoundEffect::Poop).with_volume(scale));
 
                 spawn_poop(
                     &mut commands,
+                    &asset_server,
                     &game_image_assets,
                     scale,
                     transform.translation.xy(),
+                    &pooper.texture,
                 );
             }
         }

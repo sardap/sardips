@@ -20,16 +20,32 @@ impl Plugin for SimulationPlugin {
             .init_schedule(SimulationUpdate)
             .add_systems(RunSimulationUpdate, run_simulation_schedule);
 
-        app.world
+        app.world_mut()
             .resource_mut::<MainScheduleOrder>()
             .insert_after(RunFixedMainLoop, RunSimulationUpdate);
     }
 }
 
-pub const MOOD_HISTORY_UPDATE: Duration = Duration::from_secs(60 * 5);
-pub const HUNGER_MOOD_UPDATE: Duration = Duration::from_secs(60 * 2);
-pub const FUN_MOOD_UPDATE: Duration = Duration::from_secs(60 * 2);
-pub const CLEANLINESS_MOOD_UPDATE: Duration = Duration::from_secs(60 * 2);
+const fn from_mins(mins: u64) -> Duration {
+    Duration::from_secs(60 * mins)
+}
+
+const fn from_hours(hours: u64) -> Duration {
+    from_mins(60 * hours)
+}
+
+const fn from_days(days: u64) -> Duration {
+    from_hours(24 * days)
+}
+
+pub const MOOD_HISTORY_UPDATE: Duration = from_mins(5);
+pub const HUNGER_MOOD_UPDATE: Duration = from_mins(2);
+pub const FUN_MOOD_UPDATE: Duration = from_mins(2);
+pub const MONEY_MOOD_UPDATE: Duration = from_hours(2);
+pub const CLEANLINESS_MOOD_UPDATE: Duration = from_mins(2);
+pub const BREED_RESET_INTERVAL: Duration = from_mins(30);
+pub const EGG_HATCH_ATTEMPT_INTERVAL: Duration = from_mins(30);
+pub const MAX_EGG_LIFE: Duration = from_days(2);
 
 // Tick down rates one point per seconds
 // One point per minute

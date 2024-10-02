@@ -42,7 +42,7 @@ fn setup_background(mut commands: Commands, mut create_parallax: EventWriter<Cre
         layers_data: vec![LayerData {
             speed: LayerSpeed::Bidirectional(0.9, 0.9),
             path: assets::BackgroundTexturesAssets::MENU_BACKGROUND.to_string(),
-            tile_size: Vec2::new(53.0, 53.0),
+            tile_size: UVec2::new(53, 53),
             cols: 1,
             rows: 1,
             scale: Vec2::splat(1.0),
@@ -83,7 +83,6 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                         font: fonts.main_font.clone(),
                         font_size: 70.0,
                         color: Color::BLACK,
-                        ..default()
                     },
                 ),
                 KeyText::new().with(0, text_keys::MAIN_MENU_TITLE),
@@ -104,7 +103,7 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                         },
                         ..default()
                     },
-                    ButtonHover::new()
+                    ButtonHover::default()
                         .with_background(palettes::ui::BUTTON_SET)
                         .with_border(palettes::ui::BUTTON_BORDER_SET),
                     PlayButton,
@@ -130,8 +129,7 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
             TextStyle {
                 font: fonts.main_font.clone(),
                 font_size: 50.0,
-                color: Color::DARK_GREEN,
-                ..default()
+                color: bevy::color::palettes::css::DARK_GREEN.into(),
             },
         )
         .with_text_justify(JustifyText::Center)

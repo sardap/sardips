@@ -1,7 +1,7 @@
 use crate::{
     assets::{
-        AudioAssets, BackgroundTexturesAssets, FontAssets, FourInRowAssets, GameImageAssets,
-        HigherLowerAssets, TicTacToeAssets, ViewScreenImageAssets,
+        AudioAssets, BackgroundTexturesAssets, DipdexImageAssets, FontAssets, FourInRowAssets,
+        GameImageAssets, HigherLowerAssets, TicTacToeAssets, ViewScreenImageAssets,
     },
     GameState,
 };
@@ -24,7 +24,8 @@ impl Plugin for LoadingScenePlugin {
                 .load_collection::<GameImageAssets>()
                 .load_collection::<TicTacToeAssets>()
                 .load_collection::<HigherLowerAssets>()
-                .load_collection::<FourInRowAssets>(),
+                .load_collection::<FourInRowAssets>()
+                .load_collection::<DipdexImageAssets>(),
         );
     }
 }

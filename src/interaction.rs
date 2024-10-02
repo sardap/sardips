@@ -9,7 +9,7 @@ impl Plugin for InteractionPlugin {
                 First,
                 (
                     update_world_mouse_positions::<MouseCamera>,
-                    handle_interaction::<MouseCamera>,
+                    handle_interaction,
                 )
                     .chain(),
             )
@@ -20,17 +20,9 @@ impl Plugin for InteractionPlugin {
 #[derive(Component)]
 pub struct MouseCamera;
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct WorldMouse {
     pub last_position: Vec2,
-}
-
-impl WorldMouse {
-    pub fn new() -> Self {
-        Self {
-            last_position: Vec2::ZERO,
-        }
-    }
 }
 
 #[derive(Component, Default)]
@@ -49,7 +41,7 @@ impl Clickable {
 pub struct Hovering;
 
 fn spawn_world_mouse(mut commands: Commands) {
-    commands.spawn(WorldMouse::new());
+    commands.spawn(WorldMouse::default());
 }
 
 fn update_world_mouse_positions<C: Component>(
@@ -77,7 +69,7 @@ fn update_world_mouse_positions<C: Component>(
     }
 }
 
-fn handle_interaction<C: Component>(
+fn handle_interaction(
     mut commands: Commands,
     world_mouse: Query<&WorldMouse>,
     clickables: Query<(Entity, &GlobalTransform, &Clickable)>,

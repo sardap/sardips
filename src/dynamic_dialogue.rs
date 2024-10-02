@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{collections::HashMap, ops::Deref, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
@@ -8,18 +8,7 @@ use serde::de::{self, Visitor};
 use serde::Deserializer;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    age::Age,
-    food::Food,
-    name::SpeciesName,
-    pet::{
-        hunger::{Hunger, Starving},
-        mood::{Mood, MoodCategory, MoodCategoryHistory, MoodState},
-        poop::Poop,
-        PetKind,
-    },
-    simulation::SimulationState,
-};
+use crate::facts::{fact_str_hash, EntityFactDatabase, GlobalFactDatabase};
 
 // https://www.youtube.com/watch?v=tAbBID3N64A&t=20s
 // https://www.gdcvault.com/play/1015317/AI-driven-Dynamic-Dialog-through
@@ -33,35 +22,7 @@ impl Plugin for DynamicDialoguePlugin {
             .add_event::<ActionEvent>()
             .add_event::<FactInsert>()
             .add_systems(Startup, setup)
-            .add_systems(Update, parse_rule_sets)
-            .add_systems(
-                Update,
-                (
-                    read_fact_inserts,
-                    tick_pending_fact_deletes,
-                    expire_global_facts,
-                    expire_entity_facts,
-                    apply_pending_action,
-                ),
-            )
-            // Simulation fact updates
-            .add_systems(
-                Update,
-                (
-                    update_hunger_facts,
-                    update_starving_fact,
-                    update_food_count,
-                    update_species_name,
-                    update_pet_kind,
-                    update_poop,
-                    update_age,
-                )
-                    .run_if(in_state(SimulationState::Running)),
-            )
-            .add_systems(
-                Update,
-                (update_mood, update_overall_mood, update_median_mood),
-            );
+            .add_systems(Update, parse_rule_sets);
     }
 }
 
@@ -81,6 +42,7 @@ fn parse_rule_sets(
     }
 }
 
+#[allow(dead_code)]
 #[derive(Event)]
 enum FactInsert {
     Global(String, f32, Option<Duration>),
@@ -102,9 +64,11 @@ impl PendingFactDelete {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Component)]
 struct PendingFactDeleteEntity(Entity);
 
+#[allow(dead_code)]
 fn read_fact_inserts(
     mut commands: Commands,
     mut fact_db: ResMut<GlobalFactDatabase>,
@@ -136,12 +100,14 @@ fn read_fact_inserts(
     }
 }
 
+#[allow(dead_code)]
 fn tick_pending_fact_deletes(time: Res<Time>, mut query: Query<&mut PendingFactDelete>) {
     for mut delete in query.iter_mut() {
         delete.expire.tick(time.delta());
     }
 }
 
+#[allow(dead_code)]
 fn expire_global_facts(
     mut commands: Commands,
     mut fact_db: ResMut<GlobalFactDatabase>,
@@ -155,6 +121,7 @@ fn expire_global_facts(
     }
 }
 
+#[allow(dead_code)]
 fn expire_entity_facts(
     mut commands: Commands,
     mut fact_dbs: Query<&mut EntityFactDatabase>,
@@ -191,6 +158,7 @@ impl ActionEvent {
     }
 }
 
+#[allow(dead_code)]
 fn apply_pending_action(
     mut action_events: EventReader<ActionEvent>,
     mut inserts: EventWriter<FactInsert>,
@@ -214,120 +182,40 @@ fn apply_pending_action(
     }
 }
 
-// ************************************************************************
-
-fn update_hunger_facts(mut query: Query<(&mut EntityFactDatabase, &Hunger), Changed<Hunger>>) {
-    for (mut fact_db, hunger) in &mut query {
-        fact_db.0.add("Hunger", hunger.filled_percent());
-    }
-}
-
-fn update_starving_fact(
-    mut query: Query<(&mut EntityFactDatabase, Option<&Starving>), With<Hunger>>,
-) {
-    for (mut fact_db, starving) in query.iter_mut() {
-        if starving.is_some() {
-            fact_db.0.add("IsStarving", 1.0);
-        } else {
-            fact_db.0.remove("IStarving");
-        }
-    }
-}
-
-fn update_food_count(mut fact_db: ResMut<GlobalFactDatabase>, query: Query<Entity, With<Food>>) {
-    fact_db.0.add("FoodCount", query.iter().count() as f32);
-}
-
-fn update_species_name(
-    mut query: Query<(&mut EntityFactDatabase, &SpeciesName), Changed<SpeciesName>>,
-) {
-    const PREFIX: &str = "IsSpecies";
-
-    for (mut fact_db, name) in query.iter_mut() {
-        // Remove existing with prefix
-        fact_db.0.remove_existing(PREFIX);
-        fact_db.0.add(format!("{}{}", PREFIX, name.0), 1.0);
-    }
-}
-
-fn update_pet_kind(mut query: Query<(&mut EntityFactDatabase, &PetKind), Changed<PetKind>>) {
-    const PREFIX: &str = "IsKind";
-
-    for (mut fact_db, kind) in query.iter_mut() {
-        // Remove existing with prefix
-        fact_db.0.remove_existing(PREFIX);
-        fact_db.0.add(format!("{}{}", PREFIX, kind), 1.0);
-    }
-}
-
-fn update_poop(mut fact_db: ResMut<GlobalFactDatabase>, query: Query<Entity, With<Poop>>) {
-    fact_db.0.add("PoopCount", query.iter().count() as f32);
-}
-
-fn update_age(mut query: Query<(&mut EntityFactDatabase, &Age), Changed<Age>>) {
-    for (mut fact_db, age) in query.iter_mut() {
-        fact_db.0.add("Age", (age.as_secs_f32() / 60.0).round());
-    }
-}
-
-fn update_sub_mood_fact<T: ToString>(key: T, fact_db: &mut FactDb, mood: &Option<MoodState>) {
-    match mood {
-        Some(mood) => {
-            fact_db.add(key, mood.satisfaction.score());
-        }
-        None => {
-            fact_db.remove(key);
-        }
-    }
-}
-
-fn update_mood(mut query: Query<(&mut EntityFactDatabase, &Mood), Changed<Mood>>) {
-    for (mut fact_db, mood) in query.iter_mut() {
-        update_sub_mood_fact("MoodHunger", &mut fact_db.0, &mood.hunger);
-        update_sub_mood_fact("MoodCleanliness", &mut fact_db.0, &mood.cleanliness);
-        update_sub_mood_fact("MoodFun", &mut fact_db.0, &mood.fun);
-    }
-}
-
-fn update_overall_mood(
-    mut query: Query<(&mut EntityFactDatabase, &MoodCategory), Changed<MoodCategory>>,
-) {
-    for (mut fact_db, mood_category) in query.iter_mut() {
-        fact_db.0.add("Mood", mood_category.score());
-    }
-}
-
-fn update_median_mood(
-    mut query: Query<(&mut EntityFactDatabase, &MoodCategoryHistory), Changed<MoodCategoryHistory>>,
-) {
-    for (mut fact_db, history) in query.iter_mut() {
-        fact_db.0.add("MoodHistoryMedian", history.median().score());
-    }
-}
-
-// ************************************************************************
-
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct FactDb {
     facts: HashMap<String, f32>,
 }
 
 impl FactDb {
-    fn add<T: ToString>(&mut self, key: T, value: f32) {
+    pub fn add<T: ToString>(&mut self, key: T, value: f32) {
         self.facts.insert(key.to_string(), value);
     }
 
-    fn remove<T: ToString>(&mut self, key: T) {
+    pub fn add_str<T: ToString, J: ToString>(&mut self, key: T, value: J) {
+        self.facts
+            .insert(key.to_string(), fact_str_hash(value.to_string()));
+    }
+
+    pub fn remove<T: ToString>(&mut self, key: T) {
         self.facts.remove(&key.to_string());
     }
 
+    pub fn get(&self, key: &str) -> f32 {
+        if let Some(value) = self.facts.get(key) {
+            *value
+        } else {
+            0.
+        }
+    }
+
     // SLOW POINT
-    fn remove_existing(&mut self, prefix: &str) {
+    pub fn remove_with_prefix(&mut self, prefix: &str) {
         let keys: Vec<_> = self
             .facts
             .keys()
             .filter(|k| k.starts_with(prefix))
-            .map(|k| k.clone())
+            .cloned()
             .collect();
 
         for key in keys {
@@ -349,15 +237,11 @@ impl fmt::Display for FactDb {
     }
 }
 
-#[derive(Debug, Component, Clone, Default, Serialize, Deserialize)]
-pub struct EntityFactDatabase(pub FactDb);
-
-#[derive(Resource, Default)]
-pub struct GlobalFactDatabase(pub FactDb);
-
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum Concept {
     ThinkIdle,
+    ThinkJustAte,
+    ThinkStartingEating,
     Evolve,
 }
 
@@ -510,7 +394,7 @@ impl<'a> FactDataBaseSet<'a> {
             }
         }
 
-        return 0.;
+        0.
     }
 
     fn add(&mut self, fact_db: &'a FactDb) {
@@ -606,13 +490,7 @@ impl<'a> FactQuery<'a> {
             return None;
         }
 
-        Some(
-            matches
-                .choose(&mut rand::thread_rng())
-                .unwrap()
-                .deref()
-                .clone(),
-        )
+        Some((*matches.choose(&mut rand::thread_rng()).unwrap()).clone())
     }
 
     pub fn single_criteria(&self, criteria: &Criteria) -> bool {
@@ -625,6 +503,8 @@ mod parse {
 
     use bevy::prelude::*;
     use serde::{Deserialize, Serialize};
+
+    use crate::facts::fact_str_hash;
 
     use super::Concept;
 
@@ -728,17 +608,17 @@ mod parse {
         super::ActionSet::new(result)
     }
 
-    impl Into<super::RuleSet> for RawRuleSet {
-        fn into(self) -> super::RuleSet {
+    impl From<RawRuleSet> for super::RuleSet {
+        fn from(val: RawRuleSet) -> super::RuleSet {
             let mut result = super::RuleSet { rules: Vec::new() };
 
-            let rules = self.get_rules();
+            let rules = val.get_rules();
 
             for rule in rules {
                 let possible_criteria = parse_criteria(&rule.criteria);
 
                 for criteria in possible_criteria.into_iter() {
-                    let raw_response = self.get_response(&rule.response);
+                    let raw_response = val.get_response(&rule.response);
 
                     let response = super::Response {
                         now: raw_action_to_action_set(&raw_response.now),
@@ -788,18 +668,31 @@ mod parse {
             3 => {
                 let key = splits[0].to_string();
                 let operator = splits[1];
-                let value = splits[2].parse::<f32>().unwrap();
 
-                let (fa, fb) = match operator {
-                    "<" => (f32::MIN, value),
-                    ">" => (value, f32::MAX),
-                    "=" => (value, value),
-                    _ => panic!("Invalid operator: {}", operator),
-                };
+                if let Ok(value) = splits[2].parse::<f32>() {
+                    let (fa, fb) = match operator {
+                        "<" => (f32::MIN, value),
+                        ">" => (value, f32::MAX),
+                        "=" => (value, value),
+                        _ => panic!("Invalid operator: {}", operator),
+                    };
 
-                super::Criterion { key, fa, fb }
+                    super::Criterion { key, fa, fb }
+                } else {
+                    // handle string
+                    if operator != "=" {
+                        panic!("Invalid operator: {} for string", operator);
+                    }
+
+                    let hash = fact_str_hash(splits[2]);
+                    super::Criterion {
+                        key,
+                        fa: hash,
+                        fb: hash,
+                    }
+                }
             }
-            _ => panic!("Invalid fact: {}", criterion.to_string()),
+            _ => panic!("Invalid fact: {}", criterion),
         }
     }
 
@@ -1000,7 +893,7 @@ mod tests {
 
         let rule_set: RuleSet = raw_rule_set.clone().into();
 
-        assert!(rule_set.rules.len() >= 1);
+        assert!(!rule_set.rules.is_empty());
     }
 
     #[test]
@@ -1262,7 +1155,8 @@ mod tests {
             (test_query, read_fact_inserts, apply_pending_action).chain(),
         );
 
-        app.world.spawn((TestTag, EntityFactDatabase::default()));
+        app.world_mut()
+            .spawn((TestTag, EntityFactDatabase::default()));
 
         app.update();
         app.update();

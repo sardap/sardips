@@ -8,7 +8,7 @@ RawRuleSet(
             id: "ObjectLifeIsGood",
             criteria: Criteria(
                 concept: ThinkIdle,
-                facts: ["IsKindObject",  "Mood > 1.5"]
+                facts: ["Kind = Object",  "Mood > 1.5"]
             ),
             response: "ObjectLifeIsGood",
         )),
@@ -20,7 +20,7 @@ RawRuleSet(
             id: "ObjectHungryNoFood",
             criteria: Criteria(
                 concept: ThinkIdle,
-                facts: ["IsKindObject", "Hungry > 0.5", "FoodCount = 0"]
+                facts: ["Kind = Object", "Hungry > 0.5", "FoodCount = 0"]
             ),
             response: "ObjectHungryNoFood",
         )),
@@ -32,9 +32,21 @@ RawRuleSet(
             id: "ObjectPoopEveryWhere",
             criteria: Criteria(
                 concept: ThinkIdle,
-                facts: ["IsKindObject", "MoodCleanliness < 1.5", "PoopCount > 1"]
+                facts: ["Kind = Object", "MoodCleanliness < 1.5", "PoopCount > 1"]
             ),
             response: "ObjectPoopEveryWhere",
+        )),
+        Response(RawResponse(
+            id: "SpeciesKatHungryEggWaffle",
+            now: ["RandomText dialogue.kat_hungry_egg_waffle"],
+        )),
+        Rule(RawRule(
+            id: "SpeciesKatHungryEggWaffle",
+            criteria: Criteria(
+                concept: ThinkIdle,
+                facts: ["Kind = Creature", "Hunger < 0.7", "FoodExistsEggWaffle"]
+            ),
+            response: "SpeciesKatHungryEggWaffle",
         )),
         Response(RawResponse(
             id: "WasGaurdNothing",
@@ -44,7 +56,7 @@ RawRuleSet(
             id: "WasGuardNormal",
             criteria: Criteria(
                 concept: ThinkIdle,
-                facts: ["IsKindNormal", "IsSpeciesWasGuard"]
+                facts: ["Kind = Creature", "Species = WasGuard"]
             ),
             response: "WasGaurdNothing",
         )),
@@ -56,9 +68,21 @@ RawRuleSet(
             id: "WasGaurdSad",
             criteria: Criteria(
                 concept: ThinkIdle,
-                facts: ["IsKindNormal", "IsSpeciesWasGuard", "Mood < 1.25"]
+                facts: ["Kind = Creature", "Species = WasGuard", "Mood < 1.25"]
             ),
             response: "WasGaurdSad",
-        ))
+        )),
+        Response(RawResponse(
+            id: "StartEatAnything",
+            now: ["RandomText dialogue.starting_eating_anything"],
+        )),
+        Rule(RawRule(
+            id: "StartEatAnything",
+            criteria: Criteria(
+                concept: ThinkStartingEating,
+                facts: [""]
+            ),
+            response: "StartEatAnything",
+        )),
     ]
 )

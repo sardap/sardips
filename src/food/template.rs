@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     interaction::Clickable,
     layering,
-    name::{EntityName, HasNameTag, NameTag, NameTagBundle},
+    name::{EntityName, HasNameTag, NameTag, NameTagBundle, SpeciesName},
+    pet::template::TemplateSize,
 };
 
 use super::{FoodBundle, FoodFillFactor, FoodSensationType, FoodSensations};
@@ -42,12 +43,13 @@ fn load_templates(
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct FoodTemplate {
     pub name: String,
     pub sensations: HashSet<FoodSensationType>,
     pub texture: String,
-    pub size: (f32, f32),
+    pub texture_size: (u32, u32),
+    pub sprite_size: TemplateSize,
     pub fill_factor: f32,
 }
 
@@ -58,12 +60,15 @@ impl FoodTemplate {
         asset_server: &AssetServer,
         location: Vec2,
     ) -> Entity {
+        let custom_size = self.sprite_size.vec2(self.texture_size);
+
         let entity_id = commands
             .spawn(FoodBundle {
                 sensations: FoodSensations {
                     values: self.sensations.clone(),
                 },
-                name: EntityName::new(&self.name),
+                species_name: SpeciesName::new(&self.name),
+                name: EntityName::new(format!("food.{}", self.name.to_lowercase())),
                 sprite: SpriteBundle {
                     transform: Transform::from_translation(Vec3::new(
                         location.x,
@@ -71,7 +76,7 @@ impl FoodTemplate {
                         layering::view_screen::FOOD,
                     )),
                     sprite: Sprite {
-                        custom_size: Some(Vec2::new(self.size.0, self.size.1)),
+                        custom_size: Some(custom_size),
                         ..default()
                     },
                     texture: asset_server.load(&self.texture),
@@ -81,8 +86,8 @@ impl FoodTemplate {
                 ..default()
             })
             .insert(Clickable::new(
-                Vec2::new(-(self.size.0 / 2.), self.size.0 / 2.),
-                Vec2::new(-(self.size.1 / 2.), self.size.1 / 2.),
+                Vec2::new(-(custom_size.x / 2.), custom_size.x / 2.),
+                Vec2::new(-(custom_size.y / 2.), custom_size.y / 2.),
             ))
             .id();
 
@@ -103,7 +108,7 @@ impl FoodTemplate {
     }
 }
 
-#[derive(Debug, Resource)]
+#[derive(Resource)]
 pub struct FoodTemplateDatabase {
     pub templates: Vec<FoodTemplate>,
 }
@@ -118,7 +123,7 @@ impl FoodTemplateDatabase {
     }
 }
 
-#[derive(Debug, Asset, Serialize, Deserialize, TypePath)]
+#[derive(Asset, Serialize, Deserialize, TypePath)]
 pub struct AssetFoodTemplateSet {
     pub templates: Vec<FoodTemplate>,
 }

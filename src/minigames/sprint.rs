@@ -1,11 +1,10 @@
-use bevy::{input::keyboard::KeyboardInput, prelude::*, render::view::RenderLayers, transform};
+use bevy::{prelude::*, render::view::RenderLayers};
 use bevy_parallax::{CreateParallaxEvent, LayerData, LayerSpeed, ParallaxCameraComponent};
 
 use crate::{
     assets,
     autoscroll::AutoScroll,
     pet::mood::{AutoSetMoodImage, MoodCategory, MoodImages},
-    velocity,
 };
 
 use super::{MiniGameState, Playing};
@@ -51,8 +50,8 @@ struct SprintPlayer;
 #[derive(Component)]
 struct Obstacle;
 
-const BACKGROUND_LAYER: u8 = 1;
-const GAME_LAYER: u8 = 2;
+const BACKGROUND_LAYER: usize = 1;
+const GAME_LAYER: usize = 2;
 
 const HORIZONTAL_SPEED: f32 = 30.;
 const GROUND_Y: f32 = -133.0;
@@ -71,27 +70,25 @@ fn setup(
         .spawn((
             Camera2dBundle::default(),
             RenderLayers::from_layers(&[BACKGROUND_LAYER]),
-            ParallaxCameraComponent::new(BACKGROUND_LAYER),
+            ParallaxCameraComponent::new(BACKGROUND_LAYER as u8),
             AutoScroll::new(Vec2::new(HORIZONTAL_SPEED, 0.)),
             Sprint,
             SprintBackgroundCamera,
         ))
         .id();
 
-    let game_camera = commands
-        .spawn((
-            Camera2dBundle {
-                camera: Camera {
-                    order: 2,
-                    ..default()
-                },
+    commands.spawn((
+        Camera2dBundle {
+            camera: Camera {
+                order: 2,
                 ..default()
             },
-            RenderLayers::from_layers(&[GAME_LAYER]),
-            Sprint,
-            SprintGameCamera,
-        ))
-        .id();
+            ..default()
+        },
+        RenderLayers::from_layers(&[GAME_LAYER]),
+        Sprint,
+        SprintGameCamera,
+    ));
 
     create_parallax.send(CreateParallaxEvent {
         camera: background_camera,
@@ -99,7 +96,7 @@ fn setup(
             LayerData {
                 speed: LayerSpeed::Horizontal(0.0),
                 path: assets::SprintAssets::SKY.to_string(),
-                tile_size: Vec2::new(143.0, 700.0),
+                tile_size: UVec2::new(143, 700),
                 scale: Vec2::splat(1.0),
                 z: 0.0,
                 ..default()
@@ -107,7 +104,7 @@ fn setup(
             LayerData {
                 speed: LayerSpeed::Horizontal(0.25),
                 path: assets::SprintAssets::HILLS.to_string(),
-                tile_size: Vec2::new(2000.0, 700.0),
+                tile_size: UVec2::new(2000, 700),
                 scale: Vec2::splat(1.0),
                 z: 1.0,
                 ..default()
@@ -115,7 +112,7 @@ fn setup(
             LayerData {
                 speed: LayerSpeed::Horizontal(0.5),
                 path: assets::SprintAssets::GROUND.to_string(),
-                tile_size: Vec2::new(127.0, 700.0),
+                tile_size: UVec2::new(127, 700),
                 scale: Vec2::splat(1.0),
                 z: 2.0,
                 ..default()
@@ -123,7 +120,7 @@ fn setup(
             LayerData {
                 speed: LayerSpeed::Horizontal(0.5),
                 path: assets::SprintAssets::GRASS_BLADES.to_string(),
-                tile_size: Vec2::new(218.0, 700.0),
+                tile_size: UVec2::new(218, 700),
                 scale: Vec2::splat(1.0),
                 z: 4.0,
                 ..default()
@@ -136,18 +133,21 @@ fn setup(
     let (image, texture_atlas, mood_images) = pet_sheet.single();
 
     commands.spawn((
-        SpriteSheetBundle {
+        SpriteBundle {
             transform: Transform::from_translation(Vec3::new(-200., GROUND_Y, 10.0)),
             sprite: Sprite {
                 custom_size: Some(Vec2::new(64.0, 64.0)),
                 ..default()
             },
-            atlas: texture_atlas.clone(),
             texture: image.clone(),
             ..default()
         },
+        TextureAtlas {
+            layout: texture_atlas.layout.clone(),
+            ..default()
+        },
         RenderLayers::from_layers(&[GAME_LAYER]),
-        mood_images.clone(),
+        *mood_images,
         MoodCategory::Neutral,
         AutoSetMoodImage,
         BoundingRect {
@@ -172,7 +172,7 @@ fn setup(
                 ..default()
             },
             RenderLayers::from_layers(&[GAME_LAYER]),
-            mood_images.clone(),
+            *mood_images,
             MoodCategory::Neutral,
             AutoSetMoodImage,
             Velocity(Vec2::new(-HORIZONTAL_SPEED, 0.)),
@@ -188,10 +188,11 @@ fn teardown(mut commands: Commands, to_delete: Query<Entity, With<Sprint>>) {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Component)]
 struct BoundingRect {
-    min: Vec2,
-    max: Vec2,
+    pub min: Vec2,
+    pub max: Vec2,
 }
 
 #[derive(Component, Default, Deref, DerefMut)]
@@ -199,9 +200,9 @@ struct Velocity(Vec2);
 
 fn apply_velocity(
     time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut Velocity, &BoundingRect)>,
+    mut query: Query<(&mut Transform, &mut Velocity), With<BoundingRect>>,
 ) {
-    for (mut transform, mut velocity, rect) in query.iter_mut() {
+    for (mut transform, mut velocity) in query.iter_mut() {
         transform.translation.y += velocity.y * time.delta_seconds();
         transform.translation.x += velocity.x * time.delta_seconds();
 

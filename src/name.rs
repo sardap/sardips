@@ -3,7 +3,7 @@ use core::fmt;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{assets::FontAssets, text_translation::KeyText};
+use crate::{assets::FontAssets, text_database::TextDatabase, text_translation::KeyText};
 
 pub struct NamePlugin;
 
@@ -33,6 +33,16 @@ impl EntityName {
         }
     }
 
+    pub fn random(text_db: &TextDatabase) -> Self {
+        let first_name = text_db.random_given_name_key();
+        let middle_name = text_db.random_given_name_key();
+        let last_name = text_db.random_surname_key();
+
+        Self::new(first_name)
+            .with_middle_name(middle_name)
+            .with_last_name(last_name)
+    }
+
     pub fn with_middle_name(mut self, middle_name: impl Into<String>) -> Self {
         self.middle_name = Some(middle_name.into());
         self
@@ -47,11 +57,11 @@ impl EntityName {
         let mut result = String::new();
         result.push_str(&self.first_name);
         if let Some(middle_name) = &self.middle_name {
-            result.push_str(" ");
+            result.push(' ');
             result.push_str(middle_name);
         }
         if let Some(last_name) = &self.last_name {
-            result.push_str(" ");
+            result.push(' ');
             result.push_str(last_name);
         }
         result
@@ -96,8 +106,12 @@ impl SpeciesName {
         Self(name.into())
     }
 
-    pub fn key(&self) -> String {
+    pub fn name_key(&self) -> String {
         format!("species.{}", self.0.to_lowercase())
+    }
+
+    pub fn dipdex_description_key(&self) -> String {
+        format!("dipdex.{}.description", self.0.to_lowercase())
     }
 }
 
@@ -159,7 +173,7 @@ impl HasNameTag {
 
 fn add_section_to_text(font_assets: Res<FontAssets>, mut texts: Query<&mut Text, Added<NameTag>>) {
     for mut text in texts.iter_mut() {
-        if text.sections.len() > 0 {
+        if !text.sections.is_empty() {
             continue;
         }
 
@@ -194,14 +208,14 @@ fn update_name_tag(
 
             transform.translation = Vec3::new(0., y_offset, 0.);
 
-            key.set(0, name.full_name());
+            key.set(0, name.first_name.to_owned());
         }
     }
 }
 
 fn update_text_color(mut q_texts: Query<(&mut Text, &NameTag), Changed<NameTag>>) {
     for (mut text, name_tag) in q_texts.iter_mut() {
-        if text.sections.len() > 0 {
+        if !text.sections.is_empty() {
             text.sections[0].style.color = name_tag.color;
         }
     }

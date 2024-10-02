@@ -2,10 +2,13 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    dynamic_dialogue::{Concept, FactDb},
     food::{Food, FoodFillFactor},
     layering,
+    name::SpeciesName,
     simulation::{SimulationUpdate, HUNGER_TICK_DOWN},
     sounds::{PlaySoundEffect, SoundEffect},
+    thinking::TryThinkEvent,
     SimulationState,
 };
 
@@ -68,7 +71,6 @@ pub struct Starving;
 fn tick_hunger(mut commands: Commands, mut query: Query<(Entity, &mut Hunger), Without<Starving>>) {
     for (entity, mut hunger) in query.iter_mut() {
         hunger.decrease(HUNGER_TICK_DOWN);
-        info!("Hunger: {}", hunger.value);
         if hunger.empty() {
             commands.entity(entity).insert(Starving);
         }
@@ -103,31 +105,43 @@ pub struct Eating {
 
 fn begin_eating_food(
     mut commands: Commands,
+    mut try_think_events: EventWriter<TryThinkEvent>,
     mut events: EventReader<EatFoodEvent>,
     mut play_sounds: EventWriter<PlaySoundEffect>,
-    mut food: Query<&mut Transform, With<Food>>,
+    mut food: Query<(&mut Transform, &SpeciesName), With<Food>>,
 ) {
     for event in events.read() {
-        if food.get_mut(event.food).is_err() {
+        if let Ok((mut transform, species_name)) = food.get_mut(event.food) {
+            // Enqueue a thought event for the eater
+            {
+                let mut fact_db = FactDb::default();
+                fact_db.add_str("TargetFood", &species_name.0);
+
+                try_think_events.send(
+                    TryThinkEvent::new(event.eater, Concept::ThinkStartingEating)
+                        .with_facts(fact_db),
+                );
+            }
+
+            {
+                // Remove food since it's being eaten but still want to render
+                commands.entity(event.food).remove::<Food>();
+                // Remove the tag
+                commands.entity(event.food).despawn_descendants();
+
+                transform.translation.z = layering::view_screen::FOOD_EATING;
+            }
+
+            play_sounds.send(PlaySoundEffect::new(SoundEffect::Eating));
+
+            commands.entity(event.eater).insert(Eating {
+                timer: Timer::from_seconds(3.5, TimerMode::Once),
+                target_food: event.food,
+            });
+        } else {
             error!("Food entity not found: {:?}", event.food);
             continue;
         }
-
-        {
-            // Remove food since it's being eaten but still want to render
-            commands.entity(event.food).remove::<Food>();
-            // Remove the tag
-            commands.entity(event.food).despawn_descendants();
-
-            food.get_mut(event.food).unwrap().translation.z = layering::view_screen::FOOD_EATING;
-        }
-
-        play_sounds.send(PlaySoundEffect::new(SoundEffect::Eating));
-
-        commands.entity(event.eater).insert(Eating {
-            timer: Timer::from_seconds(3.5, TimerMode::Once),
-            target_food: event.food,
-        });
     }
     events.clear();
 }
@@ -135,20 +149,27 @@ fn begin_eating_food(
 fn eating_food(
     mut commands: Commands,
     time: Res<Time>,
+    mut try_think_events: EventWriter<TryThinkEvent>,
     mut eaters: Query<(Entity, &mut Eating, &mut Hunger)>,
-    mut foods: Query<(&mut Sprite, &FoodFillFactor)>,
+    mut foods: Query<(&mut Sprite, &FoodFillFactor, &SpeciesName)>,
 ) {
     for (entity, mut eating, mut hunger) in eaters.iter_mut() {
         eating.timer.tick(time.delta());
 
         // Get percentage of timer complete
         let percent = eating.timer.elapsed().as_secs_f32() / eating.timer.duration().as_secs_f32();
-        if let Ok((mut sprite, _)) = foods.get_mut(eating.target_food) {
-            sprite.color = Color::rgba(1.0, 1.0, 1.0, 1.0 - percent);
+        if let Ok((mut sprite, _, _)) = foods.get_mut(eating.target_food) {
+            sprite.color = Color::srgba(1.0, 1.0, 1.0, 1.0 - percent);
         }
 
         if eating.timer.finished() {
-            if let Ok((_, food_fill_factor)) = foods.get(eating.target_food) {
+            if let Ok((_, food_fill_factor, name)) = foods.get(eating.target_food) {
+                let mut fact_db: FactDb = FactDb::default();
+                fact_db.add_str("TargetFood", &name.0);
+
+                try_think_events
+                    .send(TryThinkEvent::new(entity, Concept::ThinkJustAte).with_facts(fact_db));
+
                 hunger.increase(food_fill_factor.0);
                 commands.entity(eating.target_food).despawn_recursive();
             }

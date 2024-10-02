@@ -9,6 +9,7 @@
         "criterias",
         "datetime",
         "despawn",
+        "Dipdex",
         "Interactable",
         "Minigame",
         "minigames",
@@ -24,9 +25,6 @@
         "turborand",
         "Umami",
         "visislbitly"
-    ],
-    "rust-analyzer.linkedProjects": [
-        ".\\Cargo.toml"
     ],
     "editor.formatOnSave": true,
     "editor.semanticTokenColorCustomizations": {
