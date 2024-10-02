@@ -125,10 +125,9 @@ jobs:
         uses: actions/checkout@v3
       - name: Set NUGET_VERSION without 'v' prefix
         run: |
-          NUGET_VERSION=${VERSION#v}
-          echo "NUGET_VERSION=$NUGET_VERSION" >> $GITHUB_ENV
-        env:
-          VERSION: ${{ needs.get-version.outputs.version }}
+          $version = "${{ env.VERSION }}"
+          $nuget_version = $version.TrimStart('v')
+          echo "NUGET_VERSION=$nuget_version" >> $env:GITHUB_ENV
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
