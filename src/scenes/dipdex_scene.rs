@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -35,6 +36,10 @@ impl Plugin for DipdexScenePlugin {
             .add_systems(OnExit(DipdexState::Selecting), hide_node::<DipdexPageNode>)
             .add_systems(
                 Update,
+                rotate_static.run_if(in_state(GameState::DipdexView)),
+            )
+            .add_systems(
+                Update,
                 (
                     show_dex_page,
                     next_page_button,
@@ -65,6 +70,8 @@ pub const HEADER_SIZE: f32 = 40.;
 pub const SUBHEADER_SIZE: f32 = 30.;
 pub const SUB_SUBHEADER_SIZE: f32 = 25.;
 pub const BODY_SIZE: f32 = 20.;
+
+pub const KNOWN_BACKGROUND: Color = Color::srgb(0.737, 0.961, 0.737);
 
 #[derive(States, Debug, Clone, Eq, PartialEq, Hash, Default)]
 enum DipdexState {
@@ -303,7 +310,7 @@ fn make_dipdex_list_entry(
                 ..default()
             },
             border_color: BorderColor(Color::BLACK),
-            background_color: BackgroundColor(Color::Srgba(bevy::color::palettes::css::DARK_GRAY)),
+            background_color: BackgroundColor(KNOWN_BACKGROUND),
             ..default()
         })
         .with_children(|parent| {
@@ -322,7 +329,7 @@ fn make_dipdex_list_entry(
                             height: h,
                             ..default()
                         },
-                        image: UiImage::new(dipdex_assets.screen_noise.clone()),
+                        image: UiImage::new(template.pre_calculated.texture.clone()),
                         ..default()
                     },
                     TextureAtlas {
@@ -332,17 +339,24 @@ fn make_dipdex_list_entry(
                 ));
 
                 // Spawn overlay
-                parent.spawn(ImageBundle {
-                    style: Style {
-                        position_type: PositionType::Absolute,
-                        width: Val::Percent(90.),
-                        height: Val::Percent(90.),
+                parent.spawn((
+                    ImageBundle {
+                        style: Style {
+                            position_type: PositionType::Absolute,
+                            width: Val::Percent(90.),
+                            height: Val::Percent(90.),
+                            ..default()
+                        },
+                        image: UiImage::new(dipdex_assets.screen_noise.clone())
+                            .with_color(Color::srgba(1., 1., 1., 0.3)),
                         ..default()
                     },
-                    background_color: BackgroundColor(Color::srgba(0., 1., 0., 0.1)),
-                    image: UiImage::new(dipdex_assets.screen_noise.clone()),
-                    ..default()
-                });
+                    TextureAtlas {
+                        layout: dipdex_assets.screen_noise_layout.clone(),
+                        index: 0,
+                    },
+                    RotateStatic::default(),
+                ));
             } else {
                 parent.spawn(ImageBundle {
                     style: Style {
@@ -411,6 +425,33 @@ fn make_dipdex_list_entry(
 
     if !discovered {
         entity.remove::<Interaction>();
+    }
+}
+
+#[derive(Component)]
+struct RotateStatic {
+    timer: Timer,
+}
+
+impl Default for RotateStatic {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(0.2, TimerMode::Repeating),
+        }
+    }
+}
+
+fn rotate_static(
+    time: Res<Time>,
+    mut rand: ResMut<GlobalRng>,
+    mut rotate: Query<(&mut TextureAtlas, &mut RotateStatic)>,
+) {
+    let rand = rand.get_mut();
+
+    for (mut layout, mut rotate) in rotate.iter_mut() {
+        if rotate.timer.tick(time.delta()).just_finished() {
+            layout.index = rand.gen_usize() % 64;
+        }
     }
 }
 
@@ -616,9 +657,7 @@ fn update_dipdex_entry_view(
                         align_items: AlignItems::Center,
                         ..default()
                     },
-                    background_color: BackgroundColor(Color::Srgba(
-                        bevy::color::palettes::css::GRAY,
-                    )),
+                    background_color: BackgroundColor(KNOWN_BACKGROUND),
                     border_color: BorderColor(Color::BLACK),
                     ..default()
                 })
@@ -652,7 +691,7 @@ fn update_dipdex_entry_view(
                                         height: h,
                                         ..default()
                                     },
-                                    image: UiImage::new(dipdex_assets.screen_noise.clone()),
+                                    image: UiImage::new(template.pre_calculated.texture.clone()),
                                     ..default()
                                 },
                                 TextureAtlas {
@@ -666,17 +705,24 @@ fn update_dipdex_entry_view(
                             ));
                         });
 
-                    parent.spawn(ImageBundle {
-                        style: Style {
-                            position_type: PositionType::Absolute,
-                            width: Val::Percent(95.),
-                            height: Val::Percent(95.),
+                    parent.spawn((
+                        ImageBundle {
+                            style: Style {
+                                position_type: PositionType::Absolute,
+                                width: Val::Percent(95.),
+                                height: Val::Percent(95.),
+                                ..default()
+                            },
+                            image: UiImage::new(dipdex_assets.screen_noise.clone())
+                                .with_color(Color::srgba(1., 1., 1., 0.2)),
                             ..default()
                         },
-                        background_color: BackgroundColor(Color::srgba(0., 1., 0., 0.1)),
-                        image: UiImage::new(dipdex_assets.screen_noise.clone()),
-                        ..default()
-                    });
+                        TextureAtlas {
+                            layout: dipdex_assets.screen_noise_layout.clone(),
+                            index: 0,
+                        },
+                        RotateStatic::default(),
+                    ));
                 });
 
             parent

@@ -144,6 +144,10 @@ pub struct FourInRowAssets {
 pub struct DipdexImageAssets {
     #[asset(path = "textures/dipdex/unknown.png")]
     pub unknown: Handle<Image>,
-    #[asset(path = "textures/dipdex/screen_noise.png")]
+    #[asset(path = "textures/dipdex/noise_3.png")]
     pub screen_noise: Handle<Image>,
+    #[asset(texture_atlas_layout(tile_size_x = 100, tile_size_y = 100, columns = 8, rows = 8,))]
+    pub screen_noise_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "textures/dipdex/known_background.png")]
+    pub known_background: Handle<Image>,
 }
