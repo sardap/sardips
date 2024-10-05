@@ -1,12 +1,15 @@
 pub mod dipdex_scene;
+pub mod food_buy_scene;
 pub mod info_panel;
 pub mod load_view_screen;
 pub mod loading;
 pub mod main_menu;
 pub mod minigame_scene;
+pub mod template_scene;
 pub mod view_screen;
 
 use bevy::prelude::*;
+use food_buy_scene::FoodBuyScenePlugin;
 
 use self::{
     dipdex_scene::DipdexScenePlugin, load_view_screen::LoadViewScreenPlugin,
@@ -25,6 +28,7 @@ impl Plugin for GameScenePlugin {
             LoadingScenePlugin,
             LoadViewScreenPlugin,
             DipdexScenePlugin,
+            FoodBuyScenePlugin,
         ));
     }
 }

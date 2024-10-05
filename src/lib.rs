@@ -79,7 +79,9 @@ pub enum GameState {
     LoadViewScreen,
     ViewScreen,
     MiniGame,
+    Template,
     DipdexView,
+    FoodBuy,
 }
 
 pub fn despawn_all<C: Component>(mut commands: Commands, query: Query<Entity, With<C>>) {

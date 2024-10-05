@@ -48,7 +48,7 @@ pub struct AudioAssets {
 
 #[derive(AssetCollection, Resource)]
 pub struct ViewScreenImageAssets {
-    #[asset(texture_atlas_layout(tile_size_x = 70, tile_size_y = 70, columns = 4, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 70, tile_size_y = 70, columns = 5, rows = 1,))]
     pub view_buttons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/view_buttons.png")]
     pub view_buttons: Handle<Image>,

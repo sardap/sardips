@@ -348,7 +348,7 @@ fn make_dipdex_list_entry(
                             ..default()
                         },
                         image: UiImage::new(dipdex_assets.screen_noise.clone())
-                            .with_color(Color::srgba(1., 1., 1., 0.3)),
+                            .with_color(Color::srgba(1., 1., 1., 0.1)),
                         ..default()
                     },
                     TextureAtlas {
@@ -714,7 +714,7 @@ fn update_dipdex_entry_view(
                                 ..default()
                             },
                             image: UiImage::new(dipdex_assets.screen_noise.clone())
-                                .with_color(Color::srgba(1., 1., 1., 0.2)),
+                                .with_color(Color::srgba(1., 1., 1., 0.05)),
                             ..default()
                         },
                         TextureAtlas {
@@ -1003,9 +1003,9 @@ fn update_dipdex_entry_view(
 }
 
 fn hide_node<T: Component>(mut view: Query<&mut Style, With<T>>) {
-    let mut style = view.single_mut();
-
-    style.display = Display::None;
+    if let Ok(mut style) = view.get_single_mut() {
+        style.display = Display::None;
+    }
 }
 
 fn show_node<T: Component>(mut view: Query<&mut Style, With<T>>) {

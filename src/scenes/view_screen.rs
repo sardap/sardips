@@ -77,7 +77,7 @@ impl MenuOption {
             MenuOption::Tools => 1,
             MenuOption::Food => 2,
             MenuOption::MiniGames => 3,
-            MenuOption::Dipdex => 0,
+            MenuOption::Dipdex => 4,
             MenuOption::Options => 0,
         }
     }
@@ -311,6 +311,7 @@ fn menu_button_interaction(
             }
             MenuOption::Food => {
                 vs_state.set(VSSubState::None);
+                game_state.set(GameState::FoodBuy);
             }
             MenuOption::Tools => {
                 vs_state.set(VSSubState::ToolPoopScooper);
