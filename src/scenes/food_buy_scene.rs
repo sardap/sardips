@@ -2,12 +2,8 @@ use bevy::prelude::*;
 use strum_macros::EnumIter;
 
 use crate::{
-    assets::FontAssets,
-    button_hover::ButtonHover,
-    palettes,
-    text_database::text_keys::MINIGAME_SELECT_FOUR_IN_ROW,
-    text_translation::{KeyString, KeyText},
-    GameState,
+    assets::FontAssets, palettes, text_database::text_keys::FOOD_BUY_SCENE_TITLE,
+    text_translation::KeyText, GameState,
 };
 
 pub struct FoodBuyScenePlugin;
@@ -70,39 +66,17 @@ fn setup_ui(mut commands: Commands, fonts: Res<FontAssets>) {
             FoodBuyScene,
         ))
         .with_children(|parent| {
-            parent
-                .spawn((
-                    ButtonBundle {
-                        style: Style {
-                            width: Val::Px(200.0),
-                            height: Val::Px(100.0),
-                            border: UiRect::all(Val::Px(5.0)),
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            margin: UiRect::new(Val::Px(0.), Val::Px(0.), Val::Px(5.), Val::Px(5.)),
-                            ..default()
-                        },
-                        ..default()
+            parent.spawn((
+                TextBundle::from_section(
+                    "",
+                    TextStyle {
+                        font: fonts.main_font.clone(),
+                        font_size: 50.0,
+                        color: Color::BLACK,
                     },
-                    ButtonHover::default()
-                        .with_background(palettes::minigame_select::BUTTON_SET)
-                        .with_border(palettes::minigame_select::BUTTON_BORDER_SET),
-                ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        TextBundle::from_section(
-                            "",
-                            TextStyle {
-                                font: fonts.main_font.clone(),
-                                font_size: 40.0,
-                                color: Color::BLACK,
-                            },
-                        ),
-                        KeyText {
-                            keys: hashmap! { 0 => KeyString::Direct(MINIGAME_SELECT_FOUR_IN_ROW.to_string()) },
-                        },
-                    ));
-                });
+                ),
+                KeyText::new().with(0, FOOD_BUY_SCENE_TITLE),
+            ));
         });
 }
 

@@ -1,16 +1,14 @@
 use std::path::Path;
 
 use bevy::prelude::*;
-use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 use chrono::{DateTime, Utc};
+use moonshine_save::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     age::Age,
-    assets::GameImageAssets,
     dynamic_dialogue::FactDb,
-    facts::{EntityFactDatabase, GlobalFactDatabase},
-    food::{template::FoodTemplateDatabase, Food},
+    facts::EntityFactDatabase,
     money::{MoneyHungry, Wallet},
     name::{EntityName, SpeciesName},
     pet::{
@@ -19,32 +17,88 @@ use crate::{
         fun::Fun,
         hunger::Hunger,
         mood::{Mood, MoodCategoryHistory},
-        poop::{poop_scale, spawn_poop, Cleanliness, Poop, Pooper},
-        template::SpawnPetEvent,
-        Pet, PetKind,
+        poop::{Cleanliness, Pooper},
+        PetKind,
     },
-    player::Player,
-    simulation::{SimTime, SimTimeTrait, SimulationState},
     velocity::Speed,
-    VERSION,
+    GameState,
 };
 
 pub struct SardipSavePlugin;
 
 impl Plugin for SardipSavePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_state(SardipLoadingState::default())
-            .add_event::<TriggerSave>()
-            // Systems
+        app.add_plugins((SavePlugin, LoadPlugin))
+            .insert_state(SardipLoadingState::default())
+            // .add_systems(PreUpdate, save_default().into_file("world.ron"))
+            .add_systems(
+                PreUpdate,
+                save_default().into(file_from_resource::<SaveRequest>()),
+            )
+            .add_systems(PreUpdate, load(file_from_resource::<LoadRequest>()))
+            .add_systems(OnEnter(SardipLoadingState::Loading), trigger_load)
+            .add_systems(Update, trigger_save.run_if(in_state(GameState::ViewScreen)))
             .add_systems(
                 Update,
-                (
-                    trigger_save_looping.run_if(in_state(SimulationState::Running)),
-                    save_game,
-                ),
-            )
-            .add_systems(OnEnter(SardipLoadingState::Loading), load_game);
+                post_load.run_if(in_state(SardipLoadingState::Loading)),
+            );
+
+        // app.insert_state(SardipLoadingState::default())
+        //     .add_event::<TriggerSave>()
+        //     // Systems
+        //     .add_systems(
+        //         Update,
+        //         (
+        //             trigger_save_looping.run_if(in_state(SimulationState::Running)),
+        //             save_game,
+        //         ),
+        //     )
+        //     .add_systems(OnEnter(SardipLoadingState::Loading), load_game);
     }
+}
+
+#[derive(Resource)]
+struct SaveRequest;
+
+impl GetFilePath for SaveRequest {
+    fn path(&self) -> &Path {
+        SAVE_PATH.as_ref()
+    }
+}
+
+#[derive(Resource)]
+struct LoadRequest;
+
+impl GetFilePath for LoadRequest {
+    fn path(&self) -> &Path {
+        SAVE_PATH.as_ref()
+    }
+}
+
+struct SaveTimer {
+    timer: Timer,
+}
+
+impl Default for SaveTimer {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(5., TimerMode::Repeating),
+        }
+    }
+}
+
+fn trigger_save(mut commands: Commands, time: Res<Time>, mut save_timer: Local<SaveTimer>) {
+    if save_timer.timer.tick(time.delta()).just_finished() {
+        commands.insert_resource(SaveRequest);
+    }
+}
+
+fn trigger_load(mut commands: Commands) {
+    commands.insert_resource(LoadRequest);
+}
+
+fn post_load(mut state: ResMut<NextState<SardipLoadingState>>) {
+    state.set(SardipLoadingState::Loaded);
 }
 
 #[derive(Debug, States, Default, PartialEq, Eq, Clone, Copy, Hash)]
@@ -77,7 +131,6 @@ struct PlayerSave {
 pub struct SavedFood {
     pub position: Vec2,
     pub name: SpeciesName,
-    pub persistent_id: PersistentId,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -105,293 +158,254 @@ pub struct SavedPet {
     pub money_hungry: Option<MoneyHungry>,
 }
 
-struct SaveTimer {
-    timer: Timer,
-}
+// fn save_game(
+//     mut should_save: EventReader<TriggerSave>,
+//     sim_time: Res<Time<SimTime>>,
+//     global_facts: Res<GlobalFactDatabase>,
+//     pet: Query<
+//         (
+//             &SpeciesName,
+//             &EntityName,
+//             &Speed,
+//             &EntityFactDatabase,
+//             &PetKind,
+//             &Age,
+//             Option<&Breeds>,
+//             &Mood,
+//             &MoodCategoryHistory,
+//             Option<&Fun>,
+//             Option<&Hunger>,
+//             Option<&Pooper>,
+//             Option<&Cleanliness>,
+//             Option<&MoneyHungry>,
+//         ),
+//         With<Pet>,
+//     >,
+//     poops: Query<(&Transform, &Poop)>,
+//     foods: Query<(&PersistentId, &Transform, &SpeciesName), With<Food>>,
+//     player: Query<(&Wallet, &DipdexDiscoveredEntries), With<Player>>,
+// ) {
+//     if should_save.is_empty() {
+//         return;
+//     }
+//     should_save.clear();
 
-impl Default for SaveTimer {
-    fn default() -> Self {
-        Self {
-            timer: Timer::from_seconds(5., TimerMode::Repeating),
-        }
-    }
-}
+//     debug!("Saving game");
 
-fn trigger_save_looping(
-    time: Res<Time>,
-    mut timer: Local<SaveTimer>,
-    mut save: EventWriter<TriggerSave>,
-) {
-    if timer.timer.tick(time.delta()).just_finished() {
-        save.send(TriggerSave);
-    }
-}
+//     let (player_wallet, dipdex) = player.single();
 
-fn save_game(
-    mut should_save: EventReader<TriggerSave>,
-    sim_time: Res<Time<SimTime>>,
-    global_facts: Res<GlobalFactDatabase>,
-    pet: Query<
-        (
-            &SpeciesName,
-            &EntityName,
-            &Speed,
-            &EntityFactDatabase,
-            &PetKind,
-            &Age,
-            Option<&Breeds>,
-            &Mood,
-            &MoodCategoryHistory,
-            Option<&Fun>,
-            Option<&Hunger>,
-            Option<&Pooper>,
-            Option<&Cleanliness>,
-            Option<&MoneyHungry>,
-        ),
-        With<Pet>,
-    >,
-    poops: Query<(&Transform, &Poop)>,
-    foods: Query<(&PersistentId, &Transform, &SpeciesName), With<Food>>,
-    player: Query<(&Wallet, &DipdexDiscoveredEntries), With<Player>>,
-) {
-    if should_save.is_empty() {
-        return;
-    }
-    should_save.clear();
+//     let mut save_game = SaveGame {
+//         version: VERSION.to_string(),
+//         time_saved: sim_time.last_run(),
+//         player_save: PlayerSave {
+//             wallet: player_wallet.clone(),
+//             dipdex: dipdex.clone(),
+//         },
+//         global_facts: global_facts.0.clone(),
+//         pets: Vec::new(),
+//         poops: Vec::new(),
+//         foods: Vec::new(),
+//     };
 
-    debug!("Saving game");
+//     for (
+//         species_name,
+//         name,
+//         speed,
+//         fact_db,
+//         kind,
+//         age,
+//         breeds,
+//         mood,
+//         mood_category_history,
+//         fun,
+//         hunger,
+//         pooper,
+//         cleanliness,
+//         money_hungry,
+//     ) in pet.iter()
+//     {
+//         save_game.pets.push(SavedPet {
+//             location: None,
+//             species_name: species_name.clone(),
+//             name: name.clone(),
+//             speed: speed.clone(),
+//             fact_db: fact_db.clone(),
+//             kind: *kind,
+//             age: age.clone(),
+//             breeds: breeds.cloned(),
+//             mood: mood.clone(),
+//             mood_history: mood_category_history.clone(),
+//             fun: fun.cloned(),
+//             hunger: hunger.cloned(),
+//             pooper: pooper.cloned(),
+//             cleanliness: cleanliness.cloned(),
+//             money_hungry: money_hungry.cloned(),
+//         });
+//     }
 
-    let (player_wallet, dipdex) = player.single();
+//     for (transform, poop) in poops.iter() {
+//         save_game.poops.push(SavedPoop {
+//             position: transform.translation.xy(),
+//             texture: poop.texture_path.clone(),
+//         });
+//     }
 
-    let mut save_game = SaveGame {
-        version: VERSION.to_string(),
-        time_saved: sim_time.last_run(),
-        player_save: PlayerSave {
-            wallet: player_wallet.clone(),
-            dipdex: dipdex.clone(),
-        },
-        global_facts: global_facts.0.clone(),
-        pets: Vec::new(),
-        poops: Vec::new(),
-        foods: Vec::new(),
-    };
+//     for (id, transform, name) in foods.iter() {
+//         save_game.foods.push(SavedFood {
+//             persistent_id: id.clone(),
+//             position: transform.translation.xy(),
+//             name: name.clone(),
+//         });
+//     }
 
-    for (
-        species_name,
-        name,
-        speed,
-        fact_db,
-        kind,
-        age,
-        breeds,
-        mood,
-        mood_category_history,
-        fun,
-        hunger,
-        pooper,
-        cleanliness,
-        money_hungry,
-    ) in pet.iter()
-    {
-        save_game.pets.push(SavedPet {
-            location: None,
-            species_name: species_name.clone(),
-            name: name.clone(),
-            speed: speed.clone(),
-            fact_db: fact_db.clone(),
-            kind: *kind,
-            age: age.clone(),
-            breeds: breeds.cloned(),
-            mood: mood.clone(),
-            mood_history: mood_category_history.clone(),
-            fun: fun.cloned(),
-            hunger: hunger.cloned(),
-            pooper: pooper.cloned(),
-            cleanliness: cleanliness.cloned(),
-            money_hungry: money_hungry.cloned(),
-        });
-    }
+//     let save_path = Path::new(SAVE_PATH);
+//     let save_file = std::fs::File::create(save_path).unwrap();
+//     #[cfg(feature = "dev")]
+//     ron::ser::to_writer_pretty(save_file, &save_game, ron::ser::PrettyConfig::default())
+//         .expect("Failed to save game");
 
-    for (transform, poop) in poops.iter() {
-        save_game.poops.push(SavedPoop {
-            position: transform.translation.xy(),
-            texture: poop.texture_path.clone(),
-        });
-    }
+//     #[cfg(not(feature = "dev"))]
+//     bincode::serialize_into(save_file, &save_game).unwrap();
+// }
 
-    for (id, transform, name) in foods.iter() {
-        save_game.foods.push(SavedFood {
-            persistent_id: id.clone(),
-            position: transform.translation.xy(),
-            name: name.clone(),
-        });
-    }
+// #[derive(Deserialize)]
+// struct SaveGameVersionOnly {
+//     version: String,
+// }
 
-    let save_path = Path::new(SAVE_PATH);
-    let save_file = std::fs::File::create(save_path).unwrap();
-    #[cfg(feature = "dev")]
-    ron::ser::to_writer_pretty(save_file, &save_game, ron::ser::PrettyConfig::default())
-        .expect("Failed to save game");
+// pub fn save_compatibility(a: &str, b: &str) -> bool {
+//     let a = a.split('.').collect::<Vec<_>>();
+//     let b = b.split('.').collect::<Vec<_>>();
 
-    #[cfg(not(feature = "dev"))]
-    bincode::serialize_into(save_file, &save_game).unwrap();
-}
+//     // check majors are the same
+//     if a[0] != b[0] {
+//         return false;
+//     }
 
-#[derive(Deserialize)]
-struct SaveGameVersionOnly {
-    version: String,
-}
+//     // Check minor versions are the same
+//     if a.len() > 1 && b.len() > 1 && a[1] != b[1] {
+//         return false;
+//     }
 
-pub fn save_compatibility(a: &str, b: &str) -> bool {
-    let a = a.split('.').collect::<Vec<_>>();
-    let b = b.split('.').collect::<Vec<_>>();
+//     true
+// }
 
-    // check majors are the same
-    if a[0] != b[0] {
-        return false;
-    }
+// fn load_game(
+//     mut commands: Commands,
+//     mut spawn_pets: EventWriter<SpawnPetEvent>,
+//     mut sim_time: ResMut<Time<SimTime>>,
+//     mut rng: ResMut<GlobalRng>,
+//     mut state: ResMut<NextState<SardipLoadingState>>,
+//     mut global_fact_db: ResMut<GlobalFactDatabase>,
+//     asset_server: Res<AssetServer>,
+//     game_image_assets: Res<GameImageAssets>,
+//     player: Query<Entity, With<Player>>,
+// ) {
+//     debug!("Loading game");
+//     let load_path = Path::new(SAVE_PATH);
+//     let save_file = match std::fs::read(load_path) {
+//         Ok(string) => string,
+//         Err(_) => {
+//             error!("Failed to open save file");
+//             state.set(SardipLoadingState::Failed);
+//             return;
+//         }
+//     };
 
-    // Check minor versions are the same
-    if a.len() > 1 && b.len() > 1 && a[1] != b[1] {
-        return false;
-    }
+//     // Check minor version is the same
+//     #[cfg(feature = "dev")]
+//     let version: SaveGameVersionOnly = match ron::de::from_bytes(&save_file) {
+//         Ok(version) => version,
+//         Err(_) => {
+//             error!("Failed to deserialize save file version");
+//             state.set(SardipLoadingState::Failed);
+//             return;
+//         }
+//     };
 
-    true
-}
+//     #[cfg(not(feature = "dev"))]
+//     let version: SaveGameVersionOnly = match bincode::deserialize(&save_file) {
+//         Ok(version) => version,
+//         Err(_) => {
+//             error!("Failed to deserialize save file version");
+//             state.set(SardipLoadingState::Failed);
+//             return;
+//         }
+//     };
 
-fn load_game(
-    mut commands: Commands,
-    mut spawn_pets: EventWriter<SpawnPetEvent>,
-    mut sim_time: ResMut<Time<SimTime>>,
-    mut rng: ResMut<GlobalRng>,
-    mut state: ResMut<NextState<SardipLoadingState>>,
-    mut global_fact_db: ResMut<GlobalFactDatabase>,
-    asset_server: Res<AssetServer>,
-    food_template_db: Res<FoodTemplateDatabase>,
-    game_image_assets: Res<GameImageAssets>,
-    player: Query<Entity, With<Player>>,
-) {
-    debug!("Loading game");
-    let load_path = Path::new(SAVE_PATH);
-    let save_file = match std::fs::read(load_path) {
-        Ok(string) => string,
-        Err(_) => {
-            error!("Failed to open save file");
-            state.set(SardipLoadingState::Failed);
-            return;
-        }
-    };
+//     if !save_compatibility(&version.version, VERSION) {
+//         error!(
+//             "Save file version mismatch: {} != {}",
+//             version.version, VERSION
+//         );
+//         state.set(SardipLoadingState::Failed);
+//         return;
+//     }
 
-    // Check minor version is the same
-    #[cfg(feature = "dev")]
-    let version: SaveGameVersionOnly = match ron::de::from_bytes(&save_file) {
-        Ok(version) => version,
-        Err(_) => {
-            error!("Failed to deserialize save file version");
-            state.set(SardipLoadingState::Failed);
-            return;
-        }
-    };
+//     #[cfg(feature = "dev")]
+//     let save_game: SaveGame = match ron::de::from_bytes(&save_file) {
+//         Ok(save_game) => save_game,
+//         Err(err) => {
+//             error!("Failed to deserialize save file {}", err);
+//             state.set(SardipLoadingState::Failed);
+//             return;
+//         }
+//     };
 
-    #[cfg(not(feature = "dev"))]
-    let version: SaveGameVersionOnly = match bincode::deserialize(&save_file) {
-        Ok(version) => version,
-        Err(_) => {
-            error!("Failed to deserialize save file version");
-            state.set(SardipLoadingState::Failed);
-            return;
-        }
-    };
+//     #[cfg(not(feature = "dev"))]
+//     let save_game: SaveGame = match bincode::deserialize(&save_file) {
+//         Ok(save_game) => save_game,
+//         Err(_) => {
+//             error!("Failed to deserialize save file");
+//             state.set(SardipLoadingState::Failed);
+//             return;
+//         }
+//     };
 
-    if !save_compatibility(&version.version, VERSION) {
-        error!(
-            "Save file version mismatch: {} != {}",
-            version.version, VERSION
-        );
-        state.set(SardipLoadingState::Failed);
-        return;
-    }
+//     sim_time.set_last_run(save_game.time_saved);
 
-    #[cfg(feature = "dev")]
-    let save_game: SaveGame = match ron::de::from_bytes(&save_file) {
-        Ok(save_game) => save_game,
-        Err(err) => {
-            error!("Failed to deserialize save file {}", err);
-            state.set(SardipLoadingState::Failed);
-            return;
-        }
-    };
+//     global_fact_db.0 = save_game.global_facts;
 
-    #[cfg(not(feature = "dev"))]
-    let save_game: SaveGame = match bincode::deserialize(&save_file) {
-        Ok(save_game) => save_game,
-        Err(_) => {
-            error!("Failed to deserialize save file");
-            state.set(SardipLoadingState::Failed);
-            return;
-        }
-    };
+//     // Load player
+//     let player_entity = player.single();
+//     commands
+//         .entity(player_entity)
+//         .insert(save_game.player_save.wallet.clone())
+//         .insert(save_game.player_save.dipdex.clone());
 
-    sim_time.set_last_run(save_game.time_saved);
+//     // Load pets
+//     for saved_pet in save_game.pets {
+//         spawn_pets.send(SpawnPetEvent::Saved(saved_pet.clone()));
+//     }
 
-    global_fact_db.0 = save_game.global_facts;
+//     // Load Foods
+//     // for saved_food in save_game.foods {
+//     //     //Get Food template from name
+//     //     let template = food_template_db
+//     //         .get(&saved_food.name.0)
+//     //         .expect("Failed to find food template");
 
-    // Load player
-    let player_entity = player.single();
-    commands
-        .entity(player_entity)
-        .insert(save_game.player_save.wallet.clone())
-        .insert(save_game.player_save.dipdex.clone());
+//     //     let entity = template.spawn(&mut commands, &asset_server, saved_food.position);
+//     //     commands.entity(entity).insert(saved_food.persistent_id);
+//     // }
 
-    // Load pets
-    for saved_pet in save_game.pets {
-        spawn_pets.send(SpawnPetEvent::Saved(saved_pet.clone()));
-    }
+//     let mut rng = RngComponent::from(&mut rng);
+//     let mut rng = rng.fork();
 
-    // Load Foods
-    for saved_food in save_game.foods {
-        //Get Food template from name
-        let template = food_template_db
-            .get(&saved_food.name.0)
-            .expect("Failed to find food template");
+//     // Load Poops
+//     for saved_poop in save_game.poops {
+//         spawn_poop(
+//             &mut commands,
+//             &asset_server,
+//             &game_image_assets,
+//             poop_scale(&mut rng),
+//             saved_poop.position,
+//             &saved_poop.texture,
+//         );
+//     }
 
-        let entity = template.spawn(&mut commands, &asset_server, saved_food.position);
-        commands.entity(entity).insert(saved_food.persistent_id);
-    }
+//     debug!("Game loaded");
+//     state.set(SardipLoadingState::Loaded);
+// }
 
-    let mut rng = RngComponent::from(&mut rng);
-    let mut rng = rng.fork();
-
-    // Load Poops
-    for saved_poop in save_game.poops {
-        spawn_poop(
-            &mut commands,
-            &asset_server,
-            &game_image_assets,
-            poop_scale(&mut rng),
-            saved_poop.position,
-            &saved_poop.texture,
-        );
-    }
-
-    debug!("Game loaded");
-    state.set(SardipLoadingState::Loaded);
-}
-
-const SAVE_PATH: &str = "sardip_save.sav";
-
-#[derive(Event)]
-pub struct TriggerSave;
-
-#[derive(Component, Serialize, Deserialize, Clone)]
-pub struct PersistentId {
-    uuid: uuid::Uuid,
-}
-
-impl Default for PersistentId {
-    fn default() -> Self {
-        Self {
-            uuid: uuid::Uuid::new_v4(),
-        }
-    }
-}
+const SAVE_PATH: &str = "sardip_save.ron";

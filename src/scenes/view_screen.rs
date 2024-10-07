@@ -6,7 +6,7 @@ use crate::{
     assets::{FontAssets, GameImageAssets, ViewScreenImageAssets},
     button_hover::{ButtonHover, Selected},
     despawn_all,
-    food::Food,
+    food::FoodView,
     interaction::{Hovering, MouseCamera},
     money::Wallet,
     name::NameTag,
@@ -14,6 +14,7 @@ use crate::{
     pet::Pet,
     player::Player,
     tools::poop_scooper::{create_poop_scooper, PoopScooper},
+    view::EntityView,
     GameState, SimulationState,
 };
 
@@ -258,7 +259,7 @@ fn info_panel_handle_click(
     mut info_panel_clear: EventWriter<InfoPanelsClear>,
     buttons: Res<ButtonInput<MouseButton>>,
     pets: Query<Entity, (With<Pet>, With<Hovering>)>,
-    foods: Query<Entity, (With<Food>, With<Hovering>)>,
+    foods: Query<&EntityView, (With<FoodView>, With<Hovering>)>,
     mut name_tags: Query<&mut NameTag>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
@@ -272,9 +273,9 @@ fn info_panel_handle_click(
             clicked = true;
         }
 
-        for entity in foods.iter() {
+        for view in foods.iter() {
             update_info_panel.send(InfoPanelUpdate {
-                entity,
+                entity: view.entity,
                 panel_type: PanelType::Food,
             });
             clicked = true;

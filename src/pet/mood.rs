@@ -342,8 +342,7 @@ fn update_overall_mood(mut moods: Query<(&Mood, &mut MoodCategory)>) {
     }
 }
 
-#[derive(Debug, Component, Default, Clone, Copy, Reflect)]
-#[reflect(Component)]
+#[derive(Debug, Component, Default, Clone, Copy)]
 pub struct MoodImages {
     indexes: [usize; 5],
 }

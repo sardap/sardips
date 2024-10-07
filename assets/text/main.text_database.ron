@@ -84,6 +84,8 @@ TextDatabase(
             "dipdex.stats_header": "Stats",
             "dipdex.species_title": "Species",
 
+            "food_buy_scene.title": "Buy food",
+
             "species.blob": "Blob",
             "dipdex.blob.description": "The most basic form of a sardip. All sardips can trace their lineage back to the blob.",
             "species.pawn": "Pawn",

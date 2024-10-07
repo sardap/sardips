@@ -38,8 +38,7 @@ impl Plugin for PetAiPlugin {
     }
 }
 
-#[derive(Debug, Component, Reflect)]
-#[reflect(Component)]
+#[derive(Debug, Component)]
 pub struct PetAi {
     pub food_cooldown: Timer,
     pub check_breed_cooldown: Timer,

@@ -12,8 +12,7 @@ impl Plugin for VelocityPlugin {
 #[derive(Debug, Component, Default, Clone, Serialize, Deserialize)]
 pub struct Speed(pub f32);
 
-#[derive(Debug, Component, Default, Reflect)]
-#[reflect(Component)]
+#[derive(Debug, Component, Default)]
 pub struct MovementDirection {
     pub direction: Vec2,
 }

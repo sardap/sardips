@@ -31,6 +31,7 @@ pub mod text_translation;
 pub mod thinking;
 pub mod tools;
 pub mod velocity;
+pub mod view;
 
 use crate::name::NamePlugin;
 use age::AgePlugin;
@@ -61,6 +62,7 @@ use text_translation::TextTranslationPlugin;
 use thinking::ThinkingPlugin;
 use tools::{poop_scooper::PoopScooperPlugin, ToolPlugin};
 use velocity::VelocityPlugin;
+use view::ViewPlugin;
 
 #[macro_use]
 extern crate lazy_static;
@@ -122,8 +124,8 @@ impl Plugin for GamePlugin {
         ))
         .insert_state(GameState::default())
         .add_plugins((
-            PetPlugin,
             SardipSavePlugin,
+            PetPlugin,
             SimulationPlugin,
             AutoScrollPlugin,
             TextDatabasePlugin,
@@ -138,6 +140,7 @@ impl Plugin for GamePlugin {
             AgePlugin,
         ))
         .add_plugins((
+            ViewPlugin,
             AnimePlugin,
             ToolPlugin,
             PoopScooperPlugin,

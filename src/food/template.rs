@@ -1,13 +1,10 @@
-use std::collections::HashSet;
-
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 use bevy_common_assets::ron::RonAssetPlugin;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    interaction::Clickable,
     layering,
-    name::{EntityName, HasNameTag, NameTag, NameTagBundle, SpeciesName},
+    name::{EntityName, SpeciesName},
     pet::template::TemplateSize,
 };
 
@@ -54,55 +51,23 @@ pub struct FoodTemplate {
 }
 
 impl FoodTemplate {
-    pub fn spawn(
-        &self,
-        commands: &mut Commands,
-        asset_server: &AssetServer,
-        location: Vec2,
-    ) -> Entity {
-        let custom_size = self.sprite_size.vec2(self.texture_size);
-
+    pub fn spawn(&self, commands: &mut Commands, location: Vec2) -> Entity {
         let entity_id = commands
             .spawn(FoodBundle {
                 sensations: FoodSensations {
                     values: self.sensations.clone(),
                 },
+                location: Transform::from_translation(Vec3::new(
+                    location.x,
+                    location.y,
+                    layering::view_screen::FOOD,
+                )),
                 species_name: SpeciesName::new(&self.name),
                 name: EntityName::new(format!("food.{}", self.name.to_lowercase())),
-                sprite: SpriteBundle {
-                    transform: Transform::from_translation(Vec3::new(
-                        location.x,
-                        location.y,
-                        layering::view_screen::FOOD,
-                    )),
-                    sprite: Sprite {
-                        custom_size: Some(custom_size),
-                        ..default()
-                    },
-                    texture: asset_server.load(&self.texture),
-                    ..default()
-                },
                 fill_factor: FoodFillFactor(self.fill_factor),
                 ..default()
             })
-            .insert(Clickable::new(
-                Vec2::new(-(custom_size.x / 2.), custom_size.x / 2.),
-                Vec2::new(-(custom_size.y / 2.), custom_size.y / 2.),
-            ))
             .id();
-
-        let name_tag_id = commands
-            .spawn(NameTagBundle {
-                text: default(),
-                name_tag: NameTag::new().with_font_size(30.),
-                ..default()
-            })
-            .set_parent(entity_id)
-            .id();
-
-        commands
-            .entity(entity_id)
-            .insert(HasNameTag::new(name_tag_id));
 
         entity_id
     }

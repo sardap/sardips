@@ -3,21 +3,26 @@ use core::fmt;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{assets::FontAssets, text_database::TextDatabase, text_translation::KeyText};
+use crate::{
+    assets::FontAssets, text_database::TextDatabase, text_translation::KeyText, view::HasView,
+};
 
 pub struct NamePlugin;
 
 impl Plugin for NamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            (update_name_tag, update_text_color, add_section_to_text)
-                .run_if(resource_exists::<FontAssets>),
-        );
+        app.register_type::<SpeciesName>()
+            .register_type::<EntityName>()
+            .add_systems(
+                Update,
+                (update_name_tag, update_text_color, add_section_to_text)
+                    .run_if(resource_exists::<FontAssets>),
+            );
     }
 }
 
-#[derive(Debug, Component, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Component, Serialize, Deserialize, Clone, Default, Reflect)]
+#[reflect(Component)]
 pub struct EntityName {
     pub first_name: String,
     pub middle_name: Option<String>,
@@ -98,7 +103,8 @@ impl fmt::Display for EntityName {
     }
 }
 
-#[derive(Debug, Component, Serialize, Deserialize, Clone, Default)]
+#[derive(Debug, Component, Serialize, Deserialize, Clone, Default, Reflect)]
+#[reflect(Component)]
 pub struct SpeciesName(pub String);
 
 impl SpeciesName {
@@ -188,27 +194,43 @@ fn add_section_to_text(font_assets: Res<FontAssets>, mut texts: Query<&mut Text,
     }
 }
 
+#[derive(Debug, Component)]
+struct PopulatedNameTag;
+
 fn update_name_tag(
-    names: Query<(&HasNameTag, &EntityName, &Sprite), Or<(Changed<EntityName>, Added<EntityName>)>>,
+    mut commands: Commands,
+    names: Query<
+        (Entity, &HasView, &EntityName),
+        Or<(
+            Changed<EntityName>,
+            Added<EntityName>,
+            Without<PopulatedNameTag>,
+        )>,
+    >,
+    name_views: Query<(&HasNameTag, &Sprite)>,
     mut q_texts: Query<(&mut KeyText, &mut Transform, &NameTag)>,
 ) {
-    for (has_name_tag, name, sprite) in names.iter() {
-        if let Ok((mut key, mut transform, name_tag)) =
-            q_texts.get_mut(has_name_tag.name_tag_entity)
-        {
-            let y_offset = if let Some(y) = name_tag.offset_y {
-                y
-            } else {
-                let sprite_height = match sprite.custom_size {
-                    Some(size) => size.y * 0.75,
-                    None => 50.,
+    for (view_entity, view, name) in names.iter() {
+        if let Ok((has_name_tag, sprite)) = name_views.get(view.view_entity) {
+            if let Ok((mut key, mut transform, name_tag)) =
+                q_texts.get_mut(has_name_tag.name_tag_entity)
+            {
+                commands.entity(view_entity).insert(PopulatedNameTag);
+
+                let y_offset = if let Some(y) = name_tag.offset_y {
+                    y
+                } else {
+                    let sprite_height = match sprite.custom_size {
+                        Some(size) => size.y * 0.75,
+                        None => 50.,
+                    };
+                    sprite_height + 0.5
                 };
-                sprite_height + 0.5
-            };
 
-            transform.translation = Vec3::new(0., y_offset, 0.);
+                transform.translation = Vec3::new(0., y_offset, 0.);
 
-            key.set(0, name.first_name.to_owned());
+                key.set(0, name.first_name.to_owned());
+            }
         }
     }
 }

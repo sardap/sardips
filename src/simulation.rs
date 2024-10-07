@@ -10,6 +10,8 @@ pub struct SimulationPlugin;
 
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
+        app.register_type::<Simulated>();
+
         app.insert_state(SimulationState::default())
             .insert_resource(SimTimeScale(1.0))
             .add_systems(OnEnter(SimulationState::Running), sim_entities_visibility)
@@ -60,7 +62,8 @@ pub enum SimulationState {
     Running,
 }
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Reflect)]
+#[reflect(Component)]
 pub struct Simulated;
 
 fn sim_entities_visibility(

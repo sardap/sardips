@@ -6,3 +6,4 @@ target/
 *.aseprite
 dist/
 pending_food/
+sardip_save.ron
