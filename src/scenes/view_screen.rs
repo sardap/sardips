@@ -6,7 +6,7 @@ use crate::{
     assets::{FontAssets, GameImageAssets, ViewScreenImageAssets},
     button_hover::{ButtonHover, Selected},
     despawn_all,
-    food::FoodView,
+    food::view::FoodView,
     interaction::{Hovering, MouseCamera},
     money::Wallet,
     name::NameTag,

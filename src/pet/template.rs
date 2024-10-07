@@ -199,11 +199,13 @@ pub struct TemplatePooper {
     texture: Option<String>,
 }
 
+pub const DEFAULT_POOP_TEXTURE: &str = "textures/game/poop.png";
+
 impl TemplatePooper {
     fn pooper(&self) -> Pooper {
         let texture = match &self.texture {
             Some(texture) => texture,
-            None => "textures/game/poop.png",
+            None => DEFAULT_POOP_TEXTURE,
         };
 
         Pooper::new(self.interval.interval(), texture)
