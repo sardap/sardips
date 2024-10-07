@@ -4,8 +4,9 @@ use crate::{
     assets::GameImageAssets,
     interaction::Hovering,
     layering,
-    pet::poop::Poop,
+    pet::poop::PoopView,
     sounds::{PlaySoundEffect, SoundEffect},
+    view::EntityView,
 };
 
 use super::{Tool, TOOL_SIZE};
@@ -48,7 +49,7 @@ pub fn click_up_poop(
     mut commands: Commands,
     mut sounds: EventWriter<PlaySoundEffect>,
     poop_scooper: Query<Entity, With<PoopScooper>>,
-    poops: Query<Entity, (With<Poop>, With<Hovering>)>,
+    poops: Query<&EntityView, (With<PoopView>, With<Hovering>)>,
     buttons: Res<ButtonInput<MouseButton>>,
 ) {
     if poop_scooper.iter().count() == 0 {
@@ -58,9 +59,9 @@ pub fn click_up_poop(
     if buttons.just_pressed(MouseButton::Left) {
         let mut picked_up = false;
 
-        for poop in poops.iter() {
+        for view in poops.iter() {
             picked_up = true;
-            commands.entity(poop).despawn_recursive();
+            commands.entity(view.entity).despawn_recursive();
         }
 
         sounds.send(PlaySoundEffect::new(if picked_up {

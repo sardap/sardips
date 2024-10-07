@@ -4,7 +4,7 @@ use crate::{
     interaction::Clickable,
     layering,
     name::{HasNameTag, NameTag, NameTagBundle, SpeciesName},
-    view::{EntityView, HasView},
+    view::EntityView,
 };
 
 use super::{template::FoodTemplateDatabase, Food};
@@ -54,10 +54,6 @@ pub fn spawn_food_view(
                 ),
             })
             .id();
-
-        commands.entity(food).insert(HasView {
-            view_entity: entity_id,
-        });
 
         let name_tag_id = commands
             .spawn(NameTagBundle {
