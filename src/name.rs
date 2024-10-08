@@ -27,6 +27,7 @@ pub struct EntityName {
     pub first_name: String,
     pub middle_name: Option<String>,
     pub last_name: Option<String>,
+    pub id: u32,
 }
 
 impl EntityName {
@@ -35,6 +36,7 @@ impl EntityName {
             first_name: first_name.into(),
             middle_name: None,
             last_name: None,
+            id: rand::random(),
         }
     }
 

@@ -10,7 +10,7 @@ use crate::{
     assets::{FontAssets, FourInRowAssets},
     interaction::{AttachToCursor, Clickable, Hovering, MouseCamera},
     pet::{
-        mood::{AutoSetMoodImage, MoodCategory, MoodImages},
+        mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
         move_towards::{MoveTowardsOnSpawn, MovingTowards},
     },
     sounds::{PlaySoundEffect, SoundEffect},
@@ -140,7 +140,7 @@ fn setup_game(
     assets: Res<FourInRowAssets>,
     fonts: Res<FontAssets>,
     mut rng: ResMut<GlobalRng>,
-    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &Sprite, &MoodImages), With<Playing>>,
+    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &Sprite, &MoodImageIndexes), With<Playing>>,
 ) {
     state.set(FourInRowState::Playing);
 

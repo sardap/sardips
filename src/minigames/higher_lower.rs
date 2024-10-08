@@ -4,7 +4,7 @@ use crate::{
     assets::{self, FontAssets, HigherLowerAssets},
     autoscroll::AutoScroll,
     button_hover::{ButtonColorSet, ButtonHover},
-    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImages},
+    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     sounds::{PlaySoundEffect, SoundEffect},
 };
 use bevy::{prelude::*, render::view::RenderLayers};
@@ -136,7 +136,7 @@ fn setup_game(
     mut rng: ResMut<GlobalRng>,
     fonts: Res<FontAssets>,
     assets: Res<HigherLowerAssets>,
-    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &Sprite, &MoodImages), With<Playing>>,
+    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &Sprite, &MoodImageIndexes), With<Playing>>,
 ) {
     state.set(HigherLowerState::Playing);
 

@@ -1,20 +1,20 @@
 use core::fmt;
 
 use bevy::prelude::*;
-use bevy_turborand::RngComponent;
+use moonshine_save::save::Save;
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
-use super::mood::{AutoSetMoodImage, Mood, MoodCategory, MoodCategoryHistory, MoodImages};
-use super::pet_ai::PetAi;
+use super::mood::{Mood, MoodCategory, MoodCategoryHistory};
 use crate::age::Age;
 use crate::facts::EntityFactDatabase;
 use crate::name::{EntityName, SpeciesName};
 use crate::simulation::Simulated;
 use crate::thinking::ThinkerBundle;
-use crate::velocity::{MovementDirection, Speed};
+use crate::velocity::Speed;
 
-#[derive(Debug, Component, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Component, Default, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct Pet;
 
 #[derive(Bundle, Default)]
@@ -22,22 +22,17 @@ pub struct PetBundle {
     pub pet: Pet,
     pub species_name: SpeciesName,
     pub name: EntityName,
-    pub image_set: MoodImages,
-    pub auto_mood_image: AutoSetMoodImage,
     pub mood_category: MoodCategory,
     pub mood_category_history: MoodCategoryHistory,
-    pub sprite: SpriteBundle,
-    pub atlas: TextureAtlas,
     pub speed: Speed,
-    pub velocity: MovementDirection,
-    pub rng: RngComponent,
-    pub pet_ai: PetAi,
     pub mood: Mood,
     pub simulated: Simulated,
     pub fact_db: EntityFactDatabase,
     pub think: ThinkerBundle,
     pub kind: PetKind,
     pub age: Age,
+    pub transform: Transform,
+    pub save: Save,
 }
 
 #[derive(

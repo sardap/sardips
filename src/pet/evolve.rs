@@ -52,7 +52,7 @@ impl Default for CheckEvolveTimer {
 }
 
 #[derive(Component)]
-struct ShouldEvolve {
+pub struct ShouldEvolve {
     species: String,
 }
 
@@ -113,7 +113,7 @@ fn evolve_pending(
         (
             Entity,
             &ShouldEvolve,
-            &GlobalTransform,
+            &Transform,
             &EntityName,
             &Age,
             &MoodCategoryHistory,
@@ -133,7 +133,7 @@ fn evolve_pending(
 
         let evolve = EvolvingPet {
             entity,
-            location: transform.translation().xy(),
+            location: transform.translation.xy(),
             name: entity_name.clone(),
             age: age.clone(),
             mood_history: mood_history.clone(),

@@ -3,17 +3,14 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy_common_assets::ron::RonAssetPlugin;
-use bevy_turborand::{GlobalRng, RngComponent};
 use serde::{Deserialize, Serialize};
 
 use crate::age::Age;
 use crate::facts::EntityFactDatabase;
 use crate::food::preferences::{FoodPreference, FoodSensationRating};
 use crate::food::FoodSensationType;
-use crate::interaction::Clickable;
 use crate::money::MoneyHungry;
-use crate::name::{EntityName, HasNameTag, NameTag, NameTagBundle, SpeciesName};
-use crate::sardip_save::SavedPet;
+use crate::name::{EntityName, SpeciesName};
 use crate::text_database::TextDatabase;
 use crate::velocity::Speed;
 use crate::{layering, GameState};
@@ -22,10 +19,10 @@ use super::breeding::Breeds;
 use super::evolve::PossibleEvolution;
 use super::fun::Fun;
 use super::hunger::Hunger;
-use super::mood::{MoodCategory, MoodCategoryHistory, MoodImages};
+use super::mood::{MoodCategory, MoodCategoryHistory};
 use super::poop::{Cleanliness, Pooper};
+use super::PetBundle;
 use super::PetKind;
-use super::{wonder::Wonder, PetBundle};
 
 pub struct PetTemplatePlugin;
 
@@ -346,148 +343,60 @@ impl PetTemplate {
         }
     }
 
-    fn evolve(&self, commands: &mut Commands, global_rng: &mut GlobalRng, evolving: EvolvingPet) {
+    fn evolve(&self, commands: &mut Commands, evolving: EvolvingPet) {
         // Create new delete old
+
         commands.entity(evolving.entity).despawn_recursive();
 
-        self.create_entity_from_saved(
-            commands,
-            global_rng,
-            &SavedPet {
-                location: Some(evolving.location),
-                species_name: SpeciesName::new(&self.species_name),
-                speed: Speed(self.speed.value()),
-                kind: self.kind,
-                breeds: self.get_breeds(),
-                fun: self.get_fun(),
-                hunger: self.get_hunger(),
-                pooper: self.get_pooper(),
-                cleanliness: self.get_cleanliness(),
-                money_hungry: self.get_money_hungry(),
-                // Copied from evolving
-                name: evolving.name,
-                age: evolving.age,
-                mood_history: evolving.mood_history,
-                fact_db: evolving.fact_db,
-                ..default()
-            },
-        );
+        let new_entity = self.spawn(commands, evolving.location, evolving.name);
+
+        commands.entity(new_entity).insert(evolving.age);
+        commands.entity(new_entity).insert(evolving.mood_history);
+        commands.entity(new_entity).insert(evolving.fact_db);
     }
 
-    fn create_entity(
-        &self,
-        commands: &mut Commands,
-        global_rng: &mut GlobalRng,
-        location: Vec2,
-        name: EntityName,
-    ) -> Entity {
-        self.create_entity_from_saved(
-            commands,
-            global_rng,
-            &SavedPet {
-                species_name: SpeciesName::new(&self.species_name),
-                name,
-                speed: Speed(self.speed.value()),
-                kind: self.kind,
-                location: Some(location),
-                breeds: self.get_breeds(),
-                fun: self.get_fun(),
-                hunger: self.get_hunger(),
-                pooper: self.get_pooper(),
-                cleanliness: self.get_cleanliness(),
-                money_hungry: self.get_money_hungry(),
-                ..default()
-            },
-        )
-    }
-
-    fn create_entity_from_saved(
-        &self,
-        commands: &mut Commands,
-        global_rng: &mut GlobalRng,
-        saved: &SavedPet,
-    ) -> Entity {
-        let mut transform = Transform::from_xyz(0.0, 0.0, layering::view_screen::PET);
-        if let Some(location) = saved.location {
-            transform.translation.x = location.x;
-            transform.translation.y = location.y;
-        }
-
-        let custom_size = self.pre_calculated.custom_size;
-
+    fn spawn(&self, commands: &mut Commands, location: Vec2, name: EntityName) -> Entity {
         let entity_id = commands
             .spawn(PetBundle {
-                species_name: saved.species_name.clone(),
-                name: saved.name.clone(),
-                image_set: MoodImages::new(&self.image_set.column_mood_map),
-                age: saved.age.clone(),
-                mood: saved.mood.clone(),
-                mood_category_history: saved.mood_history.clone(),
-                fact_db: saved.fact_db.clone(),
-                kind: saved.kind,
-                sprite: SpriteBundle {
-                    transform,
-                    sprite: Sprite {
-                        custom_size: Some(custom_size),
-                        ..default()
-                    },
-                    texture: self.pre_calculated.texture.clone(),
-                    ..default()
-                },
-                atlas: TextureAtlas {
-                    layout: self.pre_calculated.layout.clone(),
-                    ..default()
-                },
-                speed: saved.speed.clone(),
-                rng: RngComponent::from(global_rng),
+                species_name: SpeciesName::new(&self.species_name),
+                name,
+                mood_category_history: MoodCategoryHistory::default(),
+                fact_db: EntityFactDatabase::default(),
+                kind: self.kind,
+                speed: Speed(self.speed.value()),
+                transform: Transform::from_xyz(location.x, location.y, layering::view_screen::PET),
                 ..default()
             })
-            .insert((
-                Wonder,
-                Clickable::new(
-                    Vec2::new(-(custom_size.x / 2.), custom_size.x / 2.),
-                    Vec2::new(-(custom_size.y / 2.), custom_size.y / 2.),
-                ),
-            ))
             .id();
 
-        if let Some(breeds) = &saved.breeds {
-            commands.entity(entity_id).insert(breeds.clone());
+        if let Some(breeds) = self.get_breeds() {
+            commands.entity(entity_id).insert(breeds);
         }
 
-        if let Some(hunger) = &saved.hunger {
+        if let Some(hunger) = self.get_hunger() {
             commands.entity(entity_id).insert((
-                hunger.clone(),
+                hunger,
                 FoodPreference {
                     sensation_ratings: self.stomach.as_ref().unwrap().sensations.clone(),
                 },
             ));
         }
 
-        if let Some(fun) = &saved.fun {
-            commands.entity(entity_id).insert(fun.clone());
+        if let Some(fun) = self.get_fun() {
+            commands.entity(entity_id).insert(fun);
         }
 
-        if let Some(pooper) = &saved.pooper {
-            commands.entity(entity_id).insert(pooper.clone());
+        if let Some(pooper) = self.get_pooper() {
+            commands.entity(entity_id).insert(pooper);
         }
 
-        if let Some(cleanliness) = &saved.cleanliness {
-            commands.entity(entity_id).insert(cleanliness.clone());
+        if let Some(cleanliness) = self.get_cleanliness() {
+            commands.entity(entity_id).insert(cleanliness);
         }
 
-        let name_tag_id = commands
-            .spawn(NameTagBundle {
-                text: default(),
-                name_tag: NameTag::new().with_font_size(40.0),
-                ..default()
-            })
-            .set_parent(entity_id)
-            .id();
-
-        commands
-            .entity(entity_id)
-            .insert(HasNameTag::new(name_tag_id));
+        if let Some(money_hungry) = self.get_money_hungry() {
+            commands.entity(entity_id).insert(money_hungry);
+        }
 
         entity_id
     }
@@ -563,7 +472,6 @@ struct PetTemplateSetHandle(Handle<AssetPetTemplateSet>);
 #[derive(Event)]
 pub enum SpawnPetEvent {
     Blank((Vec2, String)),
-    Saved(SavedPet),
     Evolve((String, EvolvingPet)),
 }
 
@@ -571,7 +479,6 @@ impl SpawnPetEvent {
     fn species_name(&self) -> &str {
         match self {
             SpawnPetEvent::Blank((_, species_name)) => species_name,
-            SpawnPetEvent::Saved(saved) => &saved.species_name.0,
             SpawnPetEvent::Evolve((species_name, _)) => species_name,
         }
     }
@@ -580,7 +487,6 @@ impl SpawnPetEvent {
 fn spawn_pending_pets(
     mut commands: Commands,
     mut events: EventReader<SpawnPetEvent>,
-    mut global_rng: ResMut<GlobalRng>,
     pet_template_db: Res<PetTemplateDatabase>,
     text_db: Res<TextDatabase>,
 ) {
@@ -589,18 +495,10 @@ fn spawn_pending_pets(
         if let Some(template) = pet_template_db.get_by_name(event.species_name()) {
             match event {
                 SpawnPetEvent::Blank((pos, _)) => {
-                    template.create_entity(
-                        &mut commands,
-                        &mut global_rng,
-                        *pos,
-                        EntityName::random(&text_db),
-                    );
-                }
-                SpawnPetEvent::Saved(saved) => {
-                    template.create_entity_from_saved(&mut commands, &mut global_rng, saved);
+                    template.spawn(&mut commands, *pos, EntityName::random(&text_db));
                 }
                 SpawnPetEvent::Evolve((_, evolving)) => {
-                    template.evolve(&mut commands, &mut global_rng, evolving.clone());
+                    template.evolve(&mut commands, evolving.clone());
                 }
             }
         } else {

@@ -4,6 +4,7 @@ use crate::{
     interaction::Clickable,
     layering,
     name::{HasNameTag, NameTag, NameTagBundle, SpeciesName},
+    simulation::Simulated,
     view::EntityView,
 };
 
@@ -18,6 +19,7 @@ pub struct FoodViewBundle {
     pub food_view: FoodView,
     pub sprite: SpriteBundle,
     pub clickable: Clickable,
+    pub simulated: Simulated,
 }
 
 pub fn spawn_food_view(
@@ -52,6 +54,7 @@ pub fn spawn_food_view(
                     Vec2::new(-(custom_size.x / 2.), custom_size.x / 2.),
                     Vec2::new(-(custom_size.y / 2.), custom_size.y / 2.),
                 ),
+                simulated: Simulated,
             })
             .id();
 

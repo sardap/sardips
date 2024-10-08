@@ -8,7 +8,7 @@ use crate::{
     assets::{self, FontAssets, TicTacToeAssets},
     autoscroll::AutoScroll,
     button_hover::{ButtonColorSet, ButtonHover},
-    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImages},
+    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     sounds::{PlaySoundEffect, SoundEffect},
     text_database::text_keys,
     text_translation::KeyText,
@@ -88,7 +88,7 @@ fn setup_game(
     mut commands: Commands,
     mut tic_state: ResMut<NextState<TicTacToeState>>,
     assets: Res<TicTacToeAssets>,
-    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &MoodImages), With<Playing>>,
+    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &MoodImageIndexes), With<Playing>>,
 ) {
     commands.spawn((Game::new(), TicTacToe));
     tic_state.set(TicTacToeState::Playing);

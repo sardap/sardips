@@ -86,7 +86,8 @@ fn make_child_name(text_db: &TextDatabase) -> EntityName {
 }
 */
 
-#[derive(Debug, Component, Clone, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct Breeds {
     breed_timer: Timer,
 }

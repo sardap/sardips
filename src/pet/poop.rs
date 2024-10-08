@@ -61,15 +61,19 @@ pub struct PoopBundleView {
     pub sprite: SpriteBundle,
     pub view: EntityView,
     pub poop_view: PoopView,
+    pub simulated: Simulated,
 }
 
-#[derive(Component, Default, Serialize, Deserialize, Clone)]
+#[derive(Component, Default, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Component)]
 pub struct Cleanliness;
 
-#[derive(Component, Default, Serialize, Deserialize, Clone)]
+#[derive(Component, Default, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Component)]
 pub struct Diarrhea;
 
-#[derive(Component, Clone, Serialize, Deserialize)]
+#[derive(Component, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct Pooper {
     pub interval: Duration,
     pub poop_timer: Timer,
@@ -137,6 +141,7 @@ pub fn spawn_poop_view(
                     entity: poop_entity,
                 },
                 poop_view: PoopView,
+                simulated: Simulated,
             })
             .id();
 

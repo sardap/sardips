@@ -10,7 +10,7 @@ use crate::{
     palettes,
     pet::{
         dipdex::DipdexDiscoveredEntries,
-        mood::{AutoSetMoodImage, MoodCategory, MoodImages, SatisfactionRating},
+        mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes, SatisfactionRating},
         template::{PetTemplate, PetTemplateDatabase},
     },
     player::Player,
@@ -698,7 +698,7 @@ fn update_dipdex_entry_view(
                                     layout: template.pre_calculated.layout.clone(),
                                     ..default()
                                 },
-                                MoodImages::new(&template.image_set.column_mood_map),
+                                MoodImageIndexes::new(&template.image_set.column_mood_map),
                                 PetEntryImage,
                                 MoodCategory::default(),
                                 AutoSetMoodImage,

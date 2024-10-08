@@ -10,6 +10,7 @@ use crate::{
         SimulationUpdate, CLEANLINESS_MOOD_UPDATE, FUN_MOOD_UPDATE, HUNGER_MOOD_UPDATE,
         MONEY_MOOD_UPDATE, MOOD_HISTORY_UPDATE,
     },
+    view::HasView,
 };
 
 use super::{
@@ -46,7 +47,10 @@ impl Plugin for MoodPlugin {
     }
 }
 
-#[derive(Debug, Component, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[derive(
+    Debug, Component, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default, Reflect,
+)]
+#[reflect(Component)]
 pub enum MoodCategory {
     Ecstatic,
     Happy,
@@ -75,7 +79,8 @@ impl From<SatisfactionRating> for MoodCategory {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Reflect, PartialEq)]
+#[reflect_value(PartialEq, Serialize, Deserialize)]
 pub struct MoodState {
     pub satisfaction: SatisfactionRating,
     pub timer: Timer,
@@ -90,7 +95,8 @@ impl MoodState {
     }
 }
 
-#[derive(Component, Clone, Serialize, Deserialize, Default)]
+#[derive(Component, Clone, Serialize, Deserialize, Default, Reflect)]
+#[reflect(Component)]
 pub struct Mood {
     pub hunger: Option<MoodState>,
     pub cleanliness: Option<MoodState>,
@@ -148,7 +154,10 @@ impl Mood {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, PartialOrd, Ord)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, PartialOrd, Ord, Reflect,
+)]
+#[reflect_value(PartialEq, Serialize, Deserialize)]
 pub enum SatisfactionRating {
     VerySatisfied,
     Satisfied,
@@ -343,15 +352,15 @@ fn update_overall_mood(mut moods: Query<(&Mood, &mut MoodCategory)>) {
 }
 
 #[derive(Debug, Component, Default, Clone, Copy)]
-pub struct MoodImages {
+pub struct MoodImageIndexes {
     indexes: [usize; 5],
 }
 
-impl MoodImages {
+impl MoodImageIndexes {
     pub fn new(map: &HashMap<MoodCategory, u32>) -> Self {
         let mut indexes = [0; 5];
         for (mood, index) in map {
-            indexes[MoodImages::get_index(*mood)] = *index as usize;
+            indexes[MoodImageIndexes::get_index(*mood)] = *index as usize;
         }
 
         Self { indexes }
@@ -368,7 +377,7 @@ impl MoodImages {
     }
 
     pub fn get_index_for_mood(&self, mood: MoodCategory) -> usize {
-        self.indexes[MoodImages::get_index(mood)]
+        self.indexes[MoodImageIndexes::get_index(mood)]
     }
 }
 
@@ -377,16 +386,24 @@ pub struct AutoSetMoodImage;
 
 fn update_mood_images(
     mut pets: Query<
-        (&MoodCategory, &MoodImages, &mut TextureAtlas),
+        (Entity, &MoodCategory, &MoodImageIndexes, Option<&HasView>),
         (With<AutoSetMoodImage>, Changed<MoodCategory>),
     >,
+    mut texture_atlas: Query<&mut TextureAtlas>,
 ) {
-    for (category, mood_images, mut atlas) in pets.iter_mut() {
-        atlas.index = mood_images.get_index_for_mood(*category);
+    for (entity, category, mood_images, has_view) in pets.iter_mut() {
+        let entity = has_view
+            .map(|has_view| has_view.view_entity)
+            .unwrap_or(entity);
+
+        if let Ok(mut atlas) = texture_atlas.get_mut(entity) {
+            atlas.index = mood_images.get_index_for_mood(*category);
+        }
     }
 }
 
-#[derive(Component, Serialize, Deserialize, Clone)]
+#[derive(Component, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Component)]
 pub struct MoodCategoryHistory {
     pub update_timer: Timer,
     pub history: Vec<MoodCategory>,

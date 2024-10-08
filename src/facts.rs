@@ -20,37 +20,40 @@ pub struct FactsPlugin;
 
 impl Plugin for FactsPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            FixedUpdate,
-            (
-                update_mood,
-                update_overall_mood,
-                update_median_mood,
-                update_names_facts,
-            ),
-        )
-        .add_systems(
-            SimulationUpdate,
-            (
-                update_pet_count,
-                update_hunger_facts,
-                update_starving_fact,
-                update_food_count,
-                update_species_name,
-                update_pet_kind,
-                update_poop,
-                update_age,
-                add_ready_to_breed,
-                remove_ready_to_breed,
-                update_food_exists,
-                update_existing_pets,
+        app.register_type::<FactDb>()
+            .register_type::<EntityFactDatabase>()
+            .add_systems(
+                FixedUpdate,
+                (
+                    update_mood,
+                    update_overall_mood,
+                    update_median_mood,
+                    update_names_facts,
+                ),
             )
-                .run_if(in_state(SimulationState::Running)),
-        );
+            .add_systems(
+                SimulationUpdate,
+                (
+                    update_pet_count,
+                    update_hunger_facts,
+                    update_starving_fact,
+                    update_food_count,
+                    update_species_name,
+                    update_pet_kind,
+                    update_poop,
+                    update_age,
+                    add_ready_to_breed,
+                    remove_ready_to_breed,
+                    update_food_exists,
+                    update_existing_pets,
+                )
+                    .run_if(in_state(SimulationState::Running)),
+            );
     }
 }
 
-#[derive(Debug, Component, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Default, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct EntityFactDatabase(pub FactDb);
 
 #[derive(Resource, Default)]

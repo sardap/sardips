@@ -1,5 +1,5 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
-use bevy_turborand::{DelegatedRng, RngComponent};
+use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
 use crate::{
     food::{
@@ -7,6 +7,7 @@ use crate::{
         Food, FoodSensations,
     },
     name::EntityName,
+    velocity::MovementDirection,
     SimulationState,
 };
 
@@ -15,6 +16,7 @@ use super::{
     hunger::{EatFoodEvent, Hunger},
     move_towards::{MoveTowardsEvent, MovingTowards},
     wonder::Wonder,
+    Pet,
 };
 
 pub struct PetAiPlugin;
@@ -22,7 +24,7 @@ pub struct PetAiPlugin;
 impl Plugin for PetAiPlugin {
     fn build(&self, app: &mut App) {
         // This should probably run in sim update
-        app.add_systems(
+        app.add_systems(Update, add_pet_ai).add_systems(
             FixedUpdate,
             (
                 tick_cooldowns,
@@ -55,6 +57,21 @@ impl Default for PetAi {
             food_cooldown,
             check_breed_cooldown,
         }
+    }
+}
+
+fn add_pet_ai(
+    mut commands: Commands,
+    mut rng: ResMut<GlobalRng>,
+    query: Query<Entity, Added<Pet>>,
+) {
+    for entity in query.iter() {
+        commands.entity(entity).insert((
+            PetAi::default(),
+            Wonder,
+            MovementDirection::default(),
+            RngComponent::from(&mut rng),
+        ));
     }
 }
 

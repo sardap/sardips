@@ -2,8 +2,10 @@ use std::{collections::HashMap, str::FromStr};
 
 use crate::{
     food::{template::FoodTemplateDatabase, Food, SpawnFoodEvent},
+    name::EntityName,
     pet::{
         dipdex::DipdexDiscoveredEntries,
+        evolve::ShouldEvolve,
         poop::spawn_poop,
         template::{PetTemplateDatabase, SpawnPetEvent, DEFAULT_POOP_TEXTURE},
         Pet,
@@ -485,6 +487,11 @@ fn dev_console_text_input(
                     dev_console_commands.send(DevConsoleCommand::SpawnPet(splits[1].to_string()));
                 }
             }
+            DevConsoleCommand::EVOLVE_PET_COMMAND => {
+                if splits.len() > 1 {
+                    dev_console_commands.send(DevConsoleCommand::EvolvePet(splits[1].to_string()));
+                }
+            }
             DevConsoleCommand::SPAWN_FOOD_COMMAND => {
                 if splits.len() > 1 {
                     dev_console_commands.send(DevConsoleCommand::SpawnFood(splits[1].to_string()));
@@ -525,6 +532,7 @@ fn dev_console_text_input(
 enum DevConsoleCommand {
     SetSimTimeScale(f32),
     SpawnPet(String),
+    EvolvePet(String),
     SpawnFood(String),
     SpawnPoop,
     ClearAllPets,
@@ -536,6 +544,7 @@ enum DevConsoleCommand {
 impl DevConsoleCommand {
     const SET_SIM_TIME_SCALE_COMMAND: &'static str = "set_sim_time_scale";
     const SPAWN_PET_COMMAND: &'static str = "spawn_pet";
+    const EVOLVE_PET_COMMAND: &'static str = "evolve_pet";
     const SPAWN_FOOD_COMMAND: &'static str = "spawn_food";
     const SPAWN_POOP_COMMAND: &'static str = "spawn_poop";
     const CLEAR_ALL_PETS_COMMAND: &'static str = "clear_all_pets";
@@ -547,6 +556,7 @@ impl DevConsoleCommand {
         match self {
             DevConsoleCommand::SetSimTimeScale(_) => Self::SET_SIM_TIME_SCALE_COMMAND,
             DevConsoleCommand::SpawnPet(_) => Self::SPAWN_PET_COMMAND,
+            DevConsoleCommand::EvolvePet(_) => Self::EVOLVE_PET_COMMAND,
             DevConsoleCommand::SpawnFood(_) => Self::SPAWN_FOOD_COMMAND,
             DevConsoleCommand::SpawnPoop => Self::SPAWN_POOP_COMMAND,
             DevConsoleCommand::ClearAllPets => Self::CLEAR_ALL_PETS_COMMAND,
@@ -580,7 +590,7 @@ fn action_dev_console_command(
     mut history: Query<&mut DevConsoleHistory>,
     mut language: Query<&mut Language, With<SelectedLanguageTag>>,
     mut dipdex: Query<&mut DipdexDiscoveredEntries>,
-    pets: Query<Entity, With<Pet>>,
+    pets: Query<(Entity, &EntityName), With<Pet>>,
     foods: Query<Entity, With<Food>>,
 ) {
     let mut history = match history.get_single_mut() {
@@ -598,6 +608,14 @@ fn action_dev_console_command(
                 spawn_pets.send(SpawnPetEvent::Blank((Vec2::new(0., 0.), name.clone())));
                 history.push_command_output(format!("Spawned pet: {}", name));
             }
+            DevConsoleCommand::EvolvePet(species_name) => {
+                for (pet, name) in pets.iter() {
+                    commands
+                        .entity(pet)
+                        .insert(ShouldEvolve::new(species_name.clone()));
+                    history.push_command_output(format!("Evolving {} to: {}", name, species_name));
+                }
+            }
             DevConsoleCommand::SpawnFood(name) => {
                 spawn_food.send(SpawnFoodEvent::new(name));
                 history.push_command_output(format!("Spawned food: {}", name));
@@ -609,7 +627,7 @@ fn action_dev_console_command(
                 history.push_command_output(format!("Spawned poop at {},{}", x, y));
             }
             DevConsoleCommand::ClearAllPets => {
-                for pet in pets.iter() {
+                for (pet, _) in pets.iter() {
                     commands.entity(pet).despawn_recursive();
                 }
                 history.push_command_output("Cleared all pets".to_string());

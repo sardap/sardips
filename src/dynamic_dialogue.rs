@@ -182,7 +182,8 @@ fn apply_pending_action(
     }
 }
 
-#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, Reflect, PartialEq)]
+#[reflect_value(PartialEq, Serialize, Deserialize)]
 pub struct FactDb {
     facts: HashMap<String, f32>,
 }

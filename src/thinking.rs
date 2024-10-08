@@ -10,10 +10,13 @@ pub struct ThinkingPlugin;
 
 impl Plugin for ThinkingPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<TryThinkEvent>().add_systems(
-            Update,
-            (trigger_idle_thoughts, handle_thought).run_if(in_state(SimulationState::Running)),
-        );
+        app.register_type::<ThinkTimer>()
+            .register_type::<Thought>()
+            .add_event::<TryThinkEvent>()
+            .add_systems(
+                Update,
+                (trigger_idle_thoughts, handle_thought).run_if(in_state(SimulationState::Running)),
+            );
     }
 }
 
@@ -23,7 +26,8 @@ pub struct ThinkerBundle {
     pub thought: Thought,
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, Reflect)]
+#[reflect(Component)]
 pub struct ThinkTimer {
     timer: Timer,
 }
@@ -36,7 +40,8 @@ impl Default for ThinkTimer {
     }
 }
 
-#[derive(Debug, Component, Default)]
+#[derive(Debug, Component, Default, Reflect)]
+#[reflect(Component)]
 pub struct Thought {
     pub text: Option<String>,
 }
