@@ -1,3 +1,4 @@
+#![allow(clippy::needless_lifetimes)]
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
