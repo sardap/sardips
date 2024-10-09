@@ -22,8 +22,8 @@
         * With cut out features
     * A Candy
     * Phonie
-    * bycicle
     * tradie
+    * A stock line 
 */
 
 AssetPetTemplateSet(
@@ -982,6 +982,36 @@ AssetPetTemplateSet(
             ),
             size: X(80),
             speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Regular,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Bibcyale",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/bibcyale.png",
+                tile_size: (350, 250),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 2,
+                    Sad: 1,
+                    Despairing: 0,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: X(200),
+            speed: Fast,
             stomach: Some(
                 TemplateStomach(
                     size: Medium,

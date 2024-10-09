@@ -128,6 +128,8 @@ TextDatabase(
             "species.moose": "Moose",
             "species.angel": "Angel",
             "species.genie": "Genie",
+            "species.bibcyale": "Bibcyale",
+            "species.bibcyale.description": "It's a bicycle that was consturcted by a dislexic. They gave it lyfe at the cost of it's name being spelt wrong.",
 
             "food.tunapastasauce": "Tuna Pasta Sauce",
             "food.hotpot": "Hot Pot",
