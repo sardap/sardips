@@ -7,13 +7,16 @@ pub struct MoneyPlugin;
 
 impl Plugin for MoneyPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<MoneyHungry>();
+        app.register_type::<Money>()
+            .register_type::<Wallet>()
+            .register_type::<MoneyHungry>();
     }
 }
 
 pub type Money = i32;
 
-#[derive(Component, Default, Serialize, Deserialize, Clone)]
+#[derive(Component, Default, Clone, Reflect)]
+#[reflect(Component)]
 pub struct Wallet {
     pub balance: Money,
 }

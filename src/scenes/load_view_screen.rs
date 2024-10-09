@@ -3,7 +3,7 @@ use bevy::prelude::*;
 #[cfg(not(feature = "dev"))]
 use crate::pet::template::SpawnPetEvent;
 
-use crate::{player::PlayerBundle, sardip_save::SardipLoadingState, GameState};
+use crate::{sardip_save::SardipLoadingState, GameState};
 
 pub struct LoadViewScreenPlugin;
 
@@ -43,8 +43,7 @@ fn setup_new_game(
     loading_state.set(SardipLoadingState::None);
 }
 
-fn setup(mut commands: Commands, mut loading_state: ResMut<NextState<SardipLoadingState>>) {
-    commands.spawn(PlayerBundle::default());
+fn setup(mut loading_state: ResMut<NextState<SardipLoadingState>>) {
     loading_state.set(SardipLoadingState::Loading);
 }
 

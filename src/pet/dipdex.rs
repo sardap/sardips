@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 
 use crate::name::SpeciesName;
 
@@ -11,11 +10,16 @@ pub struct DipdexPlugin;
 
 impl Plugin for DipdexPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, pet_discovered);
+        app.register_type::<HashSet<String>>()
+            .register_type_data::<HashSet<String>, ReflectSerialize>()
+            .register_type_data::<HashSet<String>, ReflectDeserialize>()
+            .register_type::<DipdexDiscoveredEntries>()
+            .add_systems(Update, pet_discovered);
     }
 }
 
-#[derive(Component, Serialize, Deserialize, Default, Clone)]
+#[derive(Component, Default, Clone, Reflect)]
+#[reflect(Component)]
 pub struct DipdexDiscoveredEntries {
     pub entries: HashSet<String>,
 }
