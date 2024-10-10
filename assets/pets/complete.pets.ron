@@ -6,7 +6,6 @@
     * A Biker
     * A solider
     * A Dick
-    * A Hunch back
     * A Youtube essay guy
     * A Groom
     * A Bride
@@ -23,8 +22,7 @@
     * Phonie
     * tradie
     * A stock line
-    * Ned kelly
-    * What's in the toilet
+    * Ned kelly* What's in the toilet
 */
 
 AssetPetTemplateSet(
@@ -998,7 +996,7 @@ AssetPetTemplateSet(
         ),
         PetTemplate(
             species_name: "Bibcyale",
-            kind: Creature,
+            kind: Object,
             image_set: PetTemplateImageSet(
                 sprite_sheet: "textures/pets/bibcyale.png",
                 tile_size: (350, 250),
@@ -1054,6 +1052,35 @@ AssetPetTemplateSet(
                 interval: VeryFrequent,
             )),
             cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Hunchy",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/hunchy.png",
+                tile_size: (195, 180),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 2,
+                    Sad: 1,
+                    Despairing: 0,
+                    Happy: 3,
+                    Ecstatic: 4,
+                },
+            ),
+            size: X(100),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: PaulEatingPizza,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Frequent,
+            )),
             fun: Some(TemplateFun()),
         ),
     ]
