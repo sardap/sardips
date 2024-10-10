@@ -26,7 +26,8 @@ impl Plugin for HungerPlugin {
     }
 }
 
-#[derive(Debug, Component, Clone, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct Hunger {
     pub value: f32,
     pub max: f32,

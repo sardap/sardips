@@ -20,7 +20,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.toml') }}
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
       - name: Install alsa and udev
@@ -41,7 +41,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ubuntu-latest-cargo-all-doc-tests-${{ hashFiles('**/Cargo.toml') }}
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
       - name: Install alsa and udev
@@ -61,7 +61,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ubuntu-latest-cargo-lint-${{ hashFiles('**/Cargo.toml') }}
-      - uses: dtolnay/rust-toolchain@master
+      - uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           components: rustfmt, clippy

@@ -37,7 +37,8 @@ impl MinigamePreference {
 #[derive(Component)]
 pub struct MinigamePreferences(pub HashMap<MiniGameType, MinigamePreference>);
 
-#[derive(Component, Default, Clone, Serialize, Deserialize)]
+#[derive(Component, Default, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct Fun {
     pub value: f32,
 }

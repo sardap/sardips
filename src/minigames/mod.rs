@@ -18,11 +18,14 @@ use crate::{
     palettes,
     pet::{
         fun::{Fun, MinigamePreference, MinigamePreferences},
+        mood::MoodImageIndexes,
+        view::PetView,
         Pet,
     },
     player::Player,
     text_database::text_keys,
     text_translation::KeyText,
+    view::HasView,
     GameState,
 };
 
@@ -154,17 +157,32 @@ fn mini_game_completed(
 }
 
 #[derive(Component)]
+struct SelectedPet;
+
+#[derive(Component)]
 struct Playing;
 
-fn set_minigame_pet(mut commands: Commands, pet: Query<Entity, With<Pet>>) {
-    if let Some(entity) = pet.iter().next() {
-        commands.entity(entity).insert(Playing);
+fn set_minigame_pet(
+    mut commands: Commands,
+    pet: Query<(Entity, &HasView), With<Pet>>,
+    pet_view: Query<(&Handle<Image>, &TextureAtlas, &MoodImageIndexes, &Sprite), With<PetView>>,
+    currently_playing: Query<Entity, With<Playing>>,
+) {
+    for entity in currently_playing.iter() {
+        commands.entity(entity).remove::<Playing>();
+    }
+
+    if let Some((entity, has_view)) = pet.iter().next() {
+        commands.entity(entity).insert(SelectedPet);
+        if let Ok((image, atlas, mood, sprite)) = pet_view.get(has_view.view_entity) {
+            commands.spawn((Playing, image.clone(), atlas.clone(), *mood, sprite.clone()));
+        }
     }
 }
 
 fn remove_playing(mut commands: Commands, pet: Query<Entity, With<Playing>>) {
     for entity in pet.iter() {
-        commands.entity(entity).remove::<Playing>();
+        commands.entity(entity).despawn_recursive();
     }
 }
 

@@ -42,7 +42,7 @@ jobs:
         run: |
           rm build.rs
       - name: Install rust toolchain for Apple Silicon
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           targets: aarch64-apple-darwin
@@ -50,7 +50,7 @@ jobs:
         run: |
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --profile dist --target=aarch64-apple-darwin
       # - name: Install rust toolchain for Apple x86
-      #   uses: dtolnay/rust-toolchain@master
+      #   uses: dtolnay/rust-toolchain@stable
       #   with:
       #     toolchain: stable
       #     targets: x86_64-apple-darwin
@@ -89,7 +89,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
       - name: Install Dependencies
@@ -129,7 +129,7 @@ jobs:
           $nuget_version = $version.TrimStart('v')
           echo "NUGET_VERSION=$nuget_version" >> $env:GITHUB_ENV
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
       - name: Install dotnet
@@ -180,7 +180,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
       - name: Install Dependencies

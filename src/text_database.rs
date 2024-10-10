@@ -90,6 +90,8 @@ pub mod text_keys {
     pub const DIPDEX_DESCRIPTION_DOES_NOT_EXIST: &str = "dipdex.description_does_not_exist";
     pub const DIPDEX_STATS_HEADER: &str = "dipdex.stats_header";
     pub const DIPDEX_SPECIES_TITLE: &str = "dipdex.species_title";
+
+    pub const FOOD_BUY_SCENE_TITLE: &str = "food_buy_scene.title";
 }
 
 #[derive(
