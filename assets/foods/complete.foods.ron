@@ -345,7 +345,7 @@ AssetFoodTemplateSet(
             sprite_size: X(80),
         ),
         FoodTemplate(
-            name: "SpicyChickenFlavouredInstantNoodles.png",
+            name: "SpicyChickenFlavouredInstantNoodles",
             sensations: [Spicy, Salty, Umami],
             fill_factor: 70,
             texture: "textures/food/spicy_chicken_flavoured_instant_noodles.png",
