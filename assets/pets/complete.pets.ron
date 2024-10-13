@@ -11,7 +11,6 @@
     * A Bride
     * A Video game Case
     * A geine
-    * Walk good maybe UFO
     * Depresed Ghost
     * A Dancer
     * A Urn
@@ -1135,6 +1134,37 @@ AssetPetTemplateSet(
             stomach: Some(
                 TemplateStomach(
                     size: Huge,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Frequent,
+            )),
+            cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Ufo",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/ufo.png",
+                tile_size: (16, 16),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 2,
+                    Sad: 1,
+                    Despairing: 0,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: X(60),
+            speed: Slow,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
                     sensations: {
                     }
                 )

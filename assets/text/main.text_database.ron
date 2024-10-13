@@ -137,6 +137,9 @@ TextDatabase(
             "species.kelly": "Kelly",
             "dipdex.kelly.description": "An ancient icon retuend to the world.",
             "species.dirtelemental": "Dirt Elemental",
+            "dipdex.dirtelemental.description": "",
+            "species.ufo": "UFO",
+            "dipdex.ufo.description": "",
 
 
             "food.tunapastasauce": "Tuna Pasta Sauce",
