@@ -42,7 +42,7 @@ dev = ["bevy/dynamic_linking"]
 #   and android_shared_stdcxx, since that is covered in `mobile`
 # keep the following in sync with Bevy's dependencies
 [dependencies]
-bevy = { version = "0.14.1", default-features = false, features = [
+bevy = { version = "0.14.2", default-features = false, features = [
     "serialize",
     "animation",
     "bevy_asset",
@@ -74,6 +74,7 @@ bevy_common_assets = { version = "0.11", features = ["toml"] }
 bevy_prototype_lyon = "0.12"
 bevy_turborand = "0.9"
 bevy-parallax = { git = "https://github.com/septum/bevy-parallax.git", branch = "bevy-0.14" }
+moonshine-save = { git = "https://github.com/sardap/moonshine_save.git", branch = "main" }
 
 rand = { version = "0.8.5" }
 webbrowser = { version = "0.8", features = ["hardened"] }

@@ -1,3 +1,4 @@
+#![allow(clippy::needless_lifetimes)]
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
@@ -31,6 +32,7 @@ pub mod text_translation;
 pub mod thinking;
 pub mod tools;
 pub mod velocity;
+pub mod view;
 
 use crate::name::NamePlugin;
 use age::AgePlugin;
@@ -61,6 +63,7 @@ use text_translation::TextTranslationPlugin;
 use thinking::ThinkingPlugin;
 use tools::{poop_scooper::PoopScooperPlugin, ToolPlugin};
 use velocity::VelocityPlugin;
+use view::ViewPlugin;
 
 #[macro_use]
 extern crate lazy_static;
@@ -79,7 +82,9 @@ pub enum GameState {
     LoadViewScreen,
     ViewScreen,
     MiniGame,
+    Template,
     DipdexView,
+    FoodBuy,
 }
 
 pub fn despawn_all<C: Component>(mut commands: Commands, query: Query<Entity, With<C>>) {
@@ -120,8 +125,8 @@ impl Plugin for GamePlugin {
         ))
         .insert_state(GameState::default())
         .add_plugins((
-            PetPlugin,
             SardipSavePlugin,
+            PetPlugin,
             SimulationPlugin,
             AutoScrollPlugin,
             TextDatabasePlugin,
@@ -136,6 +141,7 @@ impl Plugin for GamePlugin {
             AgePlugin,
         ))
         .add_plugins((
+            ViewPlugin,
             AnimePlugin,
             ToolPlugin,
             PoopScooperPlugin,

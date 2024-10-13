@@ -6,14 +6,15 @@ use crate::{
     assets::{FontAssets, GameImageAssets, ViewScreenImageAssets},
     button_hover::{ButtonHover, Selected},
     despawn_all,
-    food::Food,
+    food::view::FoodView,
     interaction::{Hovering, MouseCamera},
     money::Wallet,
     name::NameTag,
     palettes,
-    pet::Pet,
+    pet::view::PetView,
     player::Player,
     tools::poop_scooper::{create_poop_scooper, PoopScooper},
+    view::EntityView,
     GameState, SimulationState,
 };
 
@@ -77,7 +78,7 @@ impl MenuOption {
             MenuOption::Tools => 1,
             MenuOption::Food => 2,
             MenuOption::MiniGames => 3,
-            MenuOption::Dipdex => 0,
+            MenuOption::Dipdex => 4,
             MenuOption::Options => 0,
         }
     }
@@ -257,24 +258,24 @@ fn info_panel_handle_click(
     mut update_info_panel: EventWriter<InfoPanelUpdate>,
     mut info_panel_clear: EventWriter<InfoPanelsClear>,
     buttons: Res<ButtonInput<MouseButton>>,
-    pets: Query<Entity, (With<Pet>, With<Hovering>)>,
-    foods: Query<Entity, (With<Food>, With<Hovering>)>,
+    pets: Query<&EntityView, (With<PetView>, With<Hovering>)>,
+    foods: Query<&EntityView, (With<FoodView>, With<Hovering>)>,
     mut name_tags: Query<&mut NameTag>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
         let mut clicked = false;
 
-        for entity in pets.iter() {
+        for view in pets.iter() {
             update_info_panel.send(InfoPanelUpdate {
-                entity,
+                entity: view.entity,
                 panel_type: PanelType::Pet,
             });
             clicked = true;
         }
 
-        for entity in foods.iter() {
+        for view in foods.iter() {
             update_info_panel.send(InfoPanelUpdate {
-                entity,
+                entity: view.entity,
                 panel_type: PanelType::Food,
             });
             clicked = true;
@@ -311,6 +312,7 @@ fn menu_button_interaction(
             }
             MenuOption::Food => {
                 vs_state.set(VSSubState::None);
+                game_state.set(GameState::FoodBuy);
             }
             MenuOption::Tools => {
                 vs_state.set(VSSubState::ToolPoopScooper);

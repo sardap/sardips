@@ -9,11 +9,13 @@ pub struct AgePlugin;
 
 impl Plugin for AgePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(SimulationUpdate, tick_ages);
+        app.register_type::<Age>()
+            .add_systems(SimulationUpdate, tick_ages);
     }
 }
 
-#[derive(Component, Deref, DerefMut, Default, Serialize, Deserialize, Clone)]
+#[derive(Component, Deref, DerefMut, Default, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Component)]
 pub struct Age(pub Duration);
 
 impl Age {

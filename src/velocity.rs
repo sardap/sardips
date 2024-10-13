@@ -5,15 +5,16 @@ pub struct VelocityPlugin;
 
 impl Plugin for VelocityPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedUpdate, apply_direction);
+        app.register_type::<Speed>()
+            .add_systems(FixedUpdate, apply_direction);
     }
 }
 
-#[derive(Debug, Component, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Component, Default, Clone, Copy, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct Speed(pub f32);
 
-#[derive(Debug, Component, Default, Reflect)]
-#[reflect(Component)]
+#[derive(Debug, Component, Default)]
 pub struct MovementDirection {
     pub direction: Vec2,
 }

@@ -4,7 +4,7 @@ use bevy_parallax::{CreateParallaxEvent, LayerData, LayerSpeed, ParallaxCameraCo
 use crate::{
     assets,
     autoscroll::AutoScroll,
-    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImages},
+    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
 };
 
 use super::{MiniGameState, Playing};
@@ -62,7 +62,7 @@ fn setup(
     mut commands: Commands,
     mut state: ResMut<NextState<SprintState>>,
     mut create_parallax: EventWriter<CreateParallaxEvent>,
-    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &MoodImages), With<Playing>>,
+    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &MoodImageIndexes), With<Playing>>,
 ) {
     state.set(SprintState::Playing);
 

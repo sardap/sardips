@@ -1,46 +1,69 @@
-use std::{collections::HashSet, fmt};
+use std::fmt;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 use bevy_turborand::{GlobalRng, RngComponent};
+use moonshine_save::save::Save;
 use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 use crate::{
     game_zone::random_point_in_game_zone,
     name::{EntityName, SpeciesName},
-    sardip_save::PersistentId,
     simulation::{Simulated, SimulationState},
     text_database::text_keys,
 };
 
-use super::template::FoodTemplateDatabase;
+use super::{template::FoodTemplateDatabase, view::spawn_food_view};
 
 pub struct FoodPlugin;
 
 impl Plugin for FoodPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<SpawnFoodEvent>().add_systems(
-            Update,
-            spawn_pending_food.run_if(in_state(SimulationState::Running)),
-        );
+        app.add_event::<SpawnFoodEvent>()
+            .register_type::<Food>()
+            .register_type::<FoodSensationType>()
+            .register_type::<HashSet<FoodSensationType>>()
+            .register_type_data::<HashSet<FoodSensationType>, ReflectSerialize>()
+            .register_type_data::<HashSet<FoodSensationType>, ReflectDeserialize>()
+            .register_type::<FoodSensations>()
+            .register_type::<FoodFillFactor>()
+            .add_systems(
+                Update,
+                (spawn_pending_food, spawn_food_view).run_if(in_state(SimulationState::Running)),
+            );
     }
 }
 
 #[derive(Bundle, Default)]
 pub struct FoodBundle {
     pub food: Food,
+    pub location: Transform,
     pub sensations: FoodSensations,
     pub fill_factor: FoodFillFactor,
     pub species_name: SpeciesName,
     pub name: EntityName,
-    pub sprite: SpriteBundle,
     pub simulated: Simulated,
-    pub id: PersistentId,
+    pub save: Save,
 }
 
+// TODO: Implement despawn_food_view
+// fn despawn_food_view() {}
+
 #[derive(
-    Debug, Copy, Clone, Eq, PartialEq, Hash, EnumIter, Serialize, Deserialize, PartialOrd, Ord,
+    Reflect,
+    Debug,
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
+    Hash,
+    EnumIter,
+    Serialize,
+    Deserialize,
+    PartialOrd,
+    Ord,
 )]
+#[reflect_value(PartialEq, Serialize, Deserialize)]
 pub enum FoodSensationType {
     Spicy,
     Cool,
@@ -112,15 +135,18 @@ impl fmt::Display for FoodSensationType {
     }
 }
 
-#[derive(Debug, Component, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Component, Clone, Default, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct FoodSensations {
     pub values: HashSet<FoodSensationType>,
 }
 
-#[derive(Debug, Component, Default, Clone, Serialize, Deserialize)]
+#[derive(Debug, Component, Default, Clone, Serialize, Deserialize, Reflect)]
+#[reflect(Component)]
 pub struct FoodFillFactor(pub f32);
 
-#[derive(Debug, Component, Default)]
+#[derive(Debug, Component, Default, Reflect)]
+#[reflect(Component)]
 pub struct Food;
 
 #[derive(Event)]
@@ -140,18 +166,13 @@ fn spawn_pending_food(
     mut commands: Commands,
     mut events: EventReader<SpawnFoodEvent>,
     mut global_rng: ResMut<GlobalRng>,
-    asset_server: Res<AssetServer>,
     food_db: Res<FoodTemplateDatabase>,
 ) {
     for event in events.read() {
         let mut rng = RngComponent::from(&mut global_rng);
 
         if let Some(template) = food_db.get(&event.name) {
-            template.spawn(
-                &mut commands,
-                &asset_server,
-                random_point_in_game_zone(&mut rng),
-            );
+            template.spawn(&mut commands, random_point_in_game_zone(&mut rng));
         } else {
             error!("No food template found for {}", event.name);
         }
