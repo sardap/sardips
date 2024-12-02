@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_parallax::{
+use shared_deps::bevy_parallax::{
     CreateParallaxEvent, LayerComponent, LayerData, LayerSpeed, ParallaxCameraComponent,
 };
 

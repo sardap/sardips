@@ -2,7 +2,6 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    dynamic_dialogue::{Concept, FactDb},
     food::{Food, FoodFillFactor},
     layering,
     name::SpeciesName,
@@ -11,6 +10,8 @@ use crate::{
     thinking::TryThinkEvent,
     SimulationState,
 };
+
+use fact_db::{Concept, FactDb};
 
 pub struct HungerPlugin;
 

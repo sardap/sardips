@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+shared_deps = { path = "../../shared_deps" }
 sardips = { path = "../../common" }
 lazy_static = "1.4.0"
 bevy = { version = "0.14.2", default-features = false, features = [

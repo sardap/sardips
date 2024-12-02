@@ -10,23 +10,20 @@ use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::hashbrown::HashSet;
 use maplit::hashmap;
-use sardips::assets::FontAssets;
-use sardips::avian2d::prelude::{
+use shared_deps::avian2d::prelude::{
     Collider, ColliderDensity, CollidingEntities, CollisionLayers, GravityScale, LinearVelocity,
     Mass, PhysicsLayer, RigidBody,
 };
-use sardips::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
-use sardips::button_hover::{ButtonColorSet, ButtonHover};
-use sardips::interaction::MoveTowardsCursor;
-use sardips::minigames::{MiniGameCompleted, MiniGameResult, MiniGameType};
-use sardips::palettes;
-use sardips::text_translation::{KeyString, KeyText};
 use sardips::{
-    assets::EndlessShooterAssets,
-    interaction::MouseCamera,
-    minigames::{MiniGameState, Playing},
+    assets::{EndlessShooterAssets, FontAssets},
+    button_hover::{ButtonColorSet, ButtonHover},
+    interaction::{MouseCamera, MoveTowardsCursor},
+    minigames::{MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing},
+    palettes,
     pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
+    text_translation::{KeyString, KeyText},
     velocity::Speed,
 };
 use text_keys::{

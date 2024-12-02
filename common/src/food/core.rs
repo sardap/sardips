@@ -1,9 +1,9 @@
 use std::fmt;
 
 use bevy::{prelude::*, utils::HashSet};
-use bevy_turborand::{GlobalRng, RngComponent};
 use moonshine_save::save::Save;
 use serde::{Deserialize, Serialize};
+use shared_deps::bevy_turborand::{GlobalRng, RngComponent};
 use strum_macros::EnumIter;
 
 use crate::{

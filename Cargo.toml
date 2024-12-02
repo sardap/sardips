@@ -7,6 +7,6 @@ members = [
     "minigames/tic_tac_toe",
     "minigames/higher_lower",
     "run",
-    "text_keys",
+    "text_keys", "fact_db", "shared_deps",
 ]
 default-members = ["run"]

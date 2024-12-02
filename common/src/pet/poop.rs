@@ -1,9 +1,9 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_turborand::prelude::*;
 use moonshine_save::save::Save;
 use serde::{Deserialize, Serialize};
+use shared_deps::bevy_turborand::prelude::*;
 
 use crate::{
     age::Age,

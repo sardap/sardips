@@ -4,22 +4,24 @@
 #![allow(clippy::type_complexity)]
 #![allow(unexpected_cfgs)]
 use bevy::prelude::*;
-use sardips::bevy_parallax::{
-    CreateParallaxEvent, LayerComponent, LayerData, LayerSpeed, ParallaxCameraComponent,
+use shared_deps::{
+    bevy_parallax::{
+        CreateParallaxEvent, LayerComponent, LayerData, LayerSpeed, ParallaxCameraComponent,
+    },
+    bevy_turborand::{DelegatedRng, GlobalRng},
 };
-use sardips::bevy_turborand::{DelegatedRng, GlobalRng};
 
 use sardips::{
     assets::{self, FontAssets, TicTacToeAssets},
     autoscroll::AutoScroll,
     button_hover::{ButtonColorSet, ButtonHover},
+    minigames::{
+        MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
+        Playing,
+    },
     pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     sounds::{PlaySoundEffect, SoundEffect},
     text_translation::KeyText,
-};
-
-use sardips::minigames::{
-    MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing,
 };
 
 pub struct TicTacToePlugin;

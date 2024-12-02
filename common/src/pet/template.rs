@@ -2,11 +2,11 @@ use std::collections::HashMap;
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
+use fact_db::EntityFactDatabase;
 use serde::{Deserialize, Serialize};
+use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
 
 use crate::age::Age;
-use crate::facts::EntityFactDatabase;
 use crate::food::preferences::{FoodPreference, FoodSensationRating};
 use crate::food::FoodSensationType;
 use crate::money::{Money, MoneyHungry};

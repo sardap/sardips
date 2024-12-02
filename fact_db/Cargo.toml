@@ -1,12 +1,10 @@
 [package]
-name = "sardips_endless_shooter"
+name = "fact_db"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-shared_deps = { path = "../../shared_deps" }
-sardips = { path = "../../common" }
-text_keys = { path = "../../text_keys" }
+shared_deps = { path = "../shared_deps" }
 bevy = { version = "0.14.2", default-features = false, features = [
     "serialize",
     "animation",
@@ -30,4 +28,6 @@ bevy = { version = "0.14.2", default-features = false, features = [
     "webgl2",
     "bevy_debug_stepping",
 ] }
+serde = { version = "1.0.197", features = ["serde_derive"] }
+lazy_static = "1.5.0"
 maplit = "1.0.2"

@@ -1,5 +1,5 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
-use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
 use crate::{
     food::{

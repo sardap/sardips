@@ -1,5 +1,5 @@
-use sardips::bevy::prelude::*;
 use sardips::GamePlugin;
+use shared_deps::bevy::prelude::*;
 
 fn main() {
     let mut app = App::new();

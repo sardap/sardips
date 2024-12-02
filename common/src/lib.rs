@@ -12,7 +12,7 @@ pub mod autoscroll;
 pub mod button_hover;
 pub mod debug;
 pub mod dynamic_dialogue;
-pub mod facts;
+pub mod fact_update;
 pub mod food;
 pub mod game_zone;
 pub mod interaction;
@@ -35,28 +35,17 @@ pub mod tools;
 pub mod velocity;
 pub mod view;
 
-pub extern crate avian2d;
-pub extern crate bevy;
-pub extern crate bevy_parallax;
-pub extern crate bevy_prototype_lyon;
-pub extern crate bevy_turborand;
-pub extern crate num_traits;
-pub extern crate rand;
-
 use crate::name::NamePlugin;
 use age::AgePlugin;
 use anime::AnimePlugin;
 use autoscroll::AutoScrollPlugin;
-use avian2d::PhysicsPlugins;
 use bevy::{asset::AssetMetaCheck, prelude::*, window::WindowResolution};
 use bevy_kira_audio::prelude::*;
-use bevy_parallax::ParallaxPlugin;
-use bevy_prototype_lyon::prelude::*;
-use bevy_turborand::prelude::*;
 use button_hover::ButtonHoverPlugin;
 use debug::DebugPlugin;
 use dynamic_dialogue::DynamicDialoguePlugin;
-use facts::FactsPlugin;
+use fact_db::FactsPlugin;
+use fact_update::FactUpdatePlugin;
 use food::{template::FoodTemplatePlugin, FoodPlugin};
 use interaction::InteractionPlugin;
 use minigames::MinigamePlugin;
@@ -65,6 +54,10 @@ use pet::{dipdex::DipdexPlugin, PetPlugin};
 use player::PlayerPlugin;
 use sardip_save::SardipSavePlugin;
 use scenes::GameScenePlugin;
+use shared_deps::avian2d::PhysicsPlugins;
+use shared_deps::bevy_parallax::ParallaxPlugin;
+use shared_deps::bevy_prototype_lyon::prelude::*;
+use shared_deps::bevy_turborand::prelude::*;
 use simulation::{SimulationPlugin, SimulationState};
 use sounds::SoundsPlugin;
 use stock_market::StockMarketPlugin;
@@ -133,6 +126,7 @@ impl Plugin for GamePlugin {
             AudioPlugin,
             ShapePlugin,
             PhysicsPlugins::new(FixedUpdate),
+            FactsPlugin,
             // PhysicsDebugPlugin::default(),
         ))
         .insert_state(GameState::default())
@@ -160,7 +154,7 @@ impl Plugin for GamePlugin {
             SoundsPlugin,
             GameScenePlugin,
             DynamicDialoguePlugin,
-            FactsPlugin,
+            FactUpdatePlugin,
             ThinkingPlugin,
             TextTranslationPlugin,
             FoodPlugin,

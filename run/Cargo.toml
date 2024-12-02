@@ -59,6 +59,7 @@ bevy = { version = "0.14.2", default-features = false, features = [
     "webgl2",
     "bevy_debug_stepping",
 ] }
+shared_deps = { path = "../shared_deps" }
 sardips = { path = "../common" }
 sardips_endless_shooter = { path = "../minigames/endless_shooter" }
 sardips_four_in_row = { path = "../minigames/four_in_row" }

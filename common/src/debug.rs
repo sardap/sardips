@@ -16,7 +16,7 @@ use crate::{
     GameState,
 };
 use bevy::prelude::*;
-use bevy_turborand::{DelegatedRng, GlobalRng};
+use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 

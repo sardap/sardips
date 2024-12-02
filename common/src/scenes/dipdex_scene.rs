@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
+use shared_deps::bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
 use strum::IntoEnumIterator;
 
 use crate::{

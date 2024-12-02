@@ -9,15 +9,15 @@ extern crate lazy_static;
 use core::fmt;
 
 use bevy::prelude::*;
-use sardips::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
-use sardips::bevy_prototype_lyon::prelude::*;
-use sardips::minigames::{
-    MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing,
-};
 use sardips::{
     assets::{FontAssets, FourInRowAssets},
     interaction::{AttachToCursor, Clickable, Hovering, MouseCamera},
+    minigames::{
+        MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
+        Playing,
+    },
     pet::{
         mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
         move_towards::{MoveTowardsOnSpawn, MovingTowards},
@@ -25,6 +25,7 @@ use sardips::{
     sounds::{PlaySoundEffect, SoundEffect},
     velocity::{MovementDirection, Speed},
 };
+use shared_deps::bevy_prototype_lyon::prelude::*;
 
 pub struct FourInRowPlugin;
 

@@ -1,5 +1,5 @@
-use avian2d::prelude::LinearVelocity;
 use bevy::{prelude::*, window::PrimaryWindow};
+use shared_deps::avian2d::prelude::LinearVelocity;
 
 use crate::velocity::Speed;
 

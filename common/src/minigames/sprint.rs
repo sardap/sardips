@@ -1,10 +1,11 @@
-use bevy::{prelude::*, render::view::RenderLayers};
-use bevy_parallax::{CreateParallaxEvent, LayerData, LayerSpeed, ParallaxCameraComponent};
-
 use crate::{
     assets,
     autoscroll::AutoScroll,
     pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
+};
+use bevy::{prelude::*, render::view::RenderLayers};
+use shared_deps::bevy_parallax::{
+    CreateParallaxEvent, LayerData, LayerSpeed, ParallaxCameraComponent,
 };
 
 use super::{MiniGameState, Playing};

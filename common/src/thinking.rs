@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 
-use crate::{
-    dynamic_dialogue::{ActionEvent, Concept, FactDb, FactQuery, RuleSet},
-    facts::{EntityFactDatabase, GlobalFactDatabase},
-    simulation::SimulationState,
+use crate::simulation::SimulationState;
+
+use fact_db::{
+    ActionEvent, Concept, EntityFactDatabase, FactDb, FactQuery, GlobalFactDatabase, RuleSet,
 };
 
 pub struct ThinkingPlugin;

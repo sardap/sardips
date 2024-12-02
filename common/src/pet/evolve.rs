@@ -1,14 +1,14 @@
 use bevy::prelude::*;
-use bevy_turborand::{DelegatedRng, RngComponent};
 use serde::Deserialize;
+use shared_deps::bevy_turborand::{DelegatedRng, RngComponent};
 
 use crate::{
     age::Age,
-    dynamic_dialogue::{Concept, Criteria, Criterion, FactQuery},
-    facts::{EntityFactDatabase, GlobalFactDatabase},
     name::{EntityName, SpeciesName},
     simulation::{SimulationState, SimulationUpdate},
 };
+
+use fact_db::{Concept, Criteria, Criterion, EntityFactDatabase, FactQuery, GlobalFactDatabase};
 
 use super::{
     mood::MoodCategoryHistory,

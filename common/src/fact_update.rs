@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+use fact_db::{fact_str_hash, EntityFactDatabase, FactDb, GlobalFactDatabase};
 
 use crate::{
     age::Age,
-    dynamic_dialogue::FactDb,
     food::Food,
     name::{EntityName, SpeciesName},
     pet::{
@@ -16,58 +15,41 @@ use crate::{
     simulation::{SimulationState, SimulationUpdate},
 };
 
-pub struct FactsPlugin;
+// https://www.youtube.com/watch?v=tAbBID3N64A&t=20s
+// https://www.gdcvault.com/play/1015317/AI-driven-Dynamic-Dialog-through
 
-impl Plugin for FactsPlugin {
+pub struct FactUpdatePlugin;
+
+impl Plugin for FactUpdatePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<FactDb>()
-            .register_type::<EntityFactDatabase>()
-            .add_systems(
-                FixedUpdate,
-                (
-                    update_mood,
-                    update_overall_mood,
-                    update_median_mood,
-                    update_names_facts,
-                ),
+        app.add_systems(
+            FixedUpdate,
+            (
+                update_mood,
+                update_overall_mood,
+                update_median_mood,
+                update_names_facts,
+            ),
+        )
+        .add_systems(
+            SimulationUpdate,
+            (
+                update_pet_count,
+                update_hunger_facts,
+                update_starving_fact,
+                update_food_count,
+                update_species_name,
+                update_pet_kind,
+                update_poop,
+                update_age,
+                add_ready_to_breed,
+                remove_ready_to_breed,
+                update_food_exists,
+                update_existing_pets,
             )
-            .add_systems(
-                SimulationUpdate,
-                (
-                    update_pet_count,
-                    update_hunger_facts,
-                    update_starving_fact,
-                    update_food_count,
-                    update_species_name,
-                    update_pet_kind,
-                    update_poop,
-                    update_age,
-                    add_ready_to_breed,
-                    remove_ready_to_breed,
-                    update_food_exists,
-                    update_existing_pets,
-                )
-                    .run_if(in_state(SimulationState::Running)),
-            );
+                .run_if(in_state(SimulationState::Running)),
+        );
     }
-}
-
-#[derive(Debug, Component, Clone, Default, Serialize, Deserialize, Reflect)]
-#[reflect(Component)]
-pub struct EntityFactDatabase(pub FactDb);
-
-#[derive(Resource, Default)]
-pub struct GlobalFactDatabase(pub FactDb);
-
-pub fn fact_str_hash(s: impl ToString) -> f32 {
-    let mut s = s.to_string().to_lowercase();
-    s.retain(|c| !c.is_whitespace());
-
-    let hash = fxhash::hash32(&s);
-
-    let bytes = hash.to_be_bytes();
-
-    f32::from_be_bytes(bytes)
 }
 
 // ************************************************************************

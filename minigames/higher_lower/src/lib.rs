@@ -6,22 +6,22 @@
 use std::cmp::Ordering;
 
 use bevy::{prelude::*, render::view::RenderLayers};
-use sardips::bevy_parallax::{
-    CreateParallaxEvent, LayerComponent, LayerData, LayerSpeed, ParallaxCameraComponent,
-};
-use sardips::bevy_turborand::{DelegatedRng, GlobalRng};
-use sardips::rand::{seq::SliceRandom, thread_rng};
 use sardips::{
     assets::{self, FontAssets, HigherLowerAssets},
     autoscroll::AutoScroll,
     button_hover::{ButtonColorSet, ButtonHover},
+    minigames::{
+        MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
+        Playing,
+    },
     pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     sounds::{PlaySoundEffect, SoundEffect},
 };
-
-use sardips::minigames::{
-    MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing,
+use shared_deps::bevy_parallax::{
+    CreateParallaxEvent, LayerComponent, LayerData, LayerSpeed, ParallaxCameraComponent,
 };
+use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng};
+use shared_deps::rand::{seq::SliceRandom, thread_rng};
 
 pub struct HigherLowerPlugin;
 

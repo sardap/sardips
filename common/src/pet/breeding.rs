@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 use serde::{Deserialize, Serialize};
+use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
 use crate::{
     age::Age,
@@ -16,7 +16,7 @@ use super::{
     template::{PetTemplate, PetTemplateDatabase, SpawnPetEvent},
     PetKind,
 };
-use rand::prelude::SliceRandom;
+use shared_deps::rand::prelude::SliceRandom;
 
 pub struct BreedPlugin;
 

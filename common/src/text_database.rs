@@ -1,9 +1,9 @@
 use std::{collections::HashMap, str::FromStr};
 
 use bevy::prelude::*;
-use bevy_common_assets::ron::RonAssetPlugin;
-use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
+use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
+use shared_deps::rand::seq::SliceRandom;
 use strum_macros::EnumIter;
 
 use crate::GameState;

@@ -1,5 +1,5 @@
 use bevy::math::Vec2;
-use bevy_turborand::{DelegatedRng, RngComponent};
+use shared_deps::bevy_turborand::{DelegatedRng, RngComponent};
 
 pub const GAME_ZONE_WIDTH: i32 = 400;
 pub const GAME_ZONE_Y: i32 = 500;

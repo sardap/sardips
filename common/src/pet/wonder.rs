@@ -1,6 +1,6 @@
 use crate::{game_zone::random_point_in_game_zone, pet::move_towards::MoveTowardsEvent};
 use bevy::prelude::*;
-use bevy_turborand::prelude::*;
+use shared_deps::bevy_turborand::prelude::*;
 
 use super::move_towards::MovingTowards;
 

@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_parallax::ParallaxMoveEvent;
+use shared_deps::bevy_parallax::ParallaxMoveEvent;
 
 pub struct AutoScrollPlugin;
 

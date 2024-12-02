@@ -1,8 +1,8 @@
 use bevy::{prelude::*, utils::HashMap};
-use bevy_turborand::{DelegatedRng, GlobalRng};
 use moonshine_save::save::Save;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
+use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng};
+use shared_deps::rand::Rng;
 use weighted_rand::{
     builder::{NewBuilder, WalkerTableBuilder},
     table::WalkerTable,
