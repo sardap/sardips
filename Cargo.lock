@@ -1917,6 +1917,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "extended"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af9673d8203fcb076b19dfd17e38b3d4ae9f44959416ea532ce72415a6020365"
+
+[[package]]
 name = "fact_db"
 version = "0.1.0"
 dependencies = [
@@ -2394,6 +2400,8 @@ dependencies = [
  "byteorder-lite",
  "num-traits",
  "png",
+ "zune-core",
+ "zune-jpeg",
 ]
 
 [[package]]
@@ -3816,7 +3824,6 @@ version = "0.2.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
- "bevy_kira_audio",
  "bincode",
  "chrono",
  "fact_db",
@@ -3849,6 +3856,7 @@ dependencies = [
  "sardips_endless_shooter",
  "sardips_four_in_row",
  "sardips_higher_lower",
+ "sardips_rhythm",
  "sardips_tic_tac_toe",
  "shared_deps",
 ]
@@ -3880,6 +3888,17 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "sardips",
+ "shared_deps",
+ "text_keys",
+]
+
+[[package]]
+name = "sardips_rhythm"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "sardips",
+ "serde",
  "shared_deps",
  "text_keys",
 ]
@@ -4134,10 +4153,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "815c942ae7ee74737bb00f965fa5b5a2ac2ce7b6c01c0cc169bbeaf7abd5f5a9"
 dependencies = [
  "lazy_static",
+ "symphonia-bundle-mp3",
+ "symphonia-codec-pcm",
  "symphonia-codec-vorbis",
  "symphonia-core",
  "symphonia-format-ogg",
+ "symphonia-format-riff",
  "symphonia-metadata",
+]
+
+[[package]]
+name = "symphonia-bundle-mp3"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c01c2aae70f0f1fb096b6f0ff112a930b1fb3626178fba3ae68b09dce71706d4"
+dependencies = [
+ "lazy_static",
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
+]
+
+[[package]]
+name = "symphonia-codec-pcm"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f395a67057c2ebc5e84d7bb1be71cce1a7ba99f64e0f0f0e303a03f79116f89b"
+dependencies = [
+ "log",
+ "symphonia-core",
 ]
 
 [[package]]
@@ -4174,6 +4218,18 @@ dependencies = [
  "symphonia-core",
  "symphonia-metadata",
  "symphonia-utils-xiph",
+]
+
+[[package]]
+name = "symphonia-format-riff"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05f7be232f962f937f4b7115cbe62c330929345434c834359425e043bfd15f50"
+dependencies = [
+ "extended",
+ "log",
+ "symphonia-core",
+ "symphonia-metadata",
 ]
 
 [[package]]
@@ -5335,4 +5391,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.76",
+]
+
+[[package]]
+name = "zune-core"
+version = "0.4.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f423a2c17029964870cfaabb1f13dfab7d092a62a29a89264f4d36990ca414a"
+
+[[package]]
+name = "zune-jpeg"
+version = "0.4.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "16099418600b4d8f028622f73ff6e3deaabdff330fb9a2a131dea781ee8b0768"
+dependencies = [
+ "zune-core",
 ]

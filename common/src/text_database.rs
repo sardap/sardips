@@ -73,6 +73,9 @@ lazy_static! {
 
 impl TextDatabase {
     pub fn get(&self, language: Language, key: &str) -> String {
+        if key.is_empty() {
+            return MISSING_TEXT.clone();
+        }
         match self.values.get(&language).unwrap().get(key) {
             Some(val) => val.to_string(),
             None => {

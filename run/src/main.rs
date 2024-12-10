@@ -9,6 +9,7 @@ fn main() {
         sardips_four_in_row::FourInRowPlugin,
         sardips_tic_tac_toe::TicTacToePlugin,
         sardips_higher_lower::HigherLowerPlugin,
+        sardips_rhythm::RhythmPlugin,
     ));
     app.run();
 }

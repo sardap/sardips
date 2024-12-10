@@ -1,6 +1,7 @@
 pub extern crate avian2d;
 pub extern crate bevy;
 pub extern crate bevy_common_assets;
+pub extern crate bevy_kira_audio;
 pub extern crate bevy_parallax;
 pub extern crate bevy_prototype_lyon;
 pub extern crate bevy_turborand;

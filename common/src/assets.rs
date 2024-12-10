@@ -3,7 +3,7 @@ use bevy::{
     text::Font,
 };
 use bevy_asset_loader::asset_collection::AssetCollection;
-use bevy_kira_audio::prelude::*;
+use shared_deps::bevy_kira_audio::prelude::*;
 
 #[derive(AssetCollection, Resource)]
 pub struct BackgroundTexturesAssets {}

@@ -51,6 +51,8 @@ bevy = { version = "0.14.2", default-features = false, features = [
     "bevy_text",
     "bevy_ui",
     "png",
+    "jpeg",
+
     "hdr",
     "x11",
     "bevy_gizmos",
@@ -65,3 +67,4 @@ sardips_endless_shooter = { path = "../minigames/endless_shooter" }
 sardips_four_in_row = { path = "../minigames/four_in_row" }
 sardips_tic_tac_toe = { path = "../minigames/tic_tac_toe" }
 sardips_higher_lower = { path = "../minigames/higher_lower" }
+sardips_rhythm = { path = "../minigames/rhythm" }

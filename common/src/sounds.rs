@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_kira_audio::prelude::*;
+use shared_deps::bevy_kira_audio::prelude::*;
 
 use crate::assets::AudioAssets;
 

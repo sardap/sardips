@@ -6,7 +6,10 @@ members = [
     "minigames/endless_shooter",
     "minigames/tic_tac_toe",
     "minigames/higher_lower",
+    "minigames/rhythm",
     "run",
-    "text_keys", "fact_db", "shared_deps",
+    "text_keys",
+    "fact_db",
+    "shared_deps",
 ]
 default-members = ["run"]

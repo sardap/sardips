@@ -12,8 +12,8 @@ use crate::{
 };
 
 use text_keys::{
-    MINIGAME_SELECT_ENDLESS_SHOOTER, MINIGAME_SELECT_FOUR_IN_ROW, MINIGAME_SELECT_HIGHER_LOWER,
-    MINIGAME_SELECT_SPRINT, MINIGAME_SELECT_TIC_TAC_TOE,
+    MINIGAME_SELECT_ENDLESS_RHYTHM, MINIGAME_SELECT_ENDLESS_SHOOTER, MINIGAME_SELECT_FOUR_IN_ROW,
+    MINIGAME_SELECT_HIGHER_LOWER, MINIGAME_SELECT_SPRINT, MINIGAME_SELECT_TIC_TAC_TOE,
 };
 
 pub struct MinigameScenePlugin;
@@ -110,6 +110,7 @@ fn setup_select_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                                     MinigameButton::HigherLower => MINIGAME_SELECT_HIGHER_LOWER,
                                     MinigameButton::FourInRow => MINIGAME_SELECT_FOUR_IN_ROW,
                                     MinigameButton::EndlessShooter => MINIGAME_SELECT_ENDLESS_SHOOTER,
+                                    MinigameButton::Rhythm => MINIGAME_SELECT_ENDLESS_RHYTHM,
                                 }.to_string()) },
                             },
                         ));
@@ -137,6 +138,7 @@ enum MinigameButton {
     HigherLower,
     FourInRow,
     EndlessShooter,
+    Rhythm,
 }
 
 fn tick_input_selecting(
@@ -154,6 +156,7 @@ fn tick_input_selecting(
             MinigameButton::HigherLower => MiniGameState::PlayingHigherLower,
             MinigameButton::FourInRow => MiniGameState::PlayingFourInRow,
             MinigameButton::EndlessShooter => MiniGameState::PlayingEndlessShooter,
+            MinigameButton::Rhythm => MiniGameState::PlayingRhythm,
         });
     }
 }

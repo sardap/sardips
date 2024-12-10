@@ -29,6 +29,8 @@ bevy = { version = "0.14.2", default-features = false, features = [
     "bevy_text",
     "bevy_ui",
     "png",
+    "jpeg",
+
     "hdr",
     "x11",
     "bevy_gizmos",
@@ -37,7 +39,6 @@ bevy = { version = "0.14.2", default-features = false, features = [
     "webgl2",
     "bevy_debug_stepping",
 ] }
-bevy_kira_audio = { version = "0.20" }
 bevy_asset_loader = { version = "0.21", features = [
     "2d",
     "standard_dynamic_assets",

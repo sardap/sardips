@@ -38,6 +38,7 @@ pub const MINIGAME_SELECT_SPRINT: &str = "minigame_select.sprint";
 pub const MINIGAME_SELECT_HIGHER_LOWER: &str = "minigame_select.higher_lower";
 pub const MINIGAME_SELECT_FOUR_IN_ROW: &str = "minigame_select.four_in_row";
 pub const MINIGAME_SELECT_ENDLESS_SHOOTER: &str = "minigame_select.endless_shooter";
+pub const MINIGAME_SELECT_ENDLESS_RHYTHM: &str = "minigame_select.rhythm";
 
 pub const DIPDEX_FOOD_SENSATION_TITLE: &str = "dipdex.food_sensation_title";
 pub const DIPDEX_STOMACH_SIZE: &str = "dipdex.stomach_size";
@@ -81,3 +82,5 @@ pub const MINIGAME_ENDLESS_SHOOTER_TURNCOAT_GUN_COOLDOWN: &str =
     "minigame.endless_shooter.turncoat_gun_cooldown";
 pub const MINIGAME_ENDLESS_SHOOTER_SCORE: &str = "minigame.endless_shooter.score";
 pub const MINIGAME_ENDLESS_SHOOTER_QUIT: &str = "minigame.endless_shooter.quit";
+
+pub const MINIGAME_RHYTHM_LOADING: &str = "minigame.rhythm.loading";

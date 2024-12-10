@@ -1,19 +1,27 @@
 use bevy::color::Color;
 
 #[macro_export]
-macro_rules! rgb_to_color {
-    ($r:expr, $g:expr, $b:expr) => {{
+macro_rules! rgba_to_color {
+    ($r:expr, $g:expr, $b:expr, $a:expr) => {{
         // Normalize the RGB components to floating-point values in the range [0, 1]
         let normalized_r = $r as f32 / 255.0;
         let normalized_g = $g as f32 / 255.0;
         let normalized_b = $b as f32 / 255.0;
+        let normalized_a = $a as f32 / 255.0;
 
         bevy::color::Color::Srgba(bevy::color::Srgba {
             red: normalized_r,
             green: normalized_g,
             blue: normalized_b,
-            alpha: 1.0,
+            alpha: normalized_a,
         })
+    }};
+}
+
+#[macro_export]
+macro_rules! rgb_to_color {
+    ($r:expr, $g:expr, $b:expr) => {{
+        rgba_to_color!($r, $g, $b, 255)
     }};
 }
 
