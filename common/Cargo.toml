@@ -30,7 +30,6 @@ bevy = { version = "0.14.2", default-features = false, features = [
     "bevy_ui",
     "png",
     "jpeg",
-
     "hdr",
     "x11",
     "bevy_gizmos",
