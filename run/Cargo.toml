@@ -32,8 +32,8 @@ opt-level = 0
 [build-dependencies]
 embed-resource = "1"
 
-[features]
-dev = ["bevy/dynamic_linking"]
+# [features]
+# dev = ["bevy/dynamic_linking"]
 
 [dependencies]
 bevy = { version = "0.14.2", default-features = false, features = [

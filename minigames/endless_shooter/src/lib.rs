@@ -235,7 +235,7 @@ impl Shooter {
             damage: 0.,
             y_speed_bonus: 0.,
             guns: vec![OwnedGun::new(gun, rng)],
-            health: 3,
+            health: 2,
         }
     }
 }

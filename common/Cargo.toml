@@ -6,8 +6,8 @@ authors = ["Paul Sarda paul@sarda.dev"]
 edition = "2021"
 exclude = ["dist", "build", "assets", "credits"]
 
-[features]
-dev = ["bevy/dynamic_linking"]
+# [features]
+# dev = ["bevy/dynamic_linking"]
 
 
 [dependencies]

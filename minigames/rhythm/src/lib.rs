@@ -1,10 +1,12 @@
+#![allow(clippy::needless_lifetimes)]
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::type_complexity)]
+#![allow(unexpected_cfgs)]
 mod palette;
-
-use std::time::Duration;
 
 use bevy::{
     prelude::*,
-    render::view::visibility,
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
 };
 use palette::{
@@ -15,7 +17,10 @@ use sardips::{
     assets::FontAssets,
     despawn_all,
     interaction::MouseCamera,
-    minigames::{rhythm_template::ActiveRhythmTemplate, MiniGameState},
+    minigames::{
+        rhythm_template::ActiveRhythmTemplate, MiniGameCompleted, MiniGameResult, MiniGameState,
+        MiniGameType,
+    },
     text_translation::KeyText,
 };
 use shared_deps::bevy_kira_audio::prelude::*;
@@ -28,8 +33,11 @@ impl Plugin for RhythmPlugin {
         app.insert_state::<RhythmState>(RhythmState::default())
             .add_systems(Startup, (initialize_materials, initialize_meshes))
             .add_systems(OnEnter(MiniGameState::PlayingRhythm), setup_game)
-            .add_systems(OnExit(MiniGameState::PlayingRhythm), teardown_game)
-            .add_systems(OnEnter(RhythmState::Exit), exit_game)
+            .add_systems(
+                OnExit(MiniGameState::PlayingRhythm),
+                (despawn_all::<Rhythm>, teardown_game),
+            )
+            .add_systems(OnEnter(RhythmState::Exit), (send_complete, exit_game))
             .add_systems(OnEnter(RhythmState::Loading), setup_loading)
             .add_systems(OnExit(RhythmState::Loading), despawn_all::<RhythmLoading>)
             .add_systems(
@@ -59,7 +67,8 @@ impl Plugin for RhythmPlugin {
                 )
                     .chain()
                     .run_if(in_state(RhythmState::Playing)),
-            );
+            )
+            .add_systems(OnEnter(RhythmState::Score), setup_score);
     }
 }
 
@@ -154,6 +163,8 @@ fn setup_game(
         Rhythm,
     ));
 
+    commands.spawn((Score::default(), Rhythm));
+
     // Start loading
     let active_template = template.selected_template.as_mut().unwrap();
     active_template.start_load(&asset_server);
@@ -161,20 +172,28 @@ fn setup_game(
     rhythm_state.set(RhythmState::Loading);
 }
 
-fn teardown_game(
-    mut commands: Commands,
-    mut rhythm_state: ResMut<NextState<RhythmState>>,
-    rhythms: Query<Entity, With<Rhythm>>,
-) {
-    for entity in rhythms.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
-
+fn teardown_game(audio: ResMut<Audio>, mut rhythm_state: ResMut<NextState<RhythmState>>) {
+    audio.stop();
     rhythm_state.set(RhythmState::None);
 }
 
-fn exit_game(mut commands: Commands, mut minigame_state: ResMut<NextState<MiniGameState>>) {
+fn exit_game(mut minigame_state: ResMut<NextState<MiniGameState>>) {
     minigame_state.set(MiniGameState::None);
+}
+
+fn send_complete(mut event_writer: EventWriter<MiniGameCompleted>, score: Query<&Score>) {
+    let score = score.single().calc();
+
+    event_writer.send(MiniGameCompleted {
+        game_type: MiniGameType::Rhythm,
+        result: if score > 10000. {
+            MiniGameResult::Lose
+        } else if score > 5000. {
+            MiniGameResult::Draw
+        } else {
+            MiniGameResult::Win
+        },
+    });
 }
 
 #[derive(Component)]
@@ -418,7 +437,6 @@ fn setup_background(
 }
 
 fn tick_background(
-    time: Res<Time>,
     active_template: Res<ActiveRhythmTemplate>,
     audio: Res<Audio>,
     mut background_handler: Query<&mut BackgroundHandler>,
@@ -428,30 +446,25 @@ fn tick_background(
     let mut background_handler = background_handler.single_mut();
     let active_template = active_template.active();
     let music_player = music_player.single();
-    match audio.state(&music_player.handle) {
-        PlaybackState::Playing { position } => {
-            let current_index = background_handler.current_index;
-            let current_background = &active_template.backgrounds[current_index];
+    if let PlaybackState::Playing { position } = audio.state(&music_player.handle) {
+        let current_index = background_handler.current_index;
+        let current_background = &active_template.backgrounds[current_index];
 
-            if position >= current_background.end
-                && background_handler.current_index + 1 < active_template.backgrounds.len()
-            {
-                background_handler.current_index = current_index + 1;
-                let next_background =
-                    &active_template.backgrounds[background_handler.current_index];
+        if position >= current_background.end
+            && background_handler.current_index + 1 < active_template.backgrounds.len()
+        {
+            background_handler.current_index = current_index + 1;
+            let next_background = &active_template.backgrounds[background_handler.current_index];
 
-                let mut image = background_image.single_mut();
-                image.texture = next_background.image_handle.as_ref().unwrap().clone();
-            }
+            let mut image = background_image.single_mut();
+            image.texture = next_background.image_handle.as_ref().unwrap().clone();
         }
-        _ => {}
     }
 }
 
 #[derive(Copy, Clone)]
 enum ZLayer {
-    Background = 1,
-    Lyrics,
+    Lyrics = 1,
     ProgressBar,
     InputMarker,
     ProgressMarker,
@@ -485,6 +498,7 @@ struct RhythmPageBundle {
 
 #[derive(Component)]
 struct RhythmLine {
+    #[allow(dead_code)]
     number: usize,
 }
 
@@ -589,22 +603,28 @@ fn spawn_page_entities(
 #[derive(Component)]
 struct InputMarker {
     sound: Handle<AudioSource>,
+    input_index: usize,
     hit: bool,
 }
 
 impl InputMarker {
-    fn new(sound: Handle<AudioSource>) -> Self {
-        Self { sound, hit: false }
+    fn new(sound: Handle<AudioSource>, input_index: usize) -> Self {
+        Self {
+            sound,
+            input_index,
+            hit: false,
+        }
     }
 }
 
 fn populate_page(
     mut commands: Commands,
+    mut state: ResMut<NextState<RhythmState>>,
     active_template: Res<ActiveRhythmTemplate>,
     materials: Res<PreMadeMaterials>,
     meshes: Res<PreMadeMeshes>,
     mut page_handler: Query<
-        (&LineMap, &RhythmPageIndex, &mut RhythmLineIndex),
+        (&LineMap, &mut RhythmPageIndex, &mut RhythmLineIndex),
         (With<RhythmPageHandler>, Changed<RhythmPageIndex>),
     >,
     mut text_lines: Query<(&mut KeyText, &mut Text, &RhythmLine)>,
@@ -612,7 +632,7 @@ fn populate_page(
     progress_lines_trans: Query<&Transform, With<RhythmLine>>,
     existing_input_markers: Query<Entity, With<InputMarker>>,
 ) {
-    if let Ok((line_map, page_index, mut line_index)) = page_handler.get_single_mut() {
+    if let Ok((line_map, mut page_index, mut line_index)) = page_handler.get_single_mut() {
         for entity in existing_input_markers.iter() {
             commands.entity(entity).despawn_recursive();
         }
@@ -641,7 +661,7 @@ fn populate_page(
             }
 
             // Spawn input marker here
-            for input in &active_template.inputs {
+            for (i, input) in active_template.inputs.iter().enumerate() {
                 if input.page() != page_index.page {
                     continue;
                 }
@@ -669,7 +689,7 @@ fn populate_page(
                         transform: Transform::from_xyz(x, y, ZLayer::InputMarker.to_f32()),
                         ..default()
                     },
-                    InputMarker::new(active_template.get_input_sound(&input)),
+                    InputMarker::new(active_template.get_input_sound(input), i),
                     RhythmMain,
                     Rhythm,
                 ));
@@ -677,6 +697,8 @@ fn populate_page(
         } else {
             // End of game
             line_index.line = 0;
+            page_index.page = 0;
+            state.set(RhythmState::Score);
         }
     }
 }
@@ -733,30 +755,27 @@ fn tick_line(
 
     let playback_state = audio.state(&music_player.handle);
 
-    match playback_state {
-        PlaybackState::Playing { position } => {
-            if position > active_line.end {
-                if line_index.line + 1 >= active_page.len() {
-                    page_index.page += 1;
-                } else {
-                    line_index.line += 1;
-                }
-                return;
+    if let PlaybackState::Playing { position } = playback_state {
+        if position > active_line.end {
+            if line_index.line + 1 >= active_page.len() {
+                page_index.page += 1;
+            } else {
+                line_index.line += 1;
             }
-
-            let progress_transform = progress_line
-                .get(line_map.map[line_index.line].progress)
-                .unwrap();
-
-            let mut marker_transform = marker.single_mut();
-            marker_transform.translation.y = progress_transform.translation().y;
-
-            let progress =
-                ((position - active_line.start) / (active_line.end - active_line.start)) as f32;
-
-            marker_transform.translation.x = progress * 400. - 200.;
+            return;
         }
-        _ => {}
+
+        let progress_transform = progress_line
+            .get(line_map.map[line_index.line].progress)
+            .unwrap();
+
+        let mut marker_transform = marker.single_mut();
+        marker_transform.translation.y = progress_transform.translation().y;
+
+        let progress =
+            ((position - active_line.start) / (active_line.end - active_line.start)) as f32;
+
+        marker_transform.translation.x = progress * 400. - 200.;
     }
 }
 
@@ -775,10 +794,11 @@ fn tick_input_colors(
         let input_x = input_transform.translation().x;
         let input_y = input_transform.translation().y;
 
-        if input_y == progress_marker.translation().y {
-            if input_x + INPUT_THRESHOLD < x && !marker.hit {
-                *mat = materials.passed_input_marker.clone();
-            }
+        if input_y == progress_marker.translation().y
+            && input_x + INPUT_THRESHOLD < x
+            && !marker.hit
+        {
+            *mat = materials.passed_input_marker.clone();
         }
     }
 }
@@ -792,9 +812,11 @@ fn handle_click(
         &GlobalTransform,
         &mut InputMarker,
     )>,
+    mut score: Query<&mut Score>,
     progress_markers: Query<&GlobalTransform, With<ProgressMarker>>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
+        let mut score = score.single_mut();
         let progress_marker = progress_markers.single();
         let x = progress_marker.translation().x;
 
@@ -810,7 +832,39 @@ fn handle_click(
                 *mat = materials.hit_input_marker.clone();
                 marker.hit = true;
                 audio.play(marker.sound.clone()).with_volume(INPUT_VOLUME);
+                score.hits.push(HitHistory {
+                    input_index: marker.input_index,
+                    off_by: (x - input_x).abs(),
+                });
             }
         }
     }
+}
+
+#[derive(Component)]
+struct HitHistory {
+    #[allow(dead_code)]
+    input_index: usize,
+    off_by: f32,
+}
+
+#[derive(Component, Default)]
+struct Score {
+    hits: Vec<HitHistory>,
+}
+
+impl Score {
+    fn calc(&self) -> f32 {
+        let mut score = 0.;
+
+        for hit in &self.hits {
+            score += 100. - hit.off_by;
+        }
+
+        score
+    }
+}
+
+fn setup_score(mut state: ResMut<NextState<RhythmState>>) {
+    state.set(RhythmState::Exit);
 }

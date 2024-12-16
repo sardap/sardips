@@ -1,4 +1,4 @@
-use bevy::{core_pipeline::core_2d::graph::input, prelude::*};
+use bevy::prelude::*;
 use shared_deps::bevy_kira_audio::AudioSource;
 use std::{collections::HashMap, hash::Hash, time::Duration};
 
@@ -221,36 +221,13 @@ impl RhythmTemplate {
             }
         }
 
-        info!("inputs {:?}", self.inputs);
         for i in 0..self.inputs.len() {
             let input_start = self.inputs[i].start();
             if let Some((page, index)) = self.get_page_line_for_time(input_start) {
-                info!("Setting input {} page {} line {}", i, page, index);
                 self.inputs[i].set_page(page);
                 self.inputs[i].set_line(index);
-            } else {
-                warn!("Input {} at time {} not found in any page", i, input_start);
             }
         }
-        // let mut inputs_top: usize = 0;
-        // for i in 0..self.pages.len() {
-        //     for j in 0..self.pages[i].len() {
-        //         let line = &self.pages[i][j];
-        //         let line_start = line.start;
-        //         let line_end = line.end;
-        //         for k in inputs_top..self.inputs.len() {
-        //             let input = &mut self.inputs[k];
-        //             if input.start() >= line_start && input.start() <= line_end {
-        //                 info!("Setting input page {} line {}", i, j);
-        //                 input.set_page(i);
-        //                 input.set_line(j);
-        //                 inputs_top += 1;
-        //             } else if input.start() > line_end {
-        //                 break;
-        //             }
-        //         }
-        //     }
-        // }
     }
 
     fn get_page_line_for_time(&self, time: f64) -> Option<(usize, usize)> {
@@ -309,7 +286,7 @@ impl RhythmTemplate {
                 return false;
             }
         }
-        return true;
+        true
     }
 }
 
@@ -323,7 +300,7 @@ lazy_static! {
             inputs.push(RhythmTemplateInput::Tap(Tap::new(
                 Button::Click,
                 "sounds/mini_games/rhythm/hey.wav",
-                i as f64 * STEP_SIZE,
+                6. + i as f64 * STEP_SIZE,
             )));
         }
 
@@ -461,7 +438,7 @@ lazy_static! {
                     },
                 ],
             ],
-            inputs: inputs,
+            inputs,
             backgrounds: vec![RhythmTemplateBackgroundEntry::new(
                 "textures/mini_games/rhythm/test/background_1.png",
                 3.58,
