@@ -4,7 +4,7 @@ repos:
       - id: cargo-test
         name: cargo test
         description: Run cargo test
-        entry: cargo test
+        entry: cargo test --doc --all-features
         language: rust
         files: \.rs$
         pass_filenames: false

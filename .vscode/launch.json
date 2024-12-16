@@ -21,8 +21,8 @@
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=sardips",
-                    "--package=sardips",
+                    "--bin=sardip-run",
+                    "--package=sardip-run",
                     "--features",
                     "dev",
                     "--features",

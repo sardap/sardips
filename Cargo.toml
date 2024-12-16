@@ -1,96 +1,15 @@
-[package]
-name = "sardips"
-version = "0.2.0"
-publish = false
-authors = ["Paul Sarda paul@sarda.dev"]
-edition = "2021"
-exclude = ["dist", "build", "assets", "credits"]
-
 [workspace]
-members = []
-
-[profile.dev.package."*"]
-opt-level = 3
-
-[profile.dev]
-opt-level = 0
-
-# This is used by trunk as it doesn't support custom profiles: https://github.com/trunk-rs/trunk/issues/605
-# xbuild also uses this profile for building android AABs because I couldn't find a configuration for it
-[profile.release]
-opt-level = "s"
-lto = true
-codegen-units = 1
-strip = true
-
-# Profile for distribution
-[profile.dist]
-inherits = "release"
-opt-level = 3
-lto = true
-codegen-units = 1
-strip = true
-
-[profile.test]
-debug = true
-opt-level = 0
-
-[features]
-dev = ["bevy/dynamic_linking"]
-
-# All of Bevy's default features exept for the audio related ones (bevy_audio, vorbis), since they clash with bevy_kira_audio
-#   and android_shared_stdcxx, since that is covered in `mobile`
-# keep the following in sync with Bevy's dependencies
-[dependencies]
-bevy = { version = "0.14.1", default-features = false, features = [
-    "serialize",
-    "animation",
-    "bevy_asset",
-    "bevy_gilrs",
-    "bevy_scene",
-    "bevy_winit",
-    "bevy_core_pipeline",
-    "bevy_pbr",
-    "bevy_gltf",
-    "bevy_render",
-    "bevy_sprite",
-    "bevy_text",
-    "bevy_ui",
-    "png",
-    "hdr",
-    "x11",
-    "bevy_gizmos",
-    "tonemapping_luts",
-    "default_font",
-    "webgl2",
-    "bevy_debug_stepping",
-] }
-bevy_kira_audio = { version = "0.20" }
-bevy_asset_loader = { version = "0.21", features = [
-    "2d",
-    "standard_dynamic_assets",
-] }
-bevy_common_assets = { version = "0.11", features = ["toml"] }
-bevy_prototype_lyon = "0.12"
-bevy_turborand = "0.9"
-bevy-parallax = { git = "https://github.com/septum/bevy-parallax.git", branch = "bevy-0.14" }
-
-rand = { version = "0.8.5" }
-webbrowser = { version = "0.8", features = ["hardened"] }
-lazy_static = "1.4.0"
-serde = { version = "1.0.197", features = ["serde_derive"] }
-strum = { version = "0.26.1", features = ["strum_macros"] }
-strum_macros = "0.26.1"
-ron = "0.8"
-
-winit = { version = "0.30", default-features = false }
-image = { version = "0.24", default-features = false }
-maplit = "1.0.2"
-chrono = { version = "0.4.37", features = ["serde"] }
-bincode = "1.3.3"
-fxhash = "0.2.1"
-uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
-regex = "1.10.4"
-
-[build-dependencies]
-embed-resource = "1"
+resolver = "2"
+members = [
+    "common",
+    "minigames/four_in_row",
+    "minigames/endless_shooter",
+    "minigames/tic_tac_toe",
+    "minigames/higher_lower",
+    "minigames/rhythm",
+    "run",
+    "text_keys",
+    "fact_db",
+    "shared_deps",
+]
+default-members = ["run"]
