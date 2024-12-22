@@ -12,8 +12,8 @@ on:
         type: string
 
 env:
-  GAME_EXECUTABLE_NAME: sardips_run
-  GAME_OSX_APP_NAME: SarDips_run
+  GAME_EXECUTABLE_NAME: sardips-run
+  GAME_OSX_APP_NAME: SarDips-run
 
 permissions:
   contents: write
