@@ -41,3 +41,4 @@ sardips_four_in_row = { path = "../minigames/four_in_row" }
 sardips_tic_tac_toe = { path = "../minigames/tic_tac_toe" }
 sardips_higher_lower = { path = "../minigames/higher_lower" }
 sardips_rhythm = { path = "../minigames/rhythm" }
+sardips_translate = { path = "../minigames/translate" }

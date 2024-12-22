@@ -1,0 +1,33 @@
+[package]
+name = "sardips_translate"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+shared_deps = { path = "../../shared_deps" }
+sardips = { path = "../../common" }
+text_keys = { path = "../../text_keys" }
+bevy = { version = "0.14.2", default-features = false, features = [
+    "serialize",
+    "animation",
+    "bevy_asset",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "png",
+    "jpeg",
+    "hdr",
+    "x11",
+    "bevy_gizmos",
+    "tonemapping_luts",
+    "default_font",
+    "webgl2",
+    "bevy_debug_stepping",
+] }

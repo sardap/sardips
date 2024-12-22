@@ -25,6 +25,7 @@ pub mod pet;
 pub mod player;
 pub mod sardip_save;
 pub mod scenes;
+pub mod shrink;
 pub mod simulation;
 pub mod sounds;
 pub mod stock_market;
@@ -58,6 +59,7 @@ use shared_deps::bevy_kira_audio::prelude::*;
 use shared_deps::bevy_parallax::ParallaxPlugin;
 use shared_deps::bevy_prototype_lyon::prelude::*;
 use shared_deps::bevy_turborand::prelude::*;
+use shrink::ShrinkPlugin;
 use simulation::{SimulationPlugin, SimulationState};
 use sounds::SoundsPlugin;
 use stock_market::StockMarketPlugin;
@@ -101,6 +103,10 @@ pub fn remove_resource<T: Resource>(mut commands: Commands) {
     commands.remove_resource::<T>();
 }
 
+pub fn random_choose<'a, T, R: DelegatedRng>(rng: &mut R, items: &'a [T]) -> &'a T {
+    items.get(rng.usize(0..items.len())).unwrap()
+}
+
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
@@ -127,7 +133,7 @@ impl Plugin for GamePlugin {
             ShapePlugin,
             PhysicsPlugins::new(FixedUpdate),
             FactsPlugin,
-            // PhysicsDebugPlugin::default(),
+            // shared_deps::avian2d::prelude::PhysicsDebugPlugin::default(),
         ))
         .insert_state(GameState::default())
         .add_plugins((
@@ -145,6 +151,7 @@ impl Plugin for GamePlugin {
             MoneyPlugin,
             PlayerPlugin,
             AgePlugin,
+            ShrinkPlugin,
         ))
         .add_plugins((
             ViewPlugin,

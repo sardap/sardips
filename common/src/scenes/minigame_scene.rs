@@ -14,6 +14,7 @@ use crate::{
 use text_keys::{
     MINIGAME_SELECT_ENDLESS_RHYTHM, MINIGAME_SELECT_ENDLESS_SHOOTER, MINIGAME_SELECT_FOUR_IN_ROW,
     MINIGAME_SELECT_HIGHER_LOWER, MINIGAME_SELECT_SPRINT, MINIGAME_SELECT_TIC_TAC_TOE,
+    MINIGAME_SELECT_TRANSLATE,
 };
 
 pub struct MinigameScenePlugin;
@@ -111,6 +112,7 @@ fn setup_select_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                                     MinigameButton::FourInRow => MINIGAME_SELECT_FOUR_IN_ROW,
                                     MinigameButton::EndlessShooter => MINIGAME_SELECT_ENDLESS_SHOOTER,
                                     MinigameButton::Rhythm => MINIGAME_SELECT_ENDLESS_RHYTHM,
+                                    MinigameButton::Translate => MINIGAME_SELECT_TRANSLATE,
                                 }.to_string()) },
                             },
                         ));
@@ -139,6 +141,7 @@ enum MinigameButton {
     FourInRow,
     EndlessShooter,
     Rhythm,
+    Translate,
 }
 
 fn tick_input_selecting(
@@ -157,6 +160,7 @@ fn tick_input_selecting(
             MinigameButton::FourInRow => MiniGameState::PlayingFourInRow,
             MinigameButton::EndlessShooter => MiniGameState::PlayingEndlessShooter,
             MinigameButton::Rhythm => MiniGameState::PlayingRhythm,
+            MinigameButton::Translate => MiniGameState::PlayingTranslate,
         });
     }
 }

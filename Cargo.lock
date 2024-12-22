@@ -3810,7 +3810,7 @@ dependencies = [
 
 [[package]]
 name = "sardips"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -3848,6 +3848,7 @@ dependencies = [
  "sardips_higher_lower",
  "sardips_rhythm",
  "sardips_tic_tac_toe",
+ "sardips_translate",
  "shared_deps",
 ]
 
@@ -3899,6 +3900,16 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "lazy_static",
+ "sardips",
+ "shared_deps",
+ "text_keys",
+]
+
+[[package]]
+name = "sardips_translate"
+version = "0.1.0"
+dependencies = [
+ "bevy",
  "sardips",
  "shared_deps",
  "text_keys",

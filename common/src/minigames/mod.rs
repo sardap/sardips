@@ -1,5 +1,6 @@
 pub mod rhythm_template;
 mod sprint;
+pub mod translate_wordbank;
 // Checkers
 // Snake
 // Bug catch
@@ -8,6 +9,7 @@ mod sprint;
 
 use bevy::prelude::*;
 use rhythm_template::RhythmTemplatePlugin;
+use translate_wordbank::TranslateWordBankPlugin;
 
 use crate::{
     assets::FontAssets,
@@ -35,7 +37,7 @@ impl Plugin for MinigamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state::<MiniGameState>(MiniGameState::default())
             .add_event::<MiniGameCompleted>()
-            .add_plugins((SprintPlugin, RhythmTemplatePlugin))
+            .add_plugins((SprintPlugin, RhythmTemplatePlugin, TranslateWordBankPlugin))
             .add_systems(OnEnter(MiniGameState::None), remove_playing)
             .add_systems(OnEnter(MiniGameState::Selecting), set_minigame_pet)
             .add_systems(Update, (mini_game_completed, handle_back));
@@ -67,6 +69,7 @@ pub enum MiniGameState {
     PlayingFourInRow,
     PlayingEndlessShooter,
     PlayingRhythm,
+    PlayingTranslate,
 }
 
 struct MiniGamePrize {
@@ -88,6 +91,7 @@ pub enum MiniGameType {
     FourInRow,
     EndlessShooter,
     Rhythm,
+    Translate,
 }
 
 impl MiniGameType {
@@ -123,6 +127,12 @@ impl MiniGameType {
                 _ => return None,
             },
             MiniGameType::Rhythm => match result {
+                MiniGameResult::Win => MiniGamePrize::new(1000, 10.),
+                MiniGameResult::Draw => MiniGamePrize::new(50, 1.),
+                MiniGameResult::Lose => MiniGamePrize::new(50, 1.),
+                _ => return None,
+            },
+            MiniGameType::Translate => match result {
                 MiniGameResult::Win => MiniGamePrize::new(1000, 10.),
                 MiniGameResult::Draw => MiniGamePrize::new(50, 1.),
                 MiniGameResult::Lose => MiniGamePrize::new(50, 1.),

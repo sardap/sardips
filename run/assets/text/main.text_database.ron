@@ -73,6 +73,7 @@ TextDatabase(
             "minigame_select.four_in_row": "Join Four",
             "minigame_select.endless_shooter": "Shootem",
             "minigame_select.rhythm": "Rhythm",
+            "minigame_select.translate": "Translate",
 
             "dipdex.food_sensation_title": "Food tastes",
             "dipdex.stomach_size": "Stomach size",
@@ -245,6 +246,8 @@ TextDatabase(
             "minigame.rhythm.bird.line_20" : "",
             "minigame.rhythm.bird.line_21" : "Same words, same phrase",
             "minigame.rhythm.bird.line_22" : "(Hello baby, hello)",
+
+            "minigame.translate.score": "Score",
         },
         Korean: {
             "global.poop": "똥",

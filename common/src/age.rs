@@ -10,7 +10,8 @@ pub struct AgePlugin;
 impl Plugin for AgePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Age>()
-            .add_systems(SimulationUpdate, tick_ages);
+            .add_systems(SimulationUpdate, tick_ages)
+            .add_systems(Update, tick_update_ages);
     }
 }
 
@@ -43,5 +44,14 @@ impl Age {
 fn tick_ages(time: Res<Time>, mut query: Query<&mut Age>) {
     for mut age in query.iter_mut() {
         age.0 += time.delta();
+    }
+}
+
+#[derive(Component, Default)]
+pub struct UpdateAge(pub Duration);
+
+fn tick_update_ages(time: Res<Time>, mut query: Query<&mut UpdateAge>) {
+    for mut update_age in query.iter_mut() {
+        update_age.0 += time.delta();
     }
 }

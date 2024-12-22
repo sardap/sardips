@@ -119,3 +119,30 @@ impl TextDatabase {
 
 #[derive(Debug, Resource)]
 struct TextDatabaseHandle(Handle<TextDatabase>);
+
+pub enum WritingSystems {
+    Other,
+    Korean,
+}
+
+pub fn get_writing_system(text: &str) -> WritingSystems {
+    if let Some(c) = text.chars().next() {
+        // Hangul Symbol Range: 0xAC00 ~ 0xD7A3
+        // Hangul Jamo Range: 0x1100 ~ 0x11FF
+        // Hangul Compatibility Jamo Range: 0x3130 ~ 0x318F
+        // Hangul Jamo Extended-A Range: 0xA960 ~ 0xA97F
+        // Hangul Jamo Extended-B Range: 0xD7B0 ~ 0xD7FF
+        const RANGES: [std::ops::RangeInclusive<char>; 5] = [
+            '\u{AC00}'..='\u{D7A3}',
+            '\u{1100}'..='\u{11FF}',
+            '\u{3130}'..='\u{318F}',
+            '\u{A960}'..='\u{A97F}',
+            '\u{D7B0}'..='\u{D7FF}',
+        ];
+
+        if RANGES.iter().any(|range| range.contains(&c)) {
+            return WritingSystems::Korean;
+        }
+    }
+    WritingSystems::Other
+}
