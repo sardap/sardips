@@ -35,7 +35,7 @@
         <!-- Installs the actual files -->
         <ComponentGroup Id="MainComponent" Directory="INSTALLFOLDER">
             <Component>
-                <File Id="Executable" Source="..\..\..\target\dist\sardips.exe" Vital="true" />  <!-- ToDo this should point to your executable -->
+                <File Id="Executable" Source="..\..\..\target\dist\sardips-run.exe" Vital="true" />  <!-- ToDo this should point to your executable -->
             </Component>
         </ComponentGroup>
 
