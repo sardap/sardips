@@ -10,12 +10,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <HarvestDirectory Include="..\..\..\assets">
+        <HarvestDirectory Include="..\..\..\run\assets">
               <ComponentGroupName>AssetsDirectory</ComponentGroupName>
               <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
               <SuppressRootDirectory>false</SuppressRootDirectory>
         </HarvestDirectory>
-        <BindPath Include="..\..\..\assets" />
+        <BindPath Include="..\..\..\run\assets" />
     </ItemGroup>
 
     <ItemGroup>
