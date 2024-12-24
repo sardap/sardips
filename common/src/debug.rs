@@ -17,8 +17,8 @@ use crate::{
 };
 use bevy::prelude::*;
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng};
+use shared_deps::strum_macros::EnumIter;
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
 
 pub struct DebugPlugin;
 

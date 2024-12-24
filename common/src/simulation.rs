@@ -5,7 +5,7 @@ use bevy::{
     ecs::schedule::ScheduleLabel,
     prelude::*,
 };
-use chrono::{DateTime, Utc};
+use shared_deps::chrono::{DateTime, Utc};
 pub struct SimulationPlugin;
 
 impl Plugin for SimulationPlugin {

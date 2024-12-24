@@ -1,10 +1,10 @@
 use std::{collections::HashMap, str::FromStr};
 
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
 use shared_deps::rand::seq::SliceRandom;
-use strum_macros::EnumIter;
+use shared_deps::serde::{Deserialize, Serialize};
+use shared_deps::strum_macros::EnumIter;
 
 use crate::GameState;
 
@@ -96,12 +96,12 @@ impl TextDatabase {
     }
 
     pub fn random_given_name_key(&self) -> &str {
-        let mut rng = rand::thread_rng();
+        let mut rng = shared_deps::rand::thread_rng();
         self.default_given_names_keys.choose(&mut rng).unwrap()
     }
 
     pub fn random_surname_key(&self) -> &str {
-        let mut rng = rand::thread_rng();
+        let mut rng = shared_deps::rand::thread_rng();
         self.default_surnames_keys.choose(&mut rng).unwrap()
     }
 

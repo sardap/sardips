@@ -2,9 +2,9 @@ use core::fmt;
 
 use bevy::prelude::*;
 use fact_db::EntityFactDatabase;
-use moonshine_save::save::Save;
-use serde::{Deserialize, Serialize};
-use strum_macros::EnumIter;
+use shared_deps::moonshine_save::save::Save;
+use shared_deps::serde::{Deserialize, Serialize};
+use shared_deps::strum_macros::EnumIter;
 
 use super::mood::{Mood, MoodCategory, MoodCategoryHistory};
 use crate::age::Age;

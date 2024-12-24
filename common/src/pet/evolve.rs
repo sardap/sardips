@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use serde::Deserialize;
 use shared_deps::bevy_turborand::{DelegatedRng, RngComponent};
+use shared_deps::serde::Deserialize;
 
 use crate::{
     age::Age,

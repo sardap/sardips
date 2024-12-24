@@ -13,13 +13,14 @@ use bevy::{
 use sardips::{
     age::UpdateAge,
     assets::{FontAssets, TranslateAssets},
+    button_hover::ButtonHover,
     despawn_all,
     interaction::{MouseCamera, WorldMouse},
     minigames::{
         translate_wordbank::{Word, WordBank, WordSet},
-        MiniGameState,
+        MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
     },
-    random_choose,
+    palettes, random_choose,
     shrink::Shrinking,
     text_database::{get_writing_system, Language, WritingSystems},
     text_translation::KeyText,
@@ -31,7 +32,7 @@ use shared_deps::{
     },
     bevy_turborand::{DelegatedRng, GlobalRng},
 };
-use text_keys::MINIGAME_TRANSLATE_SCORE;
+use text_keys::{MINIGAME_TRANSLATE_QUIT, MINIGAME_TRANSLATE_SCORE, MINIGAME_TRANSLATE_TIME_LEFT};
 
 pub struct TranslateGamePlugin;
 
@@ -54,7 +55,13 @@ impl Plugin for TranslateGamePlugin {
             )
             .add_systems(
                 OnEnter(TranslateState::Playing),
-                (setup_spawners, select_words, setup_walls, setup_history),
+                (
+                    setup_spawners,
+                    select_words,
+                    setup_walls,
+                    setup_history,
+                    setup_game_timer,
+                ),
             )
             .add_systems(
                 OnExit(TranslateState::Playing),
@@ -71,8 +78,22 @@ impl Plugin for TranslateGamePlugin {
                     remove_select_border,
                     unstick_stuck,
                     update_score_text,
+                    tick_game_timer,
                 )
                     .run_if(in_state(TranslateState::Playing)),
+            )
+            .add_systems(OnEnter(TranslateState::Score), setup_score_screen)
+            .add_systems(
+                OnExit(TranslateState::Score),
+                despawn_all::<TranslateScoreScreen>,
+            )
+            .add_systems(
+                Update,
+                quit_button_pressed.run_if(in_state(TranslateState::Score)),
+            )
+            .add_systems(
+                OnEnter(TranslateState::Exit),
+                (despawn_all::<Translate>, on_exit),
             );
     }
 }
@@ -137,7 +158,7 @@ fn check_loading(
 }
 
 #[derive(Component)]
-struct TranslateUiCamera;
+struct TranslateBackgroundUiCamera;
 
 #[derive(Component)]
 struct TranslateSpriteCamera;
@@ -147,7 +168,7 @@ fn setup_camera_and_ui(
     assets: Res<TranslateAssets>,
     font_assets: Res<FontAssets>,
 ) {
-    let ui_camera: Entity = commands
+    let ui_background_camera: Entity = commands
         .spawn((
             Camera2dBundle {
                 camera: Camera {
@@ -156,14 +177,27 @@ fn setup_camera_and_ui(
                 },
                 ..default()
             },
-            TranslateUiCamera,
+            TranslateBackgroundUiCamera,
+            Translate,
+        ))
+        .id();
+
+    let ui_camera: Entity = commands
+        .spawn((
+            Camera2dBundle {
+                camera: Camera {
+                    order: 3,
+                    ..default()
+                },
+                ..default()
+            },
             Translate,
         ))
         .id();
 
     commands
         .spawn((
-            TargetCamera(ui_camera),
+            TargetCamera(ui_background_camera),
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.),
@@ -190,7 +224,7 @@ fn setup_camera_and_ui(
 
     commands
         .spawn((
-            TargetCamera(ui_camera),
+            TargetCamera(ui_background_camera),
             NodeBundle {
                 style: Style {
                     height: Val::Percent(100.),
@@ -231,7 +265,6 @@ fn setup_camera_and_ui(
                     position_type: PositionType::Absolute,
                     ..default()
                 },
-
                 ..default()
             },
             Translate,
@@ -253,7 +286,43 @@ fn setup_camera_and_ui(
                             },
                         ),
                         TextSection::new(
-                            ":\n",
+                            "\n",
+                            TextStyle {
+                                font: font_assets.main_font.clone(),
+                                font_size: 20.,
+                                color: Color::BLACK,
+                            },
+                        ),
+                        TextSection::new(
+                            "",
+                            TextStyle {
+                                font: font_assets.main_font.clone(),
+                                font_size: 20.,
+                                color: Color::BLACK,
+                            },
+                        ),
+                    ]),
+                    ..default()
+                },
+                KeyText::new().with(0, MINIGAME_TRANSLATE_TIME_LEFT),
+                TimeRemainingText,
+                TranslatePlaying,
+            ));
+
+            parent.spawn((
+                TextBundle {
+                    style: Style { ..default() },
+                    text: Text::from_sections(vec![
+                        TextSection::new(
+                            "",
+                            TextStyle {
+                                font: font_assets.main_font.clone(),
+                                font_size: 20.,
+                                color: Color::BLACK,
+                            },
+                        ),
+                        TextSection::new(
+                            "\n",
                             TextStyle {
                                 font: font_assets.main_font.clone(),
                                 font_size: 20.,
@@ -273,6 +342,7 @@ fn setup_camera_and_ui(
                 },
                 KeyText::new().with(0, MINIGAME_TRANSLATE_SCORE),
                 ScoreText,
+                TranslatePlaying,
             ));
         });
 
@@ -295,6 +365,9 @@ struct TranslatePlaying;
 
 #[derive(Component)]
 struct ScoreText;
+
+#[derive(Component)]
+struct TimeRemainingText;
 
 #[derive(Component)]
 struct WordSpawner {
@@ -383,6 +456,23 @@ fn setup_history(mut commands: Commands, existing: Query<Entity, With<History>>)
     }
 
     commands.spawn((History::default(), Translate));
+}
+
+#[derive(Component)]
+struct GameTimer {
+    timer: Timer,
+}
+
+impl Default for GameTimer {
+    fn default() -> Self {
+        Self {
+            timer: Timer::new(Duration::from_secs_f32(5.), TimerMode::Once),
+        }
+    }
+}
+
+fn setup_game_timer(mut commands: Commands) {
+    commands.spawn((GameTimer::default(), Translate, TranslatePlaying));
 }
 
 /*
@@ -996,5 +1086,184 @@ fn update_score_text(
     if let Ok(history) = history.get_single() {
         let mut score_text = score_text.single_mut();
         score_text.sections[2].value = format!("{:.2}", history.score());
+    }
+}
+
+fn tick_game_timer(
+    time: Res<Time>,
+    mut state: ResMut<NextState<TranslateState>>,
+    mut game_timer: Query<&mut GameTimer>,
+    mut timer_text: Query<&mut Text, With<TimeRemainingText>>,
+) {
+    for mut timer in &mut game_timer {
+        timer.timer.tick(time.delta());
+
+        let mut score_text = timer_text.single_mut();
+        let remaining = timer.timer.duration().as_secs_f32() - timer.timer.elapsed().as_secs_f32();
+        score_text.sections[2].value = format!("{:.2}", remaining);
+
+        if timer.timer.finished() {
+            state.set(TranslateState::Score);
+        }
+    }
+}
+
+#[derive(Component)]
+struct TranslateScoreScreen;
+
+#[derive(Component)]
+struct ScoreScreenText;
+
+#[derive(Component)]
+struct QuitButton;
+
+fn setup_score_screen(
+    mut commands: Commands,
+    font_assets: Res<FontAssets>,
+    camera: Query<Entity, With<TranslateSpriteCamera>>,
+    history: Query<&History>,
+) {
+    let ui_camera = camera.single();
+
+    let history = history.single();
+
+    const FONT_SIZE: f32 = 30.;
+
+    commands
+        .spawn((
+            TargetCamera(ui_camera),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    position_type: PositionType::Absolute,
+                    ..default()
+                },
+                ..default()
+            },
+            Translate,
+        ))
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    NodeBundle {
+                        style: Style {
+                            width: Val::Px(300.),
+                            height: Val::Px(50.),
+                            flex_direction: FlexDirection::Column,
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            ..default()
+                        },
+                        background_color: BackgroundColor(Color::srgba(1., 1., 1., 0.5)),
+                        border_color: BorderColor(Color::BLACK),
+                        border_radius: BorderRadius::all(Val::Px(10.)),
+                        ..default()
+                    },
+                    Translate,
+                    TranslateScoreScreen,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        TextBundle {
+                            style: Style { ..default() },
+                            text: Text::from_sections(vec![TextSection::new(
+                                "",
+                                TextStyle {
+                                    font: font_assets.main_font.clone(),
+                                    font_size: FONT_SIZE,
+                                    color: Color::BLACK,
+                                },
+                            )]),
+                            ..default()
+                        },
+                        KeyText::new().with(0, MINIGAME_TRANSLATE_SCORE),
+                    ));
+
+                    parent.spawn((
+                        TextBundle {
+                            style: Style { ..default() },
+                            text: Text::from_sections(vec![TextSection::new(
+                                history.score().to_string(),
+                                TextStyle {
+                                    font: font_assets.main_font.clone(),
+                                    font_size: FONT_SIZE,
+                                    color: Color::BLACK,
+                                },
+                            )]),
+                            ..default()
+                        },
+                        ScoreScreenText,
+                    ));
+                });
+
+            parent
+                .spawn((
+                    ButtonBundle {
+                        style: Style {
+                            width: Val::Percent(50.),
+                            height: Val::Px(100.),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    ButtonHover::default()
+                        .with_background(palettes::dipdex_view::BUTTON_SET)
+                        .with_border(palettes::dipdex_view::BUTTON_BORDER_SET),
+                    Translate,
+                    QuitButton,
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        TextBundle {
+                            style: Style { ..default() },
+                            text: Text::from_section(
+                                "",
+                                TextStyle {
+                                    font: font_assets.main_font.clone(),
+                                    font_size: FONT_SIZE,
+                                    color: Color::BLACK,
+                                },
+                            ),
+                            ..default()
+                        },
+                        KeyText::new().with(0, MINIGAME_TRANSLATE_QUIT),
+                    ));
+                });
+        });
+}
+
+fn on_exit(
+    mut state: ResMut<NextState<MiniGameState>>,
+    mut event_writer: EventWriter<MiniGameCompleted>,
+    history: Query<&History>,
+) {
+    state.set(MiniGameState::None);
+
+    let score = history.single().score();
+
+    event_writer.send(MiniGameCompleted {
+        game_type: MiniGameType::Translate,
+        result: if score > 10000. {
+            MiniGameResult::Lose
+        } else if score > 5000. {
+            MiniGameResult::Draw
+        } else {
+            MiniGameResult::Win
+        },
+    });
+}
+
+fn quit_button_pressed(
+    mut state: ResMut<NextState<TranslateState>>,
+    quit_buttons: Query<&Interaction, (With<QuitButton>, Changed<Interaction>)>,
+) {
+    for interaction in &quit_buttons {
+        if interaction == &Interaction::Pressed {
+            state.set(TranslateState::Exit);
+        }
     }
 }

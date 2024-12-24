@@ -248,6 +248,8 @@ TextDatabase(
             "minigame.rhythm.bird.line_22" : "(Hello baby, hello)",
 
             "minigame.translate.score": "Score",
+            "minigame.translate.time_left": "Time Left",
+            "minigame.translate.quit": "Quit",
         },
         Korean: {
             "global.poop": "똥",

@@ -3814,26 +3814,13 @@ version = "0.4.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
- "bincode",
- "chrono",
  "fact_db",
- "image 0.24.9",
  "lazy_static",
  "maplit",
- "moonshine-save",
- "num-traits",
- "rand",
- "regex",
- "ron",
  "serde",
  "shared_deps",
  "strum",
- "strum_macros",
  "text_keys",
- "uuid",
- "webbrowser",
- "weighted_rand",
- "winit",
 ]
 
 [[package]]
@@ -3988,9 +3975,7 @@ name = "shared_deps"
 version = "0.1.0"
 dependencies = [
  "avian2d",
- "bevy",
  "bevy-parallax",
- "bevy_asset_loader",
  "bevy_common_assets",
  "bevy_kira_audio",
  "bevy_prototype_lyon",

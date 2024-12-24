@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use shared_deps::serde::{Deserialize, Serialize};
 
 use crate::{
     age::Age,
@@ -73,7 +73,11 @@ fn breeding_result(
         breeder_right
     );
 
-    Some(*possible.choose(&mut rand::thread_rng()).unwrap())
+    Some(
+        *possible
+            .choose(&mut shared_deps::rand::thread_rng())
+            .unwrap(),
+    )
 }
 
 /*

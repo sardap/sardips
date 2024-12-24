@@ -10,11 +10,10 @@ use core::fmt;
 use std::{collections::HashMap, time::Duration};
 
 use bevy::prelude::*;
-use serde::de::{self, Visitor};
-use serde::Deserializer;
-use serde::{Deserialize, Serialize};
-use shared_deps::rand;
 use shared_deps::rand::prelude::SliceRandom;
+use shared_deps::serde::de::{self, Visitor};
+use shared_deps::serde::Deserializer;
+use shared_deps::serde::{Deserialize, Serialize};
 
 pub struct FactsPlugin;
 
@@ -494,7 +493,12 @@ impl<'a> FactQuery<'a> {
             return None;
         }
 
-        Some((*matches.choose(&mut rand::thread_rng()).unwrap()).clone())
+        Some(
+            (*matches
+                .choose(&mut shared_deps::rand::thread_rng())
+                .unwrap())
+            .clone(),
+        )
     }
 
     pub fn single_criteria(&self, criteria: &Criteria) -> bool {

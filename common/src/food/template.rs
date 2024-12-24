@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashSet};
-use serde::{Deserialize, Serialize};
 use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
+use shared_deps::serde::{Deserialize, Serialize};
 
 use crate::{
     layering,

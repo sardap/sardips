@@ -2,13 +2,13 @@ use core::fmt;
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+use shared_deps::serde::{Deserialize, Serialize};
 
 use text_keys;
 
 use super::{FoodSensationType, FoodSensations};
+use shared_deps::strum_macros::EnumIter;
 use strum::IntoEnumIterator;
-use strum_macros::EnumIter;
 
 #[derive(Debug, Copy, Clone, EnumIter, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FoodSensationRating {

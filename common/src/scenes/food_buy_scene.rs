@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use strum_macros::EnumIter;
+use shared_deps::strum_macros::EnumIter;
 
 use crate::{assets::FontAssets, palettes, text_translation::KeyText, GameState};
 use text_keys::FOOD_BUY_SCENE_TITLE;

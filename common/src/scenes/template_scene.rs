@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use strum_macros::EnumIter;
+use shared_deps::strum_macros::EnumIter;
 
 use crate::{
     assets::FontAssets,

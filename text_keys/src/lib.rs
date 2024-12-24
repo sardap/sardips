@@ -87,3 +87,5 @@ pub const MINIGAME_ENDLESS_SHOOTER_QUIT: &str = "minigame.endless_shooter.quit";
 pub const MINIGAME_RHYTHM_LOADING: &str = "minigame.rhythm.loading";
 
 pub const MINIGAME_TRANSLATE_SCORE: &str = "minigame.translate.score";
+pub const MINIGAME_TRANSLATE_TIME_LEFT: &str = "minigame.translate.time_left";
+pub const MINIGAME_TRANSLATE_QUIT: &str = "minigame.translate.quit";

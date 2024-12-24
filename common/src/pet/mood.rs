@@ -1,7 +1,7 @@
 use std::{collections::HashMap, time::Duration};
 
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+use shared_deps::serde::{Deserialize, Serialize};
 
 use crate::{
     money::{MoneyHungry, Wallet},

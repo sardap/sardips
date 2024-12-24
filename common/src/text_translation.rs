@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use regex::Regex;
+use shared_deps::regex::Regex;
 
 use crate::{
     text_database::{Language, TextDatabase},
@@ -50,7 +50,7 @@ impl KeyString {
             KeyString::Direct(key) => text_database.get(language, key),
             KeyString::Format(str) => {
                 let result = FORMAT_RE
-                    .replace_all(str, |caps: &regex::Captures| {
+                    .replace_all(str, |caps: &shared_deps::regex::Captures| {
                         let key = caps.get(1).unwrap().as_str();
                         text_database.get(language, key)
                     })

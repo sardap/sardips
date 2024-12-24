@@ -1,9 +1,9 @@
 use bevy::{prelude::*, utils::HashMap};
-use moonshine_save::save::Save;
-use serde::{Deserialize, Serialize};
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng};
+use shared_deps::moonshine_save::save::Save;
 use shared_deps::rand::Rng;
-use weighted_rand::{
+use shared_deps::serde::{Deserialize, Serialize};
+use shared_deps::weighted_rand::{
     builder::{NewBuilder, WalkerTableBuilder},
     table::WalkerTable,
 };
@@ -73,7 +73,7 @@ pub struct SharePortfolio {
 impl SharePortfolio {
     pub fn new_player_portfolio() -> Self {
         Self {
-            share_key: rand::thread_rng().gen_range(PLAYER_SHARE_KEY_RANGE),
+            share_key: shared_deps::rand::thread_rng().gen_range(PLAYER_SHARE_KEY_RANGE),
         }
     }
 }
