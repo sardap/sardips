@@ -3,8 +3,8 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use fact_db::EntityFactDatabase;
-use serde::{Deserialize, Serialize};
 use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
+use shared_deps::serde::{Deserialize, Serialize};
 
 use crate::age::Age;
 use crate::food::preferences::{FoodPreference, FoodSensationRating};

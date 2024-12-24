@@ -10,6 +10,7 @@ use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::hashbrown::HashSet;
 use maplit::hashmap;
+use sardips::shrink::Shrinking;
 use shared_deps::avian2d::prelude::{
     Collider, ColliderDensity, CollidingEntities, CollisionLayers, GravityScale, LinearVelocity,
     Mass, PhysicsLayer, RigidBody,
@@ -86,7 +87,6 @@ impl Plugin for EndlessShooterPlugin {
                     tick_score,
                     tick_invincibility,
                     toggle_walker_bodies,
-                    update_shrink,
                 )
                     .run_if(in_state(EndlessShooterState::Playing)),
             )
@@ -1513,41 +1513,6 @@ fn update_damage_fade(
 fn update_tint_turncoat(mut turncoats: Query<&mut Sprite, Added<TurnCoat>>) {
     for mut sprite in &mut turncoats {
         sprite.color = Color::linear_rgb(0., 1., 0.);
-    }
-}
-
-#[derive(Component)]
-struct Shrinking {
-    starting_size: Vec2,
-    time: Timer,
-}
-
-impl Shrinking {
-    fn new(size: Vec2, duration: Duration) -> Self {
-        Self {
-            starting_size: size,
-            time: Timer::new(duration, TimerMode::Once),
-        }
-    }
-}
-
-fn update_shrink(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut shrink: Query<(Entity, &mut Shrinking, &mut Transform), With<EndlessShooter>>,
-) {
-    for (entity, mut shrink, mut trans) in &mut shrink {
-        if shrink.time.tick(time.delta()).finished() {
-            commands.entity(entity).despawn_recursive();
-            continue;
-        }
-
-        let percent = shrink.time.elapsed().as_secs_f32() / shrink.time.duration().as_secs_f32();
-        trans.scale = Vec3::new(
-            shrink.starting_size.x * (1. - percent),
-            shrink.starting_size.y * (1. - percent),
-            1.,
-        );
     }
 }
 

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use bevy::prelude::*;
-use moonshine_save::prelude::*;
+use shared_deps::moonshine_save::prelude::*;
 
 use crate::{stock_market::OrderBook, GameState};
 

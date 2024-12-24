@@ -153,6 +153,12 @@ pub struct EndlessShooterAssets {
 }
 
 #[derive(AssetCollection, Resource)]
+pub struct TranslateAssets {
+    #[asset(path = "textures/mini_games/translate/background.jpg")]
+    pub background: Handle<Image>,
+}
+
+#[derive(AssetCollection, Resource)]
 pub struct DipdexImageAssets {
     #[asset(path = "textures/dipdex/unknown.png")]
     pub unknown: Handle<Image>,

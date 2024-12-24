@@ -1,7 +1,7 @@
 use std::fmt;
 
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+use shared_deps::serde::{Deserialize, Serialize};
 
 pub struct MoneyPlugin;
 

@@ -4,35 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.14.2", default-features = false, features = [
-    "serialize",
-    "animation",
-    "bevy_asset",
-    "bevy_gilrs",
-    "bevy_scene",
-    "bevy_winit",
-    "bevy_core_pipeline",
-    "bevy_pbr",
-    "bevy_gltf",
-    "bevy_render",
-    "bevy_sprite",
-    "bevy_text",
-    "bevy_ui",
-    "png",
-    "jpeg",
-    "hdr",
-    "x11",
-    "bevy_gizmos",
-    "tonemapping_luts",
-    "default_font",
-    "webgl2",
-    "bevy_debug_stepping",
-] }
 bevy_kira_audio = { version = "0.20", features = ["wav", "mp3"] }
-bevy_asset_loader = { version = "0.21", features = [
-    "2d",
-    "standard_dynamic_assets",
-] }
 bevy_common_assets = { version = "0.11", features = ["toml"] }
 bevy_prototype_lyon = "0.12"
 bevy_turborand = "0.9"

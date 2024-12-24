@@ -1,7 +1,7 @@
 use core::fmt;
 
 use bevy::prelude::*;
-use serde::{Deserialize, Serialize};
+use shared_deps::serde::{Deserialize, Serialize};
 
 use crate::{
     assets::FontAssets, text_database::TextDatabase, text_translation::KeyText, view::HasView,
@@ -36,7 +36,7 @@ impl EntityName {
             first_name: first_name.into(),
             middle_name: None,
             last_name: None,
-            id: rand::random(),
+            id: shared_deps::rand::random(),
         }
     }
 

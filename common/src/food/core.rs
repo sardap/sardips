@@ -1,10 +1,10 @@
 use std::fmt;
 
 use bevy::{prelude::*, utils::HashSet};
-use moonshine_save::save::Save;
-use serde::{Deserialize, Serialize};
 use shared_deps::bevy_turborand::{GlobalRng, RngComponent};
-use strum_macros::EnumIter;
+use shared_deps::moonshine_save::save::Save;
+use shared_deps::serde::{Deserialize, Serialize};
+use shared_deps::strum_macros::EnumIter;
 
 use crate::{
     game_zone::random_point_in_game_zone,

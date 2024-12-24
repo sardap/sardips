@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use moonshine_save::save::Save;
+use shared_deps::moonshine_save::save::Save;
 
 use crate::{
     money::Wallet, pet::dipdex::DipdexDiscoveredEntries, sardip_save::SardipLoadingState,

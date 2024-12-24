@@ -1,0 +1,255 @@
+WordBank(
+    sets: [
+        WordSet(
+            id: "eggplant",
+            words: {
+                English: Word(
+                    word: "Eggplant",
+                    audio_path: None,
+                    sentences: [
+                        "eat eggplant",
+                        "buy eggplant"
+                    ]
+                ),
+                Korean: Word(
+                    word: "가지",
+                    audio_path: None,
+                    sentences: [
+                        "가지를 먹다",
+                        "가지를 사다"
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/eggplant.jpg"
+            ]
+        ),
+        WordSet(
+            id: "ice",
+            words: {
+                English: Word(
+                    word: "Ice",
+                    audio_path: None,
+                    sentences: [
+                        "This ice is cold",
+                        "Ice is my favorite"
+                    ]
+                ),
+                Korean: Word(
+                    word: "얼음",
+                    audio_path: None,
+                    sentences: [
+                        "이 얼음은 차갑다",
+                        "얼음이 제일 좋아"
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/ice.jpg"
+            ]
+        ),
+        WordSet(
+            id: "kitten",
+            words: {
+                English: Word(
+                    word: "Kitten",
+                    audio_path: None,
+                    sentences: [
+                        "How cute is that kitten?",
+                        "The kitten is 5 days old"
+                    ]
+                ),
+                Korean: Word(
+                    word: "고양이",
+                    audio_path: None,
+                    sentences: [
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/kitten.jpg"
+            ]
+        ),
+        WordSet(
+            id: "color_paper",
+            words: {
+                English: Word(
+                    word: "Colored Paper",
+                    audio_path: None,
+                    sentences: [
+                        "That colored paper is pretty",
+                    ]
+                ),
+                Korean: Word(
+                    word: "색종이",
+                    audio_path: None,
+                    sentences: [
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/color_paper.jpg"
+            ]
+        ),
+        WordSet(
+            id: "dairy_cow",
+            words: {
+                English: Word(
+                    word: "Dairy Cow",
+                    audio_path: None,
+                    sentences: [
+                        "Milk that dairy cow",
+                                        ]
+                ),
+                Korean: Word(
+                    word: "젖소",
+                    audio_path: None,
+                    sentences: [
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/dairy_cow.jpg"
+            ]
+        ),
+        WordSet(
+            id: "pheasant",
+            words: {
+                English: Word(
+                    word: "Pheasant",
+                    audio_path: None,
+                    sentences: [
+
+                                        ]
+                ),
+                Korean: Word(
+                    word: "꿩",
+                    audio_path: None,
+                    sentences: [
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/pheasant.jpg"
+            ]
+        ),
+        // WordSet(
+        //     id: "fly",
+        //     words: {
+        //         English: Word(
+        //             word: "Fly",
+        //             audio_path: None,
+        //             sentences: [
+        //                 "The fly will contaminate the batch",
+
+        //                                 ]
+        //         ),
+        //         Korean: Word(
+        //             word: "파리",
+        //             audio_path: None,
+        //             sentences: [
+        //             ]
+        //         )
+        //     },
+        //     kind: Noun,
+        //     image_paths: [
+        //         "textures/mini_games/translate/things/fly.jpg"
+        //     ]
+        // ),
+        WordSet(
+            id: "grandma",
+            words: {
+                English: Word(
+                    word: "Grandma",
+                    audio_path: None,
+                    sentences: [
+
+                                        ]
+                ),
+                Korean: Word(
+                    word: "할머니",
+                    audio_path: None,
+                    sentences: [
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/grandma.jpg"
+            ]
+        ),
+        WordSet(
+            id: "catholic_church",
+            words: {
+                English: Word(
+                    word: "Catholic church",
+                    audio_path: None,
+                    sentences: [
+
+                                        ]
+                ),
+                Korean: Word(
+                    word: "상당",
+                    audio_path: None,
+                    sentences: [
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/catholic_church.jpg"
+            ]
+        ),
+        // WordSet(
+        //     id: "dad",
+        //     words: {
+        //         English: Word(
+        //             word: "Dad",
+        //             audio_path: None,
+        //             sentences: [
+
+        //                                 ]
+        //         ),
+        //         Korean: Word(
+        //             word: "아빠",
+        //             audio_path: None,
+        //             sentences: [
+        //             ]
+        //         )
+        //     },
+        //     kind: Noun,
+        //     image_paths: [
+        //         "textures/mini_games/translate/things/.jpg"
+        //     ]
+        // ),
+        WordSet(
+            id: "chick",
+            words: {
+                English: Word(
+                    word: "Chick",
+                    audio_path: None,
+                    sentences: [
+
+                                        ]
+                ),
+                Korean: Word(
+                    word: "병아리",
+                    audio_path: None,
+                    sentences: [
+                    ]
+                )
+            },
+            kind: Noun,
+            image_paths: [
+                "textures/mini_games/translate/things/chick.jpg"
+            ]
+        ),
+
+    ]
+)

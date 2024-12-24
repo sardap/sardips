@@ -1,7 +1,7 @@
 use crate::{
     assets::{
         AudioAssets, BackgroundTexturesAssets, DipdexImageAssets, EndlessShooterAssets, FontAssets,
-        FourInRowAssets, GameImageAssets, HigherLowerAssets, TicTacToeAssets,
+        FourInRowAssets, GameImageAssets, HigherLowerAssets, TicTacToeAssets, TranslateAssets,
         ViewScreenImageAssets,
     },
     GameState,
@@ -27,6 +27,7 @@ impl Plugin for LoadingScenePlugin {
                 .load_collection::<HigherLowerAssets>()
                 .load_collection::<FourInRowAssets>()
                 .load_collection::<EndlessShooterAssets>()
+                .load_collection::<TranslateAssets>()
                 .load_collection::<DipdexImageAssets>(),
         );
     }
