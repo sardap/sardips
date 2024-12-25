@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-
-use sardips::{rgb_to_color, rgba_to_color};
+use sardips_core::{rgb_to_color, rgba_to_color};
 
 pub(crate) const INACTIVE_PROGRESS_BAR_COLOR: Color = rgba_to_color!(59, 59, 59, 125);
 pub(crate) const ACTIVE_PROGRESS_BAR_COLOR: Color = rgb_to_color!(100, 100, 100);

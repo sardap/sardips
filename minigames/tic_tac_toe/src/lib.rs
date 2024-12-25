@@ -4,24 +4,22 @@
 #![allow(clippy::type_complexity)]
 #![allow(unexpected_cfgs)]
 use bevy::prelude::*;
+use sardips_core::{
+    assets::{self, FontAssets, TicTacToeAssets},
+    autoscroll::AutoScroll,
+    button_hover::{ButtonColorSet, ButtonHover},
+    minigames_core::{
+        MiniGameBackButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing,
+    },
+    mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
+    sounds::{PlaySoundEffect, SoundEffect},
+    text_translation::KeyText,
+};
 use shared_deps::{
     bevy_parallax::{
         CreateParallaxEvent, LayerComponent, LayerData, LayerSpeed, ParallaxCameraComponent,
     },
     bevy_turborand::{DelegatedRng, GlobalRng},
-};
-
-use sardips::{
-    assets::{self, FontAssets, TicTacToeAssets},
-    autoscroll::AutoScroll,
-    button_hover::{ButtonColorSet, ButtonHover},
-    minigames::{
-        MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
-        Playing,
-    },
-    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
-    sounds::{PlaySoundEffect, SoundEffect},
-    text_translation::KeyText,
 };
 
 pub struct TicTacToePlugin;
@@ -328,7 +326,7 @@ fn setup_game_over(
                 ));
             });
 
-        MiniGameBackExitButton::spawn(parent, &fonts);
+        parent.spawn(MiniGameBackButton);
     });
 }
 

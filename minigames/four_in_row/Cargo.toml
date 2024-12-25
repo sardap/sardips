@@ -1,10 +1,10 @@
 [package]
 name = "sardips_four_in_row"
-version = "0.1.0"
+version = "0.4.0"
 edition = "2021"
 
 [dependencies]
+sardips_core = { path = "../../core" }
 shared_deps = { path = "../../shared_deps" }
-sardips = { path = "../../common" }
 lazy_static = "1.4.0"
 bevy = { version = "0.14.2", default-features = false }

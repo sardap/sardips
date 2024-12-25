@@ -11,17 +11,14 @@ use core::fmt;
 use bevy::prelude::*;
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
-use sardips::{
+use sardips_core::{
     assets::{FontAssets, FourInRowAssets},
     interaction::{AttachToCursor, Clickable, Hovering, MouseCamera},
-    minigames::{
-        MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
-        Playing,
+    minigames_core::{
+        MiniGameBackButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing,
     },
-    pet::{
-        mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
-        move_towards::{MoveTowardsOnSpawn, MovingTowards},
-    },
+    mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
+    move_towards::{MoveTowardsOnSpawn, MovingTowards},
     sounds::{PlaySoundEffect, SoundEffect},
     velocity::{MovementDirection, Speed},
 };
@@ -318,7 +315,6 @@ fn teardown_playing(
 
 fn setup_game_over(
     mut commands: Commands,
-    fonts: Res<FontAssets>,
     board: Query<&GameBoard>,
     discs: Query<(&Transform, &Disc)>,
 ) {
@@ -338,7 +334,7 @@ fn setup_game_over(
             FourInRow,
         ))
         .with_children(|parent| {
-            MiniGameBackExitButton::spawn(parent, &fonts);
+            parent.spawn(MiniGameBackButton);
         });
 
     let board = board.single();

@@ -1,0 +1,27 @@
+[package]
+name = "sardips"
+version = "0.4.0"
+publish = false
+authors = ["Paul Sarda paul@sarda.dev"]
+edition = "2021"
+exclude = ["dist", "build", "assets", "credits"]
+
+# [features]
+# dev = ["bevy/dynamic_linking"]
+
+
+[dependencies]
+sardips_core = { path = "../core" }
+text_keys = { path = "../text_keys" }
+fact_db = { path = "../fact_db" }
+shared_deps = { path = "../shared_deps" }
+bevy = { version = "0.14.2", default-features = false }
+bevy_asset_loader = { version = "0.21", features = [
+    "2d",
+    "standard_dynamic_assets",
+] }
+
+lazy_static = "1.4.0"
+serde = { version = "1.0.197", features = ["serde_derive"] }
+strum = { version = "0.26.1", features = ["strum_macros"] }
+maplit = "1.0.2"

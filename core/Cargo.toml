@@ -1,0 +1,17 @@
+[package]
+name = "sardips_core"
+version = "0.4.0"
+edition = "2024"
+
+[dependencies]
+shared_deps = { path = "../shared_deps" }
+bevy = { version = "0.14.2", default-features = false }
+bevy_asset_loader = { version = "0.21", features = [
+    "2d",
+    "standard_dynamic_assets",
+] }
+
+serde = { version = "1.0.197", features = ["serde_derive"] }
+strum = { version = "0.26.1", features = ["strum_macros"] }
+maplit = "1.0.2"
+lazy_static = "1.4.0"

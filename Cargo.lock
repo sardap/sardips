@@ -1914,7 +1914,7 @@ checksum = "af9673d8203fcb076b19dfd17e38b3d4ae9f44959416ea532ce72415a6020365"
 
 [[package]]
 name = "fact_db"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
  "lazy_static",
@@ -3817,6 +3817,7 @@ dependencies = [
  "fact_db",
  "lazy_static",
  "maplit",
+ "sardips_core",
  "serde",
  "shared_deps",
  "strum",
@@ -3825,7 +3826,7 @@ dependencies = [
 
 [[package]]
 name = "sardips-run"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
  "embed-resource",
@@ -3840,42 +3841,55 @@ dependencies = [
 ]
 
 [[package]]
+name = "sardips_core"
+version = "0.4.0"
+dependencies = [
+ "bevy",
+ "bevy_asset_loader",
+ "lazy_static",
+ "maplit",
+ "serde",
+ "shared_deps",
+ "strum",
+]
+
+[[package]]
 name = "sardips_endless_shooter"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
  "maplit",
- "sardips",
+ "sardips_core",
  "shared_deps",
  "text_keys",
 ]
 
 [[package]]
 name = "sardips_four_in_row"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
  "lazy_static",
- "sardips",
+ "sardips_core",
  "shared_deps",
 ]
 
 [[package]]
 name = "sardips_higher_lower"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
- "sardips",
+ "sardips_core",
  "shared_deps",
  "text_keys",
 ]
 
 [[package]]
 name = "sardips_rhythm"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
- "sardips",
+ "sardips_core",
  "serde",
  "shared_deps",
  "text_keys",
@@ -3883,21 +3897,21 @@ dependencies = [
 
 [[package]]
 name = "sardips_tic_tac_toe"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
  "lazy_static",
- "sardips",
+ "sardips_core",
  "shared_deps",
  "text_keys",
 ]
 
 [[package]]
 name = "sardips_translate"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "bevy",
- "sardips",
+ "sardips_core",
  "shared_deps",
  "text_keys",
 ]
@@ -3972,7 +3986,7 @@ dependencies = [
 
 [[package]]
 name = "shared_deps"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "avian2d",
  "bevy-parallax",
@@ -4286,7 +4300,7 @@ dependencies = [
 
 [[package]]
 name = "text_keys"
-version = "0.1.0"
+version = "0.4.0"
 
 [[package]]
 name = "thiserror"

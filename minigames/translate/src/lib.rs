@@ -10,17 +10,15 @@ use bevy::{
     sprite::{MaterialMesh2dBundle, Mesh2dHandle},
     utils::hashbrown::HashMap,
 };
-use sardips::{
-    age::UpdateAge,
+use sardips_core::{
     assets::{FontAssets, TranslateAssets},
-    button_hover::ButtonHover,
     despawn_all,
     interaction::{MouseCamera, WorldMouse},
-    minigames::{
+    minigames_core::{
         translate_wordbank::{Word, WordBank, WordSet},
-        MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
+        MiniGameBackButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
     },
-    palettes, random_choose,
+    random_choose,
     shrink::Shrinking,
     text_database::{get_writing_system, Language, WritingSystems},
     text_translation::KeyText,
@@ -32,7 +30,7 @@ use shared_deps::{
     },
     bevy_turborand::{DelegatedRng, GlobalRng},
 };
-use text_keys::{MINIGAME_TRANSLATE_QUIT, MINIGAME_TRANSLATE_SCORE, MINIGAME_TRANSLATE_TIME_LEFT};
+use text_keys::{MINIGAME_TRANSLATE_SCORE, MINIGAME_TRANSLATE_TIME_LEFT};
 
 pub struct TranslateGamePlugin;
 
@@ -79,6 +77,7 @@ impl Plugin for TranslateGamePlugin {
                     unstick_stuck,
                     update_score_text,
                     tick_game_timer,
+                    tick_update_ages,
                 )
                     .run_if(in_state(TranslateState::Playing)),
             )
@@ -1200,39 +1199,7 @@ fn setup_score_screen(
                     ));
                 });
 
-            parent
-                .spawn((
-                    ButtonBundle {
-                        style: Style {
-                            width: Val::Percent(50.),
-                            height: Val::Px(100.),
-                            ..default()
-                        },
-                        ..default()
-                    },
-                    ButtonHover::default()
-                        .with_background(palettes::dipdex_view::BUTTON_SET)
-                        .with_border(palettes::dipdex_view::BUTTON_BORDER_SET),
-                    Translate,
-                    QuitButton,
-                ))
-                .with_children(|parent| {
-                    parent.spawn((
-                        TextBundle {
-                            style: Style { ..default() },
-                            text: Text::from_section(
-                                "",
-                                TextStyle {
-                                    font: font_assets.main_font.clone(),
-                                    font_size: FONT_SIZE,
-                                    color: Color::BLACK,
-                                },
-                            ),
-                            ..default()
-                        },
-                        KeyText::new().with(0, MINIGAME_TRANSLATE_QUIT),
-                    ));
-                });
+            parent.spawn(MiniGameBackButton);
         });
 }
 
@@ -1265,5 +1232,14 @@ fn quit_button_pressed(
         if interaction == &Interaction::Pressed {
             state.set(TranslateState::Exit);
         }
+    }
+}
+
+#[derive(Component, Default)]
+pub struct UpdateAge(pub Duration);
+
+fn tick_update_ages(time: Res<Time>, mut query: Query<&mut UpdateAge>) {
+    for mut update_age in query.iter_mut() {
+        update_age.0 += time.delta();
     }
 }

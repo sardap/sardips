@@ -10,23 +10,23 @@ use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::hashbrown::HashSet;
 use maplit::hashmap;
-use sardips::shrink::Shrinking;
+use sardips_core::rgb_to_color;
+use sardips_core::{
+    assets::{EndlessShooterAssets, FontAssets},
+    button_hover::{ButtonColorSet, ButtonHover},
+    interaction::{MouseCamera, MoveTowardsCursor},
+    minigames_core::{MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing},
+    mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
+    shrink::Shrinking,
+    text_translation::{KeyString, KeyText},
+    velocity::Speed,
+};
 use shared_deps::avian2d::prelude::{
     Collider, ColliderDensity, CollidingEntities, CollisionLayers, GravityScale, LinearVelocity,
     Mass, PhysicsLayer, RigidBody,
 };
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
-use sardips::{
-    assets::{EndlessShooterAssets, FontAssets},
-    button_hover::{ButtonColorSet, ButtonHover},
-    interaction::{MouseCamera, MoveTowardsCursor},
-    minigames::{MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing},
-    palettes,
-    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
-    text_translation::{KeyString, KeyText},
-    velocity::Speed,
-};
 use text_keys::{
     MINIGAME_ENDLESS_SHOOTER_CLUSTER_GUN, MINIGAME_ENDLESS_SHOOTER_CLUSTER_GUN_COOLDOWN,
     MINIGAME_ENDLESS_SHOOTER_COOLDOWN, MINIGAME_ENDLESS_SHOOTER_MINIGUN,
@@ -104,6 +104,15 @@ impl Plugin for EndlessShooterPlugin {
             .add_systems(OnEnter(EndlessShooterState::Exit), send_complete);
     }
 }
+
+// #FFCCD5
+pub const PALE_PINK: Color = rgb_to_color!(255, 204, 213);
+
+// #FFEAEC
+pub const VERY_LIGHT_PINK_RED: Color = rgb_to_color!(255, 234, 236);
+
+// #FFB6C1
+pub const LIGHT_PINK: Color = rgb_to_color!(255, 182, 193);
 
 #[derive(PhysicsLayer, Default)]
 enum ColLayer {
@@ -1705,13 +1714,10 @@ fn setup_game_over(
         )>,
     >,
 ) {
-    pub const BUTTON_SET: ButtonColorSet = ButtonColorSet::new(
-        palettes::PALE_PINK,
-        palettes::VERY_LIGHT_PINK_RED,
-        Color::WHITE,
-    );
+    pub const BUTTON_SET: ButtonColorSet =
+        ButtonColorSet::new(PALE_PINK, VERY_LIGHT_PINK_RED, Color::WHITE);
     pub const BUTTON_BORDER_SET: ButtonColorSet = ButtonColorSet::new(
-        palettes::LIGHT_PINK,
+        LIGHT_PINK,
         Color::WHITE,
         Color::Srgba(bevy::color::palettes::css::LIMEGREEN),
     );

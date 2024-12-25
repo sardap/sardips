@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
-    "common",
+    "sardips",
     "minigames/four_in_row",
     "minigames/endless_shooter",
     "minigames/tic_tac_toe",
@@ -12,6 +12,7 @@ members = [
     "text_keys",
     "fact_db",
     "shared_deps",
+    "core",
 ]
 default-members = ["run"]
 

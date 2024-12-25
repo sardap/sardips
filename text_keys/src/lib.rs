@@ -34,7 +34,6 @@ pub const UI_PET_INFO_PANEL_SPECIES: &str = "ui.pet_panel.species";
 pub const UI_PET_INFO_PANEL_AGE: &str = "ui.pet_panel.age";
 pub const UI_PET_PANEL_NO_THOUGHT: &str = "ui.pet_panel.no_thought";
 pub const MINIGAME_SELECT_TIC_TAC_TOE: &str = "minigame_select.tic_tac_toe";
-pub const MINIGAME_SELECT_SPRINT: &str = "minigame_select.sprint";
 pub const MINIGAME_SELECT_HIGHER_LOWER: &str = "minigame_select.higher_lower";
 pub const MINIGAME_SELECT_FOUR_IN_ROW: &str = "minigame_select.four_in_row";
 pub const MINIGAME_SELECT_ENDLESS_SHOOTER: &str = "minigame_select.endless_shooter";
