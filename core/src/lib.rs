@@ -8,6 +8,7 @@ use shared_deps::{
     bevy_turborand::DelegatedRng,
     moonshine_save::{load::LoadPlugin, save::SavePlugin},
 };
+use std::{ops::Range, time::Duration};
 
 pub mod assets;
 pub mod autoscroll;
@@ -112,4 +113,51 @@ macro_rules! rgb_to_color {
             alpha: normalized_a,
         })
     }};
+}
+
+pub struct VaryingTimer {
+    timer: Timer,
+    pub range: Range<u64>,
+    pub modifier: f64,
+    pub times_finished: u32,
+}
+
+impl VaryingTimer {
+    pub fn new<T: DelegatedRng>(range: Range<Duration>, rng: &mut T) -> Self {
+        let mut result = Self {
+            timer: Timer::new(range.start, TimerMode::Once),
+            range: range.start.as_micros() as u64..range.end.as_micros() as u64,
+            modifier: 1.,
+            times_finished: 0,
+        };
+        result.tick(result.timer.duration(), rng);
+        result
+    }
+
+    pub fn with_modifier(mut self, modifier: f64) -> Self {
+        self.modifier = modifier;
+        self
+    }
+
+    pub fn tick<T: DelegatedRng>(&mut self, delta: Duration, rng: &mut T) -> &VaryingTimer {
+        self.times_finished = self.timer.tick(delta).times_finished_this_tick();
+        if self.times_finished > 0 {
+            let mut micros = rng.u64(self.range.clone());
+            if self.modifier > 1. {
+                micros = (micros as f64 / self.modifier) as u64;
+            }
+
+            let duration = Duration::from_micros(micros);
+            self.timer = Timer::new(duration, TimerMode::Once);
+        }
+        self
+    }
+
+    pub fn just_finished(&self) -> bool {
+        self.times_finished > 0
+    }
+
+    pub fn times_finished_this_tick(&self) -> u32 {
+        self.times_finished
+    }
 }

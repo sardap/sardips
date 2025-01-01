@@ -6,10 +6,12 @@
 #[macro_use]
 extern crate lazy_static;
 
-use core::fmt;
-
 use bevy::prelude::*;
-use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use core::fmt;
+use shared_deps::{
+    bevy_async_task::{AsyncTaskRunner, AsyncTaskStatus},
+    bevy_turborand::{DelegatedRng, GlobalRng, RngComponent},
+};
 
 use sardips_core::{
     assets::{FontAssets, FourInRowAssets},
@@ -546,13 +548,30 @@ fn check_game_over(
 #[derive(Component)]
 struct Computer {
     move_timer: Timer,
+    next_move: Option<usize>,
 }
 
 impl Default for Computer {
     fn default() -> Self {
         Self {
-            move_timer: Timer::from_seconds(0.5, TimerMode::Repeating),
+            move_timer: Timer::from_seconds(1.5, TimerMode::Once),
+            next_move: None,
         }
+    }
+}
+
+impl Computer {
+    fn reset(&mut self) {
+        self.move_timer.reset();
+        self.next_move = None;
+    }
+}
+
+async fn find_computer_move<T: DelegatedRng>(mut rng: T, board: Board) -> Vec<usize> {
+    if rng.i32(0..7) != 0 {
+        best_moves(&board)
+    } else {
+        board.possible_moves()
     }
 }
 
@@ -567,6 +586,7 @@ fn run_computer_turn(
     mut moves: EventWriter<Move>,
     board: Query<&GameBoard>,
     mut computer: Query<(&Player, &mut Computer, &mut RngComponent)>,
+    mut task_runner: AsyncTaskRunner<'_, Vec<usize>>,
 ) {
     let (player, mut computer, mut rng) = match computer.get_single_mut() {
         Ok(x) => x,
@@ -579,14 +599,22 @@ fn run_computer_turn(
         return;
     }
 
-    if computer.move_timer.tick(time.delta()).just_finished() {
-        let possible_moves = if rng.i32(0..7) != 0 {
-            best_moves(&board.0)
-        } else {
-            board.0.possible_moves()
-        };
-        let selected_move = possible_moves[rng.usize(0..possible_moves.len() as usize)];
-        moves.send(Move::new(selected_move));
+    computer.move_timer.tick(time.delta());
+    if computer.next_move.is_some() && computer.move_timer.finished() {
+        moves.send(Move::new(computer.next_move.unwrap()));
+        computer.reset();
+        return;
+    }
+
+    match task_runner.poll() {
+        AsyncTaskStatus::Idle => {
+            task_runner.start(find_computer_move(rng.clone(), board.0));
+        }
+        AsyncTaskStatus::Pending => {}
+        AsyncTaskStatus::Finished(possible_moves) => {
+            let selected_move = possible_moves[rng.usize(0..possible_moves.len())];
+            computer.next_move = Some(selected_move);
+        }
     }
 }
 

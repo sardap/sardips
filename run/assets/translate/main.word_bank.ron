@@ -188,7 +188,7 @@ WordBank(
             id: "catholic_church",
             words: {
                 English: Word(
-                    word: "Catholic church",
+                    word: "Catholic\nchurch",
                     audio_path: None,
                     sentences: [
 

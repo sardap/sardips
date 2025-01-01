@@ -11,6 +11,7 @@ bevy_turborand = "0.9"
 bevy-parallax = { git = "https://github.com/septum/bevy-parallax.git", branch = "bevy-0.14" }
 moonshine-save = { git = "https://github.com/sardap/moonshine_save.git", branch = "main" }
 avian2d = { version = "0.1.2", features = ["simd"] }
+bevy_async_task = "0.2.0"
 
 rand = { version = "0.8.5" }
 webbrowser = { version = "0.8", features = ["hardened"] }
@@ -20,7 +21,6 @@ strum = { version = "0.26.1", features = ["strum_macros"] }
 strum_macros = "0.26.1"
 ron = "0.8"
 
-winit = { version = "0.30", default-features = false }
 image = { version = "0.24", default-features = false }
 maplit = "1.0.2"
 chrono = { version = "0.4.37", features = ["serde"] }
@@ -30,3 +30,4 @@ uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
 regex = "1.10.4"
 weighted_rand = "0.4.2"
 num-traits = "0.2.19"
+async-std = "1.13.0"

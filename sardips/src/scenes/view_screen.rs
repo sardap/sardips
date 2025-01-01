@@ -42,7 +42,7 @@ impl Plugin for ViewScreenPlugin {
         );
         app.add_systems(
             Update,
-            (info_panel_handle_click)
+            (info_panel_handle_click, toggle_interactions)
                 .run_if(in_state(GameState::ViewScreen).and_then(in_state(VSSubState::None))),
         );
         app.add_systems(
@@ -366,4 +366,22 @@ fn update_money_text(
     let mut text = text.single_mut();
 
     text.sections[0].value = wallet.to_string();
+}
+
+fn toggle_interactions(
+    mut commands: Commands,
+    pets: Query<&EntityView, With<PetView>>,
+    menu_options: Query<(Entity, &MenuOption, Option<&Interaction>)>,
+) {
+    let have_pet = pets.iter().len() > 0;
+
+    for (entity, option, interaction) in &menu_options {
+        if *option == MenuOption::MiniGames {
+            if have_pet && interaction.is_none() {
+                commands.entity(entity).insert(Interaction::None);
+            } else if !have_pet && interaction.is_some() {
+                commands.entity(entity).remove::<Interaction>();
+            }
+        }
+    }
 }

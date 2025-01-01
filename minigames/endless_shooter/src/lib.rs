@@ -10,7 +10,6 @@ use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::hashbrown::HashSet;
 use maplit::hashmap;
-use sardips_core::rgb_to_color;
 use sardips_core::{
     assets::{EndlessShooterAssets, FontAssets},
     button_hover::{ButtonColorSet, ButtonHover},
@@ -21,6 +20,7 @@ use sardips_core::{
     text_translation::{KeyString, KeyText},
     velocity::Speed,
 };
+use sardips_core::{rgb_to_color, VaryingTimer};
 use shared_deps::avian2d::prelude::{
     Collider, ColliderDensity, CollidingEntities, CollisionLayers, GravityScale, LinearVelocity,
     Mass, PhysicsLayer, RigidBody,
@@ -148,53 +148,6 @@ const GAME_TOP_Y: i32 = GAME_HEIGHT / 2;
 const GAME_BOTTOM_Y: i32 = -GAME_HEIGHT / 2;
 
 const SHOOTER_Y: f32 = -255.;
-
-struct VaryingTimer {
-    timer: Timer,
-    range: Range<u64>,
-    modifier: f64,
-    times_finished: u32,
-}
-
-impl VaryingTimer {
-    fn new<T: DelegatedRng>(range: Range<Duration>, rng: &mut T) -> Self {
-        let mut result = Self {
-            timer: Timer::new(range.start, TimerMode::Once),
-            range: range.start.as_micros() as u64..range.end.as_micros() as u64,
-            modifier: 1.,
-            times_finished: 0,
-        };
-        result.tick(result.timer.duration(), rng);
-        result
-    }
-
-    fn with_modifier(mut self, modifier: f64) -> Self {
-        self.modifier = modifier;
-        self
-    }
-
-    fn tick<T: DelegatedRng>(&mut self, delta: Duration, rng: &mut T) -> &VaryingTimer {
-        self.times_finished = self.timer.tick(delta).times_finished_this_tick();
-        if self.times_finished > 0 {
-            let mut micros = rng.u64(self.range.clone());
-            if self.modifier > 1. {
-                micros = (micros as f64 / self.modifier) as u64;
-            }
-
-            let duration = Duration::from_micros(micros);
-            self.timer = Timer::new(duration, TimerMode::Once);
-        }
-        self
-    }
-
-    fn just_finished(&self) -> bool {
-        self.times_finished > 0
-    }
-
-    fn times_finished_this_tick(&self) -> u32 {
-        self.times_finished
-    }
-}
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
 enum EndlessShooterState {

@@ -22,6 +22,7 @@ use sardips_core::{
     shrink::Shrinking,
     text_database::{get_writing_system, Language, WritingSystems},
     text_translation::KeyText,
+    VaryingTimer,
 };
 use shared_deps::{
     avian2d::prelude::{
@@ -69,10 +70,11 @@ impl Plugin for TranslateGamePlugin {
                 Update,
                 (
                     spawn_words,
+                    add_border_to_word,
                     mark_fallen_words_to_kill,
                     kill_words,
                     handle_click,
-                    add_select_border,
+                    change_select_border_color,
                     remove_select_border,
                     unstick_stuck,
                     update_score_text,
@@ -370,13 +372,20 @@ struct TimeRemainingText;
 
 #[derive(Component)]
 struct WordSpawner {
-    timer: Timer,
+    timer: VaryingTimer,
+    pending: usize,
 }
 
-fn setup_spawners(mut commands: Commands) {
+fn setup_spawners(mut commands: Commands, rng: ResMut<GlobalRng>) {
+    let rng = rng.into_inner();
+
     commands.spawn((
         WordSpawner {
-            timer: Timer::new(Duration::from_secs_f32(5.), TimerMode::Repeating),
+            timer: VaryingTimer::new(
+                Duration::from_secs_f32(3.)..Duration::from_secs_f32(5.),
+                rng,
+            ),
+            pending: 3,
         },
         TranslatePlaying,
         Translate,
@@ -465,7 +474,7 @@ struct GameTimer {
 impl Default for GameTimer {
     fn default() -> Self {
         Self {
-            timer: Timer::new(Duration::from_secs_f32(5.), TimerMode::Once),
+            timer: Timer::new(Duration::from_secs_f32(60.), TimerMode::Once),
         }
     }
 }
@@ -524,7 +533,7 @@ const BOUNDS: Rect = Rect {
 
 const WORD_SIZE: Vec2 = Vec2::new(80., 80.);
 
-const GAME_HEIGHT: f32 = 700.;
+const GAME_HEIGHT: f32 = 600.;
 
 const LEFT_BOUNDS: Rect = Rect {
     min: Vec2::new(-200., -GAME_HEIGHT / 2.),
@@ -552,6 +561,7 @@ struct VisualWord {
 #[derive(Component)]
 struct FallingWord;
 
+// Update to seprate the spawning or something so it can do the bounds check
 fn spawn_words(
     mut commands: Commands,
     spatial_query: SpatialQuery,
@@ -571,7 +581,22 @@ fn spawn_words(
     let rng = global_rng.into_inner();
 
     for mut spawner in &mut spawner {
-        if spawner.timer.tick(time.delta()).just_finished() {
+        if spawner.timer.tick(time.delta(), rng).just_finished() {
+            let selected = rng.f32();
+            let count = if selected < 0.1 {
+                4
+            } else if selected < 0.9 {
+                2
+            } else {
+                1
+            };
+
+            spawner.pending += count;
+        }
+
+        if spawner.pending > 0 {
+            spawner.pending -= 1;
+
             let active_sets = existing_words
                 .iter()
                 .map(|w| w.set_id.clone())
@@ -639,6 +664,7 @@ fn spawn_words(
                         let mut pos: Vec2 = Vec2::ZERO;
                         for _ in 0..100 {
                             pos = random_point_in_bounds(rng, &LEFT_BOUNDS);
+                            // pos = Vec2::new(0., 0.);
                             let query = spatial_query.cast_shape(
                                 &left_word_collider,
                                 pos,
@@ -804,6 +830,29 @@ fn spawn_words(
     }
 }
 
+fn add_border_to_word(
+    mut commands: Commands,
+    query: Query<(Entity, &Collider), (Added<VisualWord>, With<Collider>)>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    for (entity, col) in &mut query.iter() {
+        let size = col.shape().as_cuboid().unwrap().half_extents * 2.;
+
+        commands.entity(entity).with_children(|parent| {
+            parent.spawn((
+                MaterialMesh2dBundle {
+                    mesh: Mesh2dHandle(meshes.add(Rectangle::new(size.x + 10., size.y + 10.))),
+                    material: materials.add(UNSELECTED_BORDER_COLOR),
+                    transform: Transform::from_translation(Vec3::new(0., 0., -1.)),
+                    ..default()
+                },
+                SelectedBox,
+            ));
+        });
+    }
+}
+
 fn mark_fallen_words_to_kill(
     mut kill_words: EventWriter<WordToKill>,
     query: Query<
@@ -954,41 +1003,35 @@ fn handle_click(
     }
 }
 
+const UNSELECTED_BORDER_COLOR: Color = Color::srgba(0., 0., 0., 1.);
+const SELECTED_BORDER_COLOR: Color = Color::srgba(0.3, 1., 0.3, 1.5);
+
 #[derive(Component)]
 struct SelectedBox;
 
-fn add_select_border(
-    mut commands: Commands,
-    query: Query<(Entity, &Collider), (Added<Selected>, With<VisualWord>)>,
+fn change_select_border_color(
+    query: Query<&Children, (Added<Selected>, With<VisualWord>)>,
+    mut boxes: Query<&mut Handle<ColorMaterial>, With<SelectedBox>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    for (entity, col) in &mut query.iter() {
-        let size = col.shape().as_cuboid().unwrap().half_extents * 2.;
-
-        commands.entity(entity).with_children(|parent| {
-            parent.spawn((
-                MaterialMesh2dBundle {
-                    mesh: Mesh2dHandle(meshes.add(Rectangle::new(size.x + 10., size.y + 10.))),
-                    material: materials.add(Color::srgb(1., 0., 0.)),
-                    transform: Transform::from_translation(Vec3::new(0., 0., -1.)),
-                    ..default()
-                },
-                SelectedBox,
-            ));
-        });
+    for children in &query {
+        for child in children.iter() {
+            if let Ok(mut material) = boxes.get_mut(*child) {
+                *material = materials.add(SELECTED_BORDER_COLOR);
+            }
+        }
     }
 }
 
 fn remove_select_border(
-    mut commands: Commands,
     mut removed_select: RemovedComponents<Selected>,
-    select_boxes: Query<(Entity, &Parent), With<SelectedBox>>,
+    mut select_boxes: Query<(&Parent, &mut Handle<ColorMaterial>), With<SelectedBox>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     for removed in removed_select.read() {
-        for (entity, parent) in &select_boxes {
+        for (parent, mut material) in &mut select_boxes {
             if parent.get() == removed {
-                commands.entity(entity).despawn_recursive();
+                *material = materials.add(UNSELECTED_BORDER_COLOR);
             }
         }
     }

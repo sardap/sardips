@@ -1,4 +1,6 @@
+pub extern crate async_std;
 pub extern crate avian2d;
+pub extern crate bevy_async_task;
 pub extern crate bevy_common_assets;
 pub extern crate bevy_kira_audio;
 pub extern crate bevy_parallax;
