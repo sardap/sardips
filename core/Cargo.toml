@@ -1,0 +1,17 @@
+[package]
+name = "sardips_core"
+version = "0.4.0"
+edition = "2024"
+
+[dependencies]
+shared_deps = { path = "../shared_deps" }
+fact_db = { path = "../fact_db" }
+text_keys = { path = "../text_keys" }
+bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
+
+serde = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+maplit = { workspace = true }
+lazy_static = { workspace = true }

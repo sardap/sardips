@@ -10,22 +10,24 @@ use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::hashbrown::HashSet;
 use maplit::hashmap;
+use sardips_core::sprite_utils::get_adjusted_size;
+use sardips_core::{
+    assets::{EndlessShooterAssets, FontAssets},
+    button_hover::{ButtonColorSet, ButtonHover},
+    interaction::{MouseCamera, MoveTowardsCursor},
+    minigames_core::{MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing},
+    mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
+    shrink::Shrinking,
+    text_translation::{KeyString, KeyText},
+    velocity::Speed,
+};
+use sardips_core::{rgb_to_color, VaryingTimer};
 use shared_deps::avian2d::prelude::{
     Collider, ColliderDensity, CollidingEntities, CollisionLayers, GravityScale, LinearVelocity,
     Mass, PhysicsLayer, RigidBody,
 };
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
-use sardips::{
-    assets::{EndlessShooterAssets, FontAssets},
-    button_hover::{ButtonColorSet, ButtonHover},
-    interaction::{MouseCamera, MoveTowardsCursor},
-    minigames::{MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing},
-    palettes,
-    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
-    text_translation::{KeyString, KeyText},
-    velocity::Speed,
-};
 use text_keys::{
     MINIGAME_ENDLESS_SHOOTER_CLUSTER_GUN, MINIGAME_ENDLESS_SHOOTER_CLUSTER_GUN_COOLDOWN,
     MINIGAME_ENDLESS_SHOOTER_COOLDOWN, MINIGAME_ENDLESS_SHOOTER_MINIGUN,
@@ -86,7 +88,6 @@ impl Plugin for EndlessShooterPlugin {
                     tick_score,
                     tick_invincibility,
                     toggle_walker_bodies,
-                    update_shrink,
                 )
                     .run_if(in_state(EndlessShooterState::Playing)),
             )
@@ -104,6 +105,15 @@ impl Plugin for EndlessShooterPlugin {
             .add_systems(OnEnter(EndlessShooterState::Exit), send_complete);
     }
 }
+
+// #FFCCD5
+pub const PALE_PINK: Color = rgb_to_color!(255, 204, 213);
+
+// #FFEAEC
+pub const VERY_LIGHT_PINK_RED: Color = rgb_to_color!(255, 234, 236);
+
+// #FFB6C1
+pub const LIGHT_PINK: Color = rgb_to_color!(255, 182, 193);
 
 #[derive(PhysicsLayer, Default)]
 enum ColLayer {
@@ -139,53 +149,6 @@ const GAME_TOP_Y: i32 = GAME_HEIGHT / 2;
 const GAME_BOTTOM_Y: i32 = -GAME_HEIGHT / 2;
 
 const SHOOTER_Y: f32 = -255.;
-
-struct VaryingTimer {
-    timer: Timer,
-    range: Range<u64>,
-    modifier: f64,
-    times_finished: u32,
-}
-
-impl VaryingTimer {
-    fn new<T: DelegatedRng>(range: Range<Duration>, rng: &mut T) -> Self {
-        let mut result = Self {
-            timer: Timer::new(range.start, TimerMode::Once),
-            range: range.start.as_micros() as u64..range.end.as_micros() as u64,
-            modifier: 1.,
-            times_finished: 0,
-        };
-        result.tick(result.timer.duration(), rng);
-        result
-    }
-
-    fn with_modifier(mut self, modifier: f64) -> Self {
-        self.modifier = modifier;
-        self
-    }
-
-    fn tick<T: DelegatedRng>(&mut self, delta: Duration, rng: &mut T) -> &VaryingTimer {
-        self.times_finished = self.timer.tick(delta).times_finished_this_tick();
-        if self.times_finished > 0 {
-            let mut micros = rng.u64(self.range.clone());
-            if self.modifier > 1. {
-                micros = (micros as f64 / self.modifier) as u64;
-            }
-
-            let duration = Duration::from_micros(micros);
-            self.timer = Timer::new(duration, TimerMode::Once);
-        }
-        self
-    }
-
-    fn just_finished(&self) -> bool {
-        self.times_finished > 0
-    }
-
-    fn times_finished_this_tick(&self) -> u32 {
-        self.times_finished
-    }
-}
 
 #[derive(States, Clone, Eq, PartialEq, Debug, Hash, Default)]
 enum EndlessShooterState {
@@ -514,24 +477,7 @@ fn setup_shooter(
 
     const SPRITE_SIZE: f32 = 50.;
 
-    let size = sprite.custom_size.unwrap();
-
-    let size_x: f32;
-    let size_y: f32;
-
-    if size.x > size.y {
-        let x = SPRITE_SIZE;
-        let ratio = x / size.x;
-        let y = size.y * ratio;
-        size_x = x;
-        size_y = y;
-    } else {
-        let y = SPRITE_SIZE;
-        let ratio = y / size.y;
-        let x = size.x * ratio;
-        size_x = x;
-        size_y = y;
-    }
+    let custom_size = get_adjusted_size(SPRITE_SIZE, sprite.custom_size.unwrap());
 
     commands
         .spawn((
@@ -542,7 +488,7 @@ fn setup_shooter(
                     ZLayer::Pet.to_f32(),
                 )),
                 sprite: Sprite {
-                    custom_size: Some(Vec2::new(size_x, size_y)),
+                    custom_size: Some(custom_size),
                     ..default()
                 },
                 texture: image.clone(),
@@ -563,7 +509,7 @@ fn setup_shooter(
             Speed(300.),
             GravityScale(0.),
             RigidBody::Dynamic,
-            Collider::rectangle(size_x / 2., size_y / 2.),
+            Collider::rectangle(custom_size.x / 2., custom_size.y / 2.),
             CollisionLayers::new(
                 [ColLayer::Shooter],
                 [ColLayer::Gate, ColLayer::Walker, ColLayer::Wall],
@@ -1403,7 +1349,11 @@ fn update_gate_text(
             if let Ok(mut text) = gate_text.get_mut(*child) {
                 let mut updated_text = match bullet_gate {
                     GateKind::Cooldown(value) => {
-                        let number = (value.starting + barrier.score()).min(value.max);
+                        let number = (value
+                            .starting
+                            .checked_add(barrier.score())
+                            .unwrap_or(i32::MAX))
+                        .min(value.max);
                         let mut updated_text = String::new();
                         match number {
                             n if n > 0 => updated_text.push('+'),
@@ -1513,41 +1463,6 @@ fn update_damage_fade(
 fn update_tint_turncoat(mut turncoats: Query<&mut Sprite, Added<TurnCoat>>) {
     for mut sprite in &mut turncoats {
         sprite.color = Color::linear_rgb(0., 1., 0.);
-    }
-}
-
-#[derive(Component)]
-struct Shrinking {
-    starting_size: Vec2,
-    time: Timer,
-}
-
-impl Shrinking {
-    fn new(size: Vec2, duration: Duration) -> Self {
-        Self {
-            starting_size: size,
-            time: Timer::new(duration, TimerMode::Once),
-        }
-    }
-}
-
-fn update_shrink(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut shrink: Query<(Entity, &mut Shrinking, &mut Transform), With<EndlessShooter>>,
-) {
-    for (entity, mut shrink, mut trans) in &mut shrink {
-        if shrink.time.tick(time.delta()).finished() {
-            commands.entity(entity).despawn_recursive();
-            continue;
-        }
-
-        let percent = shrink.time.elapsed().as_secs_f32() / shrink.time.duration().as_secs_f32();
-        trans.scale = Vec3::new(
-            shrink.starting_size.x * (1. - percent),
-            shrink.starting_size.y * (1. - percent),
-            1.,
-        );
     }
 }
 
@@ -1740,13 +1655,10 @@ fn setup_game_over(
         )>,
     >,
 ) {
-    pub const BUTTON_SET: ButtonColorSet = ButtonColorSet::new(
-        palettes::PALE_PINK,
-        palettes::VERY_LIGHT_PINK_RED,
-        Color::WHITE,
-    );
+    pub const BUTTON_SET: ButtonColorSet =
+        ButtonColorSet::new(PALE_PINK, VERY_LIGHT_PINK_RED, Color::WHITE);
     pub const BUTTON_BORDER_SET: ButtonColorSet = ButtonColorSet::new(
-        palettes::LIGHT_PINK,
+        LIGHT_PINK,
         Color::WHITE,
         Color::Srgba(bevy::color::palettes::css::LIMEGREEN),
     );

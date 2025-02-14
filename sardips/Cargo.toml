@@ -1,0 +1,25 @@
+[package]
+name = "sardips"
+version = "0.4.0"
+publish = false
+authors = ["Paul Sarda paul@sarda.dev"]
+edition = "2021"
+exclude = ["dist", "build", "assets", "credits"]
+
+# [features]
+# dev = ["bevy/dynamic_linking"]
+
+
+[dependencies]
+sardips_core = { path = "../core" }
+text_keys = { path = "../text_keys" }
+fact_db = { path = "../fact_db" }
+shared_deps = { path = "../shared_deps" }
+bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
+
+lazy_static = { workspace = true }
+serde = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+maplit = { workspace = true }

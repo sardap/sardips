@@ -18,26 +18,23 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=sardip-run",
-                    "--package=sardip-run",
-                    "--features",
-                    "dev",
-                    "--features",
-                    "bevy/dynamic_linking"
-                ],
-                "filter": {
-                    "name": "sardips",
-                    "kind": "bin"
-                },
-            },
+            // "cargo": {
+            //     "args": [
+            //         "build",
+            //         "--features",
+            //         "bevy/dynamic_linking"
+            //     ],
+            //     "filter": {
+            //         "name": "sardips",
+            //         "kind": "bin"
+            //     },
+            // },
             "args": [],
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/run",
             "env": {
                 "CARGO_MANIFEST_DIR": "${workspaceFolder}",
             },
+            "program": "${workspaceFolder}/target/debug/sardips-run",
             "linux": {
                 "env": {
                     // platform-specific launch config overwrites (rather than merges with) existing config, so need to specify CARGO_MANIFEST_DIR again

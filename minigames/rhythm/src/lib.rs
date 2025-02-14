@@ -13,11 +13,11 @@ use palette::{
     ACTIVE_PROGRESS_BAR_COLOR, HIT_INPUT_MARKER, INACTIVE_PROGRESS_BAR_COLOR, PASSED_INPUT_MARKER,
     PENDING_INPUT_MARKER, PROGRESS_MARKER,
 };
-use sardips::{
+use sardips_core::{
     assets::FontAssets,
     despawn_all,
     interaction::MouseCamera,
-    minigames::{
+    minigames_core::{
         rhythm_template::ActiveRhythmTemplate, MiniGameCompleted, MiniGameResult, MiniGameState,
         MiniGameType,
     },

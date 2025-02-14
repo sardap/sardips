@@ -1,18 +1,57 @@
 [workspace]
 resolver = "2"
 members = [
-    "common",
+    "sardips",
     "minigames/four_in_row",
     "minigames/endless_shooter",
     "minigames/tic_tac_toe",
     "minigames/higher_lower",
     "minigames/rhythm",
+    "minigames/translate",
+    "minigames/rect_clash",
     "run",
     "text_keys",
     "fact_db",
     "shared_deps",
+    "core", "minigames/snake",
 ]
 default-members = ["run"]
+
+[workspace.dependencies]
+bevy = { version = "0.14.2", default-features = false, features = [
+    "serialize",
+    "animation",
+    "bevy_asset",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "png",
+    "jpeg",
+    "hdr",
+    "x11",
+    "bevy_gizmos",
+    "tonemapping_luts",
+    "default_font",
+    "webgl2",
+    "bevy_debug_stepping",
+] }
+bevy_asset_loader = { version = "0.21", features = [
+    "2d",
+    "standard_dynamic_assets",
+] }
+serde = { version = "1.0.197", features = ["serde_derive"] }
+strum = { version = "0.26.1", features = ["strum_macros"] }
+strum_macros = "0.26.1"
+maplit = "1.0.2"
+lazy_static = "1.4.0"
+
 
 [profile.dev.package."*"]
 opt-level = 3

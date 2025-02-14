@@ -6,15 +6,15 @@
 use std::cmp::Ordering;
 
 use bevy::{prelude::*, render::view::RenderLayers};
-use sardips::{
+
+use sardips_core::{
     assets::{self, FontAssets, HigherLowerAssets},
     autoscroll::AutoScroll,
     button_hover::{ButtonColorSet, ButtonHover},
-    minigames::{
-        MiniGameBackExitButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
-        Playing,
+    minigames_core::{
+        MiniGameBackButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing,
     },
-    pet::mood::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
+    mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     sounds::{PlaySoundEffect, SoundEffect},
 };
 use shared_deps::bevy_parallax::{
@@ -403,7 +403,6 @@ fn update_display(
 fn setup_game_over(
     mut commands: Commands,
     mut create_parallax: EventWriter<CreateParallaxEvent>,
-    fonts: Res<FontAssets>,
     mut buttons: Query<Entity, (With<TargetNumber>, With<Interaction>)>,
     layers: Query<Entity, With<LayerComponent>>,
     camera: Query<
@@ -437,7 +436,7 @@ fn setup_game_over(
             HigherLower,
         ))
         .with_children(|parent| {
-            MiniGameBackExitButton::spawn(parent, &fonts);
+            parent.spawn(MiniGameBackButton);
         });
 
     for entity in layers.iter() {

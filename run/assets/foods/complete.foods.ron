@@ -228,7 +228,7 @@ AssetFoodTemplateSet(
             name: "GiantShortBread",
             sensations: [Sweet, Crunchy],
             fill_factor: 100,
-            texture: "textures/food/giant_short_bread.png",
+            texture: "textures/food/giant_shortbread.png",
             texture_size: (500, 498),
             sprite_size: X(120),
         ),

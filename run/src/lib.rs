@@ -13,6 +13,9 @@ impl Plugin for SardipsPlugin {
             sardips_tic_tac_toe::TicTacToePlugin,
             sardips_higher_lower::HigherLowerPlugin,
             sardips_rhythm::RhythmPlugin,
+            sardips_translate::TranslateGamePlugin,
+            sardips_rect_clash::RectClashPlugin,
+            sardips_snake::SnakePlugin,
         ));
     }
 }

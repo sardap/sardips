@@ -1,0 +1,10 @@
+[package]
+name = "sardips_rect_clash"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+shared_deps = { path = "../../shared_deps" }
+sardips_core = { path = "../../core" }
+text_keys = { path = "../../text_keys" }
+bevy = { workspace = true }

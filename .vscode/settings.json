@@ -22,6 +22,7 @@
         "Pooper",
         "poopers",
         "remsadasdove",
+        "respawn",
         "Sardex",
         "sardip",
         "Sardips",
@@ -30,7 +31,8 @@
         "timestep",
         "turborand",
         "Umami",
-        "visislbitly"
+        "visislbitly",
+        "wordbank"
     ],
     "editor.formatOnSave": true,
     "editor.semanticTokenColorCustomizations": {
@@ -39,6 +41,6 @@
         },
     },
     "rust-analyzer.cargo.features": [
-        "dev"
+        // "dev"
     ]
 }
