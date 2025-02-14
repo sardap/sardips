@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use bevy::{prelude::*, utils::HashMap};
-use shared_deps::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use shared_deps::{bevy_common_assets::ron::RonAssetPlugin, bevy_kira_audio::AudioSource};
 
 use crate::{GameState, text_database::Language};

@@ -1,10 +1,11 @@
 use bevy::prelude::*;
 
-use crate::{layering, pet::poop::PoopView, view::EntityView};
+use crate::{layering, pet::poop::PoopView};
 use sardips_core::{
     assets::GameImageAssets,
     interaction::Hovering,
     sounds::{PlaySoundEffect, SoundEffect},
+    view::EntityView,
 };
 
 use super::{Tool, TOOL_SIZE};

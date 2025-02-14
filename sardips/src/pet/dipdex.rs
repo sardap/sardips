@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
 use bevy::prelude::*;
-
-use crate::name::SpeciesName;
+use sardips_core::name::SpeciesName;
 
 use super::Pet;
 

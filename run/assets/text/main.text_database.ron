@@ -74,6 +74,8 @@ TextDatabase(
             "minigame_select.endless_shooter": "Shootem",
             "minigame_select.rhythm": "Rhythm",
             "minigame_select.translate": "Translate",
+            "minigame_select.rect_clash": "Dip Clash",
+            "minigame_select.snake": "Snake",
 
             "dipdex.food_sensation_title": "Food tastes",
             "dipdex.stomach_size": "Stomach size",
@@ -250,6 +252,9 @@ TextDatabase(
             "minigame.translate.score": "Score",
             "minigame.translate.time_left": "Time Left",
             "minigame.translate.quit": "Quit",
+
+            "minigame.snake.score": "Score: {0}",
+            "minigame.snake.quit": "Quit",
         },
         Korean: {
             "global.poop": "똥",

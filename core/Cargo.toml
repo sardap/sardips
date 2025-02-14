@@ -5,13 +5,13 @@ edition = "2024"
 
 [dependencies]
 shared_deps = { path = "../shared_deps" }
-bevy = { version = "0.14.2", default-features = false }
-bevy_asset_loader = { version = "0.21", features = [
-    "2d",
-    "standard_dynamic_assets",
-] }
+fact_db = { path = "../fact_db" }
+text_keys = { path = "../text_keys" }
+bevy = { workspace = true }
+bevy_asset_loader = { workspace = true }
 
-serde = { version = "1.0.197", features = ["serde_derive"] }
-strum = { version = "0.26.1", features = ["strum_macros"] }
-maplit = "1.0.2"
-lazy_static = "1.4.0"
+serde = { workspace = true }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+maplit = { workspace = true }
+lazy_static = { workspace = true }

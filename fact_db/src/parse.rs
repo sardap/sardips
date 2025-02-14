@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use shared_deps::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::fact_str_hash;
 

@@ -1,13 +1,16 @@
 use bevy::{prelude::*, utils::HashMap};
 use serde::{Deserialize, Serialize};
 
+use crate::MOOD_HISTORY_UPDATE;
+
 pub struct MoodCorePlugin;
 
 impl Plugin for MoodCorePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SatisfactionRating>()
             .register_type::<MoodCategory>()
-            .register_type::<Vec<MoodCategory>>();
+            .register_type::<Vec<MoodCategory>>()
+            .register_type::<MoodCategoryHistory>();
     }
 }
 
@@ -170,5 +173,43 @@ impl MoodImageIndexes {
 
     pub fn get_index_for_mood(&self, mood: MoodCategory) -> usize {
         self.indexes[MoodImageIndexes::get_index(mood)]
+    }
+}
+
+#[derive(Component, Serialize, Deserialize, Clone, Reflect)]
+#[reflect(Component)]
+pub struct MoodCategoryHistory {
+    pub update_timer: Timer,
+    pub history: Vec<MoodCategory>,
+}
+
+impl Default for MoodCategoryHistory {
+    fn default() -> Self {
+        Self {
+            update_timer: Timer::new(MOOD_HISTORY_UPDATE, TimerMode::Repeating),
+            history: Vec::new(),
+        }
+    }
+}
+
+impl MoodCategoryHistory {
+    pub fn median(&self) -> MoodCategory {
+        // SLOW POINT BUT SHOULD NOT MATTER
+        let mut ratings: Vec<SatisfactionRating> = Vec::new();
+
+        for mood in &self.history {
+            ratings.extend(SatisfactionRating::from(*mood).over_all_array());
+        }
+
+        if ratings.is_empty() {
+            return MoodCategory::Neutral;
+        }
+
+        ratings.sort();
+
+        let median = ratings.len() / 2;
+        let median = ratings[median];
+
+        median.into()
     }
 }

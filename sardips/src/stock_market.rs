@@ -1,19 +1,16 @@
 use bevy::{prelude::*, utils::HashMap};
+use sardips_core::money_core::Money;
+use sardips_core::name::EntityName;
+use serde::{Deserialize, Serialize};
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng};
 use shared_deps::moonshine_save::save::Save;
 use shared_deps::rand::Rng;
-use shared_deps::serde::{Deserialize, Serialize};
 use shared_deps::weighted_rand::{
     builder::{NewBuilder, WalkerTableBuilder},
     table::WalkerTable,
 };
 
-use crate::{
-    money::{Money, Wallet},
-    name::EntityName,
-    sardip_save::SardipLoadingState,
-    simulation::SimulationUpdate,
-};
+use crate::{money::Wallet, sardip_save::SardipLoadingState, simulation::SimulationUpdate};
 
 pub struct StockMarketPlugin;
 

@@ -1,16 +1,21 @@
 use bevy::prelude::*;
 
 use crate::{
-    age::Age,
-    food::{Food, FoodFillFactor, FoodSensations},
-    name::{HasNameTag, NameTag, SpeciesName},
+    food::Food,
     palettes,
-    pet::{breeding::ReadyToBreed, mood::Mood, Pet},
+    pet::{
+        breeding::ReadyToBreed,
+        mood::{Mood, MoodHunger},
+        Pet,
+    },
     thinking::Thought,
 };
 use sardips_core::{
+    age_core::Age,
     assets::{FontAssets, ViewScreenImageAssets},
+    food_core::{FoodFillFactor, FoodSensations},
     mood_core::{MoodCategory, SatisfactionRating},
+    name::{HasNameTag, NameTag, SpeciesName},
     text_translation::{KeyString, KeyText},
     GameState,
 };
@@ -687,12 +692,45 @@ fn update_overall_mood(
     atlas.index = satisfaction.atlas_index();
 }
 
-update_pet_panel_mood!(
-    update_pet_panel_hunger_mood,
-    hunger,
-    PetInfoPanelMoodHunger,
-    PetInfoPanelMoodHungerImage
-);
+fn update_pet_panel_hunger_mood(
+    pet_info_panel: Query<&PetInfoPanel>,
+    pets: Query<Option<&MoodHunger>, With<Pet>>,
+    mut node: Query<&mut Style, With<PetInfoPanelMoodHunger>>,
+    mut layouts: Query<&mut TextureAtlas, With<PetInfoPanelMoodHungerImage>>,
+) {
+    let pet_info_panel = match pet_info_panel.get_single() {
+        Ok(val) => val,
+        Err(_) => return,
+    };
+
+    let pet_entity = match pet_info_panel.target {
+        Some(entity) => entity,
+        None => return,
+    };
+
+    let mut node_style = match node.get_single_mut() {
+        Ok(val) => val,
+        Err(_) => return,
+    };
+
+    let mut atlas = layouts.single_mut();
+
+    let mood = pets.get(pet_entity).unwrap();
+
+    if let Some(mood) = mood {
+        node_style.display = Display::DEFAULT;
+        atlas.index = mood.current_satisfaction().atlas_index();
+    } else {
+        node_style.display = Display::None;
+    }
+}
+
+// update_pet_panel_mood!(
+//     update_pet_panel_hunger_mood,
+//     hunger,
+//     PetInfoPanelMoodHunger,
+//     PetInfoPanelMoodHungerImage
+// );
 update_pet_panel_mood!(
     update_pet_panel_cleanliness_mood,
     cleanliness,

@@ -614,7 +614,7 @@ impl Board {
 
         let bb = result.pieces[result.side_to_move.to_index()];
 
-        result.pieces[result.side_to_move.to_index()] = BitBoard(*bb | 1 << *game_move);
+        result.pieces[result.side_to_move.to_index()] = BitBoard(*bb | (1 << *game_move));
 
         result.side_to_move = result.side_to_move.other();
 

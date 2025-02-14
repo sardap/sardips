@@ -10,6 +10,7 @@ use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use bevy::utils::hashbrown::HashSet;
 use maplit::hashmap;
+use sardips_core::sprite_utils::get_adjusted_size;
 use sardips_core::{
     assets::{EndlessShooterAssets, FontAssets},
     button_hover::{ButtonColorSet, ButtonHover},
@@ -476,24 +477,7 @@ fn setup_shooter(
 
     const SPRITE_SIZE: f32 = 50.;
 
-    let size = sprite.custom_size.unwrap();
-
-    let size_x: f32;
-    let size_y: f32;
-
-    if size.x > size.y {
-        let x = SPRITE_SIZE;
-        let ratio = x / size.x;
-        let y = size.y * ratio;
-        size_x = x;
-        size_y = y;
-    } else {
-        let y = SPRITE_SIZE;
-        let ratio = y / size.y;
-        let x = size.x * ratio;
-        size_x = x;
-        size_y = y;
-    }
+    let custom_size = get_adjusted_size(SPRITE_SIZE, sprite.custom_size.unwrap());
 
     commands
         .spawn((
@@ -504,7 +488,7 @@ fn setup_shooter(
                     ZLayer::Pet.to_f32(),
                 )),
                 sprite: Sprite {
-                    custom_size: Some(Vec2::new(size_x, size_y)),
+                    custom_size: Some(custom_size),
                     ..default()
                 },
                 texture: image.clone(),
@@ -525,7 +509,7 @@ fn setup_shooter(
             Speed(300.),
             GravityScale(0.),
             RigidBody::Dynamic,
-            Collider::rectangle(size_x / 2., size_y / 2.),
+            Collider::rectangle(custom_size.x / 2., custom_size.y / 2.),
             CollisionLayers::new(
                 [ColLayer::Shooter],
                 [ColLayer::Gate, ColLayer::Walker, ColLayer::Wall],
@@ -1365,7 +1349,11 @@ fn update_gate_text(
             if let Ok(mut text) = gate_text.get_mut(*child) {
                 let mut updated_text = match bullet_gate {
                     GateKind::Cooldown(value) => {
-                        let number = (value.starting + barrier.score()).min(value.max);
+                        let number = (value
+                            .starting
+                            .checked_add(barrier.score())
+                            .unwrap_or(i32::MAX))
+                        .min(value.max);
                         let mut updated_text = String::new();
                         match number {
                             n if n > 0 => updated_text.push('+'),

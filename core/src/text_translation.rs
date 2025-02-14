@@ -30,6 +30,7 @@ pub struct SelectedLanguageTag;
 pub enum KeyString {
     Direct(String),
     Format(String),
+    Value((String, Vec<String>)),
 }
 
 lazy_static! {
@@ -45,6 +46,13 @@ impl KeyString {
         KeyString::Format(str.to_string())
     }
 
+    pub fn value<T: ToString>(key: T, values: &[T]) -> Self {
+        KeyString::Value((
+            key.to_string(),
+            values.iter().map(|v| v.to_string()).collect(),
+        ))
+    }
+
     pub fn resolve_string(&self, text_database: &TextDatabase, language: Language) -> String {
         match self {
             KeyString::Direct(key) => text_database.get(language, key),
@@ -55,6 +63,13 @@ impl KeyString {
                         text_database.get(language, key)
                     })
                     .to_string();
+                result
+            }
+            KeyString::Value((key, values)) => {
+                let mut result = text_database.get(language, key);
+                for (i, value) in values.iter().enumerate() {
+                    result = result.replace(&format!("{{{}}}", i), value);
+                }
                 result
             }
         }
@@ -121,8 +136,23 @@ impl KeyText {
         self
     }
 
+    pub fn with_value<T: ToString>(mut self, index: usize, key: T, values: &[T]) -> Self {
+        self.keys.insert(
+            index,
+            KeyString::Value((
+                key.to_string(),
+                values.iter().map(|v| v.to_string()).collect(),
+            )),
+        );
+        self
+    }
+
     pub fn set<T: ToString>(&mut self, index: usize, key: T) {
         self.keys.insert(index, KeyString::Direct(key.to_string()));
+    }
+
+    pub fn set_section(&mut self, index: usize, key: KeyString) {
+        self.keys.insert(index, key);
     }
 }
 

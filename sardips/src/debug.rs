@@ -1,22 +1,25 @@
 use std::{collections::HashMap, str::FromStr};
 
 use crate::{
-    food::{template::FoodTemplateDatabase, Food, SpawnFoodEvent},
-    name::EntityName,
+    food::{Food, SpawnFoodEvent},
     pet::{
-        dipdex::DipdexDiscoveredEntries,
-        evolve::ShouldEvolve,
-        poop::spawn_poop,
-        template::{PetTemplateDatabase, SpawnPetEvent, DEFAULT_POOP_TEXTURE},
-        Pet,
+        dipdex::DipdexDiscoveredEntries, evolve::ShouldEvolve, poop::spawn_poop,
+        template::SpawnPetEvent, Pet,
     },
     simulation::SimTimeScale,
 };
 use bevy::prelude::*;
-use sardips_core::{text_database::Language, text_translation::SelectedLanguageTag, GameState};
+use sardips_core::{
+    food_core::FoodTemplateDatabase,
+    name::EntityName,
+    pet_core::{PetTemplateDatabase, DEFAULT_POOP_TEXTURE},
+    text_database::Language,
+    text_translation::SelectedLanguageTag,
+    GameState,
+};
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng};
-use shared_deps::strum_macros::EnumIter;
 use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 pub struct DebugPlugin;
 

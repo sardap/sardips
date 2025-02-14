@@ -10,10 +10,11 @@ use core::fmt;
 use std::{collections::HashMap, time::Duration};
 
 use bevy::prelude::*;
+use serde::{
+    de::{self, Visitor},
+    Deserialize, Deserializer, Serialize,
+};
 use shared_deps::rand::prelude::SliceRandom;
-use shared_deps::serde::de::{self, Visitor};
-use shared_deps::serde::Deserializer;
-use shared_deps::serde::{Deserialize, Serialize};
 
 pub struct FactsPlugin;
 

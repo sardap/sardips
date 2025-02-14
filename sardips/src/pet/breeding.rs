@@ -1,21 +1,18 @@
 use bevy::prelude::*;
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
-use shared_deps::serde::{Deserialize, Serialize};
 
-use sardips_core::{assets::GameImageAssets, text_database::TextDatabase};
-
-use crate::{
-    age::Age,
+use sardips_core::{
+    age_core::Age,
+    assets::GameImageAssets,
+    breeding_core::Breeds,
     name::EntityName,
-    simulation::{
-        Simulated, SimulationUpdate, BREED_RESET_INTERVAL, EGG_HATCH_ATTEMPT_INTERVAL, MAX_EGG_LIFE,
-    },
+    pet_core::{PetKind, PetTemplate, PetTemplateDatabase},
+    text_database::TextDatabase,
 };
 
-use super::{
-    template::{PetTemplate, PetTemplateDatabase, SpawnPetEvent},
-    PetKind,
-};
+use crate::simulation::{Simulated, SimulationUpdate, EGG_HATCH_ATTEMPT_INTERVAL, MAX_EGG_LIFE};
+
+use super::template::SpawnPetEvent;
 use shared_deps::rand::prelude::SliceRandom;
 
 pub struct BreedPlugin;
@@ -89,20 +86,6 @@ fn make_child_name(text_db: &TextDatabase) -> EntityName {
     EntityName::new(text_db.random_given_name_key())
 }
 */
-
-#[derive(Debug, Component, Clone, Serialize, Deserialize, Reflect)]
-#[reflect(Component)]
-pub struct Breeds {
-    breed_timer: Timer,
-}
-
-impl Default for Breeds {
-    fn default() -> Self {
-        Self {
-            breed_timer: Timer::new(BREED_RESET_INTERVAL, TimerMode::Once),
-        }
-    }
-}
 
 fn tick_breeds(mut query: Query<&mut Breeds>, time: Res<Time>) {
     for mut breeds in query.iter_mut() {
@@ -310,17 +293,16 @@ fn apply_pending_breeds(
 
 #[cfg(test)]
 mod test {
-    use strum::IntoEnumIterator;
-
-    use crate::pet::template::{
-        PetTemplate, PetTemplateImageSet, PreCalculated, TemplateSize, TemplateSpeed,
+    use sardips_core::pet_core::{
+        PetTemplate, PetTemplateDatabase, PetTemplateImageSet, PreCalculated, TemplateSize,
+        TemplateSpeed, WeightType,
     };
+    use strum::IntoEnumIterator;
 
     #[test]
     fn test_all_combos_exist() {
         use super::breeding_result;
         use super::PetKind;
-        use crate::pet::template::PetTemplateDatabase;
 
         let mut pet_db = PetTemplateDatabase::default();
         // Put one of every kind into the db
@@ -331,6 +313,7 @@ mod test {
                 possible_evolutions: vec![],
                 image_set: PetTemplateImageSet::default(),
                 size: TemplateSize::XY(1, 1),
+                weight: WeightType::MiddleWeight,
                 speed: TemplateSpeed::Medium,
                 breeds: false,
                 stomach: None,

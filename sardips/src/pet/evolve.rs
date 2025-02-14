@@ -1,20 +1,17 @@
 use bevy::prelude::*;
-use shared_deps::bevy_turborand::{DelegatedRng, RngComponent};
-use shared_deps::serde::Deserialize;
-
-use crate::{
-    age::Age,
+use sardips_core::{
+    age_core::Age,
+    mood_core::MoodCategoryHistory,
     name::{EntityName, SpeciesName},
-    simulation::{SimulationState, SimulationUpdate},
+    pet_core::{EvolvingPet, PetKind, PetTemplateDatabase},
 };
+use shared_deps::bevy_turborand::{DelegatedRng, RngComponent};
 
-use fact_db::{Concept, Criteria, Criterion, EntityFactDatabase, FactQuery, GlobalFactDatabase};
+use crate::simulation::{SimulationState, SimulationUpdate};
 
-use super::{
-    mood::MoodCategoryHistory,
-    template::{EvolvingPet, PetTemplateDatabase, SpawnPetEvent},
-    Pet, PetKind,
-};
+use fact_db::{Concept, EntityFactDatabase, FactQuery, GlobalFactDatabase};
+
+use super::{template::SpawnPetEvent, Pet};
 
 pub struct EvolvePlugin;
 
@@ -24,18 +21,6 @@ impl Plugin for EvolvePlugin {
             PreUpdate,
             evolve_pending.run_if(in_state(SimulationState::Running)),
         );
-    }
-}
-
-#[derive(Deserialize)]
-pub struct PossibleEvolution {
-    pub criteria: Vec<Criterion>,
-    pub species: Vec<String>,
-}
-
-impl PossibleEvolution {
-    pub fn criteria(&self) -> Criteria {
-        Criteria::new(Concept::Evolve, &self.criteria)
     }
 }
 

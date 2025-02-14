@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use shared_deps::bevy_kira_audio::AudioSource;
 use std::{collections::HashMap, hash::Hash, time::Duration};
 
-use shared_deps::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 pub struct RhythmTemplatePlugin;
 

@@ -1,17 +1,19 @@
 use bevy::prelude::*;
-use sardips_core::button_hover::{ButtonHover, Selected};
-use shared_deps::strum_macros::EnumIter;
+use sardips_core::{
+    button_hover::{ButtonHover, Selected},
+    name::NameTag,
+    view::EntityView,
+};
 use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use crate::{
     food::view::FoodView,
     money::Wallet,
-    name::NameTag,
     palettes,
     pet::view::PetView,
     player::Player,
     tools::poop_scooper::{create_poop_scooper, PoopScooper},
-    view::EntityView,
     SimulationState,
 };
 use sardips_core::{

@@ -1,5 +1,4 @@
 // Checkers
-// Snake
 // Bug catch
 // Battleship
 // Candy Crush clone
@@ -8,24 +7,26 @@ use bevy::prelude::*;
 use sardips_core::{
     assets::FontAssets,
     button_hover::ButtonHover,
+    fun_core::Fun,
     minigames_core::{
         MiniGameBackButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType, Playing,
     },
+    money_core::Money,
     mood_core::MoodImageIndexes,
     text_translation::KeyText,
+    view::HasView,
     GameState,
 };
 
 use crate::{
-    money::{Money, Wallet},
+    money::Wallet,
     palettes,
     pet::{
-        fun::{Fun, MinigamePreference, MinigamePreferences},
+        fun::{MinigamePreference, MinigamePreferences},
         view::PetView,
         Pet,
     },
     player::Player,
-    view::HasView,
 };
 use text_keys;
 
@@ -90,6 +91,18 @@ impl MiniGamePrize {
                 _ => return None,
             },
             MiniGameType::Translate => match result {
+                MiniGameResult::Win => MiniGamePrize::new(1000, 10.),
+                MiniGameResult::Draw => MiniGamePrize::new(50, 1.),
+                MiniGameResult::Lose => MiniGamePrize::new(50, 1.),
+                _ => return None,
+            },
+            MiniGameType::RectClash => match result {
+                MiniGameResult::Win => MiniGamePrize::new(1000, 10.),
+                MiniGameResult::Draw => MiniGamePrize::new(50, 1.),
+                MiniGameResult::Lose => MiniGamePrize::new(50, 1.),
+                _ => return None,
+            },
+            MiniGameType::Snake => match result {
                 MiniGameResult::Win => MiniGamePrize::new(1000, 10.),
                 MiniGameResult::Draw => MiniGamePrize::new(50, 1.),
                 MiniGameResult::Lose => MiniGamePrize::new(50, 1.),

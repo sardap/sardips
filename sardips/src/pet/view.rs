@@ -1,18 +1,16 @@
 use bevy::prelude::*;
 
-use crate::{
-    layering,
-    name::{HasNameTag, NameTag, NameTagBundle, SpeciesName},
-    simulation::Simulated,
-    view::EntityView,
-};
+use crate::{layering, simulation::Simulated};
 
 use sardips_core::{
     interaction::Clickable,
     mood_core::{AutoSetMoodImage, MoodImageIndexes},
+    name::{HasNameTag, NameTag, NameTagBundle, SpeciesName},
+    pet_core::PetTemplateDatabase,
+    view::EntityView,
 };
 
-use super::{template::PetTemplateDatabase, Pet};
+use super::Pet;
 
 pub struct PetViewPlugin;
 

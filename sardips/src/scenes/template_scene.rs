@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use shared_deps::strum_macros::EnumIter;
+use strum_macros::EnumIter;
 
 use crate::palettes;
 use sardips_core::{

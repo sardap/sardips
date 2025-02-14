@@ -1,10 +1,10 @@
 use std::{collections::HashMap, str::FromStr};
 
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
 use shared_deps::rand::seq::SliceRandom;
-use shared_deps::serde::{Deserialize, Serialize};
-use shared_deps::strum_macros::EnumIter;
+use strum_macros::EnumIter;
 
 use crate::GameState;
 

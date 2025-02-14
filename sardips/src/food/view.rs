@@ -1,14 +1,14 @@
 use bevy::prelude::*;
-use sardips_core::interaction::Clickable;
-
-use crate::{
-    layering,
+use sardips_core::{
+    food_core::FoodTemplateDatabase,
+    interaction::Clickable,
     name::{HasNameTag, NameTag, NameTagBundle, SpeciesName},
-    simulation::Simulated,
     view::EntityView,
 };
 
-use super::{template::FoodTemplateDatabase, Food};
+use crate::{layering, simulation::Simulated};
+
+use super::Food;
 
 #[derive(Debug, Component, Default)]
 pub struct FoodView;

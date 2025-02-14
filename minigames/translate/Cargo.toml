@@ -7,4 +7,4 @@ edition = "2021"
 shared_deps = { path = "../../shared_deps" }
 sardips_core = { path = "../../core" }
 text_keys = { path = "../../text_keys" }
-bevy = { version = "0.14.2", default-features = false }
+bevy = { workspace = true }

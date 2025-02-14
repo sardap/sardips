@@ -5,6 +5,7 @@ use bevy::{
     ecs::schedule::ScheduleLabel,
     prelude::*,
 };
+use sardips_core::{from_days, from_hours, from_mins};
 use shared_deps::chrono::{DateTime, Utc};
 pub struct SimulationPlugin;
 
@@ -28,24 +29,10 @@ impl Plugin for SimulationPlugin {
     }
 }
 
-const fn from_mins(mins: u64) -> Duration {
-    Duration::from_secs(60 * mins)
-}
-
-const fn from_hours(hours: u64) -> Duration {
-    from_mins(60 * hours)
-}
-
-const fn from_days(days: u64) -> Duration {
-    from_hours(24 * days)
-}
-
-pub const MOOD_HISTORY_UPDATE: Duration = from_mins(5);
 pub const HUNGER_MOOD_UPDATE: Duration = from_mins(2);
 pub const FUN_MOOD_UPDATE: Duration = from_mins(2);
 pub const MONEY_MOOD_UPDATE: Duration = from_hours(2);
 pub const CLEANLINESS_MOOD_UPDATE: Duration = from_mins(2);
-pub const BREED_RESET_INTERVAL: Duration = from_mins(30);
 pub const EGG_HATCH_ATTEMPT_INTERVAL: Duration = from_mins(30);
 pub const MAX_EGG_LIFE: Duration = from_days(2);
 

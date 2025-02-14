@@ -1,15 +1,18 @@
 use bevy::prelude::*;
-use shared_deps::serde::{Deserialize, Serialize};
 
 use crate::{
-    food::{Food, FoodFillFactor},
+    food::Food,
     layering,
-    name::SpeciesName,
     simulation::{SimulationUpdate, HUNGER_TICK_DOWN},
     thinking::TryThinkEvent,
     SimulationState,
 };
-use sardips_core::sounds::{PlaySoundEffect, SoundEffect};
+use sardips_core::{
+    food_core::FoodFillFactor,
+    hunger_core::Hunger,
+    name::SpeciesName,
+    sounds::{PlaySoundEffect, SoundEffect},
+};
 
 use fact_db::{Concept, FactDb};
 
@@ -24,46 +27,6 @@ impl Plugin for HungerPlugin {
                 (update_starving, begin_eating_food, eating_food)
                     .run_if(in_state(SimulationState::Running)),
             );
-    }
-}
-
-#[derive(Debug, Component, Clone, Serialize, Deserialize, Reflect)]
-#[reflect(Component)]
-pub struct Hunger {
-    pub value: f32,
-    pub max: f32,
-}
-
-impl Hunger {
-    pub fn new(max: f32) -> Self {
-        Self { value: max, max }
-    }
-
-    pub fn with_value(mut self, value: f32) -> Self {
-        self.value = value;
-        self
-    }
-
-    pub fn decrease(&mut self, amount: f32) {
-        self.value -= amount;
-        if self.value < 0.0 {
-            self.value = 0.0;
-        }
-    }
-
-    pub fn increase(&mut self, amount: f32) {
-        self.value += amount;
-        if self.value > self.max {
-            self.value = self.max;
-        }
-    }
-
-    pub fn empty(&self) -> bool {
-        self.value <= 0.0
-    }
-
-    pub fn filled_percent(&self) -> f32 {
-        self.value / self.max
     }
 }
 

@@ -5,22 +5,16 @@ use strum::IntoEnumIterator;
 use sardips_core::{
     assets::{DipdexImageAssets, FontAssets, ViewScreenImageAssets},
     button_hover::ButtonHover,
+    food_core::FoodSensationRating,
     mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes, SatisfactionRating},
+    name::SpeciesName,
+    pet_core::{PetTemplate, PetTemplateDatabase},
     text_database::TextDatabase,
     text_translation::KeyText,
     GameState,
 };
 
-use crate::{
-    food::preferences::FoodSensationRating,
-    name::SpeciesName,
-    palettes,
-    pet::{
-        dipdex::DipdexDiscoveredEntries,
-        template::{PetTemplate, PetTemplateDatabase},
-    },
-    player::Player,
-};
+use crate::{palettes, pet::dipdex::DipdexDiscoveredEntries, player::Player};
 use text_keys::{self, BACK};
 
 pub struct DipdexScenePlugin;

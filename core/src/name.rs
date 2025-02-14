@@ -1,9 +1,10 @@
 use core::fmt;
 
-use crate::view::HasView;
+use crate::{
+    assets::FontAssets, text_database::TextDatabase, text_translation::KeyText, view::HasView,
+};
 use bevy::prelude::*;
-use sardips_core::{assets::FontAssets, text_database::TextDatabase, text_translation::KeyText};
-use shared_deps::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 pub struct NamePlugin;
 

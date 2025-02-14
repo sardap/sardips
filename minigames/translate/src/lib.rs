@@ -17,7 +17,9 @@ use sardips_core::{
     minigames_core::{
         translate_wordbank::{Word, WordBank, WordSet},
         MiniGameBackButton, MiniGameCompleted, MiniGameResult, MiniGameState, MiniGameType,
+        Playing,
     },
+    mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     random_choose,
     shrink::Shrinking,
     text_database::{get_writing_system, Language, WritingSystems},
@@ -80,6 +82,7 @@ impl Plugin for TranslateGamePlugin {
                     update_score_text,
                     tick_game_timer,
                     tick_update_ages,
+                    update_pet_mood,
                 )
                     .run_if(in_state(TranslateState::Playing)),
             )
@@ -87,10 +90,6 @@ impl Plugin for TranslateGamePlugin {
             .add_systems(
                 OnExit(TranslateState::Score),
                 despawn_all::<TranslateScoreScreen>,
-            )
-            .add_systems(
-                Update,
-                quit_button_pressed.run_if(in_state(TranslateState::Score)),
             )
             .add_systems(
                 OnEnter(TranslateState::Exit),
@@ -105,9 +104,7 @@ enum TranslateState {
     None,
     Loading,
     Playing,
-    #[allow(dead_code)]
     Score,
-    #[allow(dead_code)]
     Exit,
 }
 
@@ -164,10 +161,14 @@ struct TranslateBackgroundUiCamera;
 #[derive(Component)]
 struct TranslateSpriteCamera;
 
+#[derive(Component)]
+struct UiPetImage;
+
 fn setup_camera_and_ui(
     mut commands: Commands,
     assets: Res<TranslateAssets>,
     font_assets: Res<FontAssets>,
+    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &MoodImageIndexes), With<Playing>>,
 ) {
     let ui_background_camera: Entity = commands
         .spawn((
@@ -277,71 +278,73 @@ fn setup_camera_and_ui(
                         top: Val::Px(10.),
                         ..default()
                     },
-                    text: Text::from_sections(vec![
-                        TextSection::new(
-                            "",
-                            TextStyle {
-                                font: font_assets.main_font.clone(),
-                                font_size: 20.,
-                                color: Color::BLACK,
-                            },
-                        ),
-                        TextSection::new(
-                            "\n",
-                            TextStyle {
-                                font: font_assets.main_font.clone(),
-                                font_size: 20.,
-                                color: Color::BLACK,
-                            },
-                        ),
-                        TextSection::new(
-                            "",
-                            TextStyle {
-                                font: font_assets.main_font.clone(),
-                                font_size: 20.,
-                                color: Color::BLACK,
-                            },
-                        ),
-                    ]),
+                    text: Text::from_sections(vec![TextSection::new(
+                        "",
+                        TextStyle {
+                            font: font_assets.main_font.clone(),
+                            font_size: 20.,
+                            color: Color::BLACK,
+                        },
+                    )]),
                     ..default()
                 },
                 KeyText::new().with(0, MINIGAME_TRANSLATE_TIME_LEFT),
+                TranslatePlaying,
+            ));
+
+            parent.spawn((
+                TextBundle {
+                    style: Style {
+                        top: Val::Px(10.),
+                        ..default()
+                    },
+                    text: Text::from_sections(vec![TextSection::new(
+                        "",
+                        TextStyle {
+                            font: font_assets.main_font.clone(),
+                            font_size: 20.,
+                            color: Color::BLACK,
+                        },
+                    )]),
+                    ..default()
+                },
                 TimeRemainingText,
                 TranslatePlaying,
             ));
 
             parent.spawn((
                 TextBundle {
-                    style: Style { ..default() },
-                    text: Text::from_sections(vec![
-                        TextSection::new(
-                            "",
-                            TextStyle {
-                                font: font_assets.main_font.clone(),
-                                font_size: 20.,
-                                color: Color::BLACK,
-                            },
-                        ),
-                        TextSection::new(
-                            "\n",
-                            TextStyle {
-                                font: font_assets.main_font.clone(),
-                                font_size: 20.,
-                                color: Color::BLACK,
-                            },
-                        ),
-                        TextSection::new(
-                            "",
-                            TextStyle {
-                                font: font_assets.main_font.clone(),
-                                font_size: 20.,
-                                color: Color::BLACK,
-                            },
-                        ),
-                    ]),
+                    style: Style {
+                        margin: UiRect::top(Val::Px(10.)),
+                        ..default()
+                    },
+                    text: Text::from_sections(vec![TextSection::new(
+                        "",
+                        TextStyle {
+                            font: font_assets.main_font.clone(),
+                            font_size: 20.,
+                            color: Color::BLACK,
+                        },
+                    )]),
                     ..default()
                 },
                 KeyText::new().with(0, MINIGAME_TRANSLATE_SCORE),
+                TranslatePlaying,
+            ));
+
+            parent.spawn((
+                TextBundle {
+                    style: Style { ..default() },
+                    text: Text::from_sections(vec![TextSection::new(
+                        "",
+                        TextStyle {
+                            font: font_assets.main_font.clone(),
+                            font_size: 20.,
+                            color: Color::BLACK,
+                        },
+                    )]),
+                    ..default()
+                },
                 ScoreText,
                 TranslatePlaying,
             ));
@@ -359,6 +362,43 @@ fn setup_camera_and_ui(
         TranslateSpriteCamera,
         Translate,
     ));
+
+    let (image, atlas, mood_images) = pet_sheet.single();
+    commands
+        .spawn((
+            TargetCamera(ui_camera),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::End,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                ..default()
+            },
+            Translate,
+            TranslatePlaying,
+        ))
+        .with_children(|parent| {
+            parent.spawn((
+                ImageBundle {
+                    style: Style {
+                        width: Val::Px(50.),
+                        margin: UiRect::bottom(Val::Px(50.)),
+                        ..default()
+                    },
+                    image: UiImage::new(image.clone()),
+                    ..default()
+                },
+                atlas.clone(),
+                UiPetImage,
+                *mood_images,
+                MoodCategory::Neutral,
+                AutoSetMoodImage,
+            ));
+        });
 }
 
 #[derive(Component)]
@@ -385,7 +425,7 @@ fn setup_spawners(mut commands: Commands, rng: ResMut<GlobalRng>) {
                 Duration::from_secs_f32(3.)..Duration::from_secs_f32(5.),
                 rng,
             ),
-            pending: 3,
+            pending: 1,
         },
         TranslatePlaying,
         Translate,
@@ -561,7 +601,6 @@ struct VisualWord {
 #[derive(Component)]
 struct FallingWord;
 
-// Update to seprate the spawning or something so it can do the bounds check
 fn spawn_words(
     mut commands: Commands,
     spatial_query: SpatialQuery,
@@ -609,18 +648,6 @@ fn spawn_words(
                 set = random_choose(rng, &word_bank.sets);
             }
 
-            let (left_word, right_word) = if rng.bool() {
-                (
-                    set.words.get(&language.native_language).unwrap(),
-                    set.words.get(&language.selected_language).unwrap(),
-                )
-            } else {
-                (
-                    set.words.get(&language.selected_language).unwrap(),
-                    set.words.get(&language.native_language).unwrap(),
-                )
-            };
-
             #[derive(PartialEq, Eq)]
             enum Sides {
                 None,
@@ -637,6 +664,23 @@ fn spawn_words(
                 } else {
                     Sides::None
                 }
+            };
+
+            let (left_word, right_word) = if picture_side == Sides::None {
+                if rng.bool() {
+                    (
+                        set.words.get(&language.native_language).unwrap(),
+                        set.words.get(&language.selected_language).unwrap(),
+                    )
+                } else {
+                    (
+                        set.words.get(&language.selected_language).unwrap(),
+                        set.words.get(&language.native_language).unwrap(),
+                    )
+                }
+            } else {
+                let word = set.words.get(&language.selected_language).unwrap();
+                (word, word)
             };
 
             let get_font_size = |word: &Word| {
@@ -807,7 +851,7 @@ fn spawn_words(
 
             commands.entity(right_entity).insert((
                 RigidBody::Dynamic,
-                GravityScale((rng.i32(80..300) / 100) as f32 + rng.f32()),
+                GravityScale(((rng.i32(80..300) / 100) as f32 + rng.f32()) / 2.),
                 Mass(5.0),
                 FallingWord,
                 ShouldUnstick::default(),
@@ -871,7 +915,7 @@ fn mark_fallen_words_to_kill(
             });
             history.history.push(HistoryEntry {
                 word_set_id: word.set_id.clone(),
-                correct: WordHistoryResult::Missed,
+                result: WordHistoryResult::Missed,
                 time_alive: age.0,
             });
         }
@@ -994,7 +1038,7 @@ fn handle_click(
 
                     history.history.push(HistoryEntry {
                         word_set_id: word.set_id.clone(),
-                        correct,
+                        result: correct,
                         time_alive: age.0,
                     });
                 }
@@ -1090,7 +1134,7 @@ enum WordHistoryResult {
 struct HistoryEntry {
     #[allow(dead_code)]
     pub word_set_id: String,
-    pub correct: WordHistoryResult,
+    pub result: WordHistoryResult,
     pub time_alive: Duration,
 }
 
@@ -1104,7 +1148,7 @@ impl History {
         let mut score = 0.;
 
         for entry in &self.history {
-            match entry.correct {
+            match entry.result {
                 WordHistoryResult::Correct => {
                     score += 100. / entry.time_alive.as_secs_f32();
                 }
@@ -1127,7 +1171,7 @@ fn update_score_text(
 ) {
     if let Ok(history) = history.get_single() {
         let mut score_text = score_text.single_mut();
-        score_text.sections[2].value = format!("{:.2}", history.score());
+        score_text.sections[0].value = format!("{:.2}", history.score());
     }
 }
 
@@ -1140,9 +1184,12 @@ fn tick_game_timer(
     for mut timer in &mut game_timer {
         timer.timer.tick(time.delta());
 
-        let mut score_text = timer_text.single_mut();
-        let remaining = timer.timer.duration().as_secs_f32() - timer.timer.elapsed().as_secs_f32();
-        score_text.sections[2].value = format!("{:.2}", remaining);
+        let mut timer_text = timer_text.single_mut();
+        let remaining = Duration::from_secs_f32(
+            timer.timer.duration().as_secs_f32() - timer.timer.elapsed().as_secs_f32(),
+        );
+        timer_text.sections[0].value =
+            format!("{}:{}", remaining.as_secs(), remaining.as_millis() % 1000);
 
         if timer.timer.finished() {
             state.set(TranslateState::Score);
@@ -1156,20 +1203,20 @@ struct TranslateScoreScreen;
 #[derive(Component)]
 struct ScoreScreenText;
 
-#[derive(Component)]
-struct QuitButton;
-
 fn setup_score_screen(
     mut commands: Commands,
     font_assets: Res<FontAssets>,
     camera: Query<Entity, With<TranslateSpriteCamera>>,
     history: Query<&History>,
+    pet_sheet: Query<(&Handle<Image>, &TextureAtlas, &MoodImageIndexes), With<Playing>>,
 ) {
     let ui_camera = camera.single();
 
     let history = history.single();
 
     const FONT_SIZE: f32 = 30.;
+
+    let (image, atlas, mood_images) = pet_sheet.single();
 
     commands
         .spawn((
@@ -1189,6 +1236,23 @@ fn setup_score_screen(
             Translate,
         ))
         .with_children(|parent| {
+            parent.spawn((
+                ImageBundle {
+                    style: Style {
+                        width: Val::Px(80.),
+                        margin: UiRect::bottom(Val::Px(50.)),
+                        ..default()
+                    },
+                    image: UiImage::new(image.clone()),
+                    ..default()
+                },
+                atlas.clone(),
+                UiPetImage,
+                *mood_images,
+                MoodCategory::Neutral,
+                AutoSetMoodImage,
+            ));
+
             parent
                 .spawn((
                     NodeBundle {
@@ -1267,22 +1331,46 @@ fn on_exit(
     });
 }
 
-fn quit_button_pressed(
-    mut state: ResMut<NextState<TranslateState>>,
-    quit_buttons: Query<&Interaction, (With<QuitButton>, Changed<Interaction>)>,
-) {
-    for interaction in &quit_buttons {
-        if interaction == &Interaction::Pressed {
-            state.set(TranslateState::Exit);
-        }
-    }
-}
-
 #[derive(Component, Default)]
 pub struct UpdateAge(pub Duration);
 
 fn tick_update_ages(time: Res<Time>, mut query: Query<&mut UpdateAge>) {
     for mut update_age in query.iter_mut() {
         update_age.0 += time.delta();
+    }
+}
+
+fn update_pet_mood(
+    history: Query<&History, Changed<History>>,
+    mut pet: Query<&mut MoodCategory, With<UiPetImage>>,
+) {
+    if let Ok(score) = history.get_single() {
+        let recent_value: f32 = score
+            .history
+            .iter()
+            .rev()
+            .take(5)
+            .map(|e| match e.result {
+                WordHistoryResult::Correct => 1.,
+                WordHistoryResult::Incorrect => 0.,
+                WordHistoryResult::Missed => -1.,
+            })
+            .sum();
+
+        let updated_mood = if recent_value > 5. {
+            MoodCategory::Ecstatic
+        } else if recent_value > 2. {
+            MoodCategory::Happy
+        } else if recent_value > 0. {
+            MoodCategory::Neutral
+        } else if recent_value > -2. {
+            MoodCategory::Sad
+        } else {
+            MoodCategory::Despairing
+        };
+
+        for mut mood in &mut pet {
+            *mood = updated_mood
+        }
     }
 }

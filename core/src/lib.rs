@@ -10,20 +10,30 @@ use shared_deps::{
 };
 use std::{ops::Range, time::Duration};
 
+pub mod age_core;
 pub mod assets;
 pub mod autoscroll;
+pub mod breeding_core;
 pub mod button_hover;
+pub mod food_core;
+pub mod fun_core;
+pub mod hunger_core;
 pub mod interaction;
 pub mod loading;
 pub mod minigames_core;
+pub mod money_core;
 pub mod mood_core;
 pub mod move_towards;
+pub mod name;
 pub mod particles;
+pub mod pet_core;
 pub mod shrink;
 pub mod sounds;
+pub mod sprite_utils;
 pub mod text_database;
 pub mod text_translation;
 pub mod velocity;
+pub mod view;
 
 #[macro_use]
 extern crate lazy_static;
@@ -47,6 +57,18 @@ impl Plugin for SardipsCorePlugin {
                 text_database::TextDatabasePlugin,
                 move_towards::MoveTowardsPlugin,
                 text_translation::TextTranslationPlugin,
+                age_core::AgeCorePlugin,
+                breeding_core::BreedingCorePlugin,
+                food_core::FoodCorePlugin,
+            ))
+            .add_plugins((
+                fun_core::FunCorePlugin,
+                hunger_core::HungerCorePlugin,
+                money_core::MoneyCorePlugin,
+                name::NamePlugin,
+                pet_core::PetCorePlugin,
+                view::ViewPlugin,
+                mood_core::MoodCorePlugin,
             ));
     }
 }
@@ -161,3 +183,18 @@ impl VaryingTimer {
         self.times_finished
     }
 }
+
+pub const fn from_mins(mins: u64) -> Duration {
+    Duration::from_secs(60 * mins)
+}
+
+pub const fn from_hours(hours: u64) -> Duration {
+    from_mins(60 * hours)
+}
+
+pub const fn from_days(days: u64) -> Duration {
+    from_hours(24 * days)
+}
+
+pub const MOOD_HISTORY_UPDATE: Duration = from_mins(5);
+pub const BREED_RESET_INTERVAL: Duration = from_mins(30);

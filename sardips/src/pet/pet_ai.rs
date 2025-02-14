@@ -1,22 +1,18 @@
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
 
-use crate::{
-    food::{
-        preferences::{FoodPreference, FoodSensationRating},
-        Food, FoodSensations,
-    },
-    name::EntityName,
-    SimulationState,
-};
+use crate::{food::Food, SimulationState};
 use sardips_core::{
+    food_core::{FoodPreference, FoodSensationRating, FoodSensations},
+    hunger_core::Hunger,
     move_towards::{MoveTowardsEvent, MovingTowards},
+    name::EntityName,
     velocity::MovementDirection,
 };
 
 use super::{
     breeding::{BreedEvent, ReadyToBreed},
-    hunger::{EatFoodEvent, Hunger},
+    hunger::EatFoodEvent,
     wonder::Wonder,
     Pet,
 };

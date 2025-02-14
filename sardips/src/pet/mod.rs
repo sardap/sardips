@@ -12,12 +12,8 @@ pub mod view;
 pub mod wonder;
 
 use bevy::prelude::*;
-use breeding::Breeds;
 pub use core::*;
-use fun::Fun;
-use hunger::Hunger;
-use mood::{Mood, MoodCategoryHistory, MoodState};
-use poop::{Cleanliness, Diarrhea, Pooper};
+use mood::{Mood, MoodHunger, MoodState};
 use view::PetViewPlugin;
 
 use self::{
@@ -31,16 +27,10 @@ pub struct PetPlugin;
 impl Plugin for PetPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Pet>()
-            .register_type::<MoodCategoryHistory>()
             .register_type::<MoodState>()
             .register_type::<Option<MoodState>>()
             .register_type::<Mood>()
-            .register_type::<Breeds>()
-            .register_type::<Hunger>()
-            .register_type::<Fun>()
-            .register_type::<Pooper>()
-            .register_type::<Cleanliness>()
-            .register_type::<Diarrhea>()
+            .register_type::<MoodHunger>()
             .add_plugins((
                 HungerPlugin,
                 MoodPlugin,

@@ -2,19 +2,23 @@ use bevy::prelude::*;
 use fact_db::{fact_str_hash, EntityFactDatabase, FactDb, GlobalFactDatabase};
 
 use crate::{
-    age::Age,
     food::Food,
-    name::{EntityName, SpeciesName},
     pet::{
         breeding::ReadyToBreed,
-        hunger::{Hunger, Starving},
-        mood::{Mood, MoodCategoryHistory, MoodState},
+        hunger::Starving,
+        mood::{Mood, MoodHunger, MoodState},
         poop::Poop,
-        Pet, PetKind,
+        Pet,
     },
     simulation::{SimulationState, SimulationUpdate},
 };
-use sardips_core::mood_core::MoodCategory;
+use sardips_core::{
+    age_core::Age,
+    hunger_core::Hunger,
+    mood_core::{MoodCategory, MoodCategoryHistory},
+    name::{EntityName, SpeciesName},
+    pet_core::PetKind,
+};
 
 // https://www.youtube.com/watch?v=tAbBID3N64A&t=20s
 // https://www.gdcvault.com/play/1015317/AI-driven-Dynamic-Dialog-through
@@ -27,6 +31,7 @@ impl Plugin for FactUpdatePlugin {
             FixedUpdate,
             (
                 update_mood,
+                update_hunger_mood,
                 update_overall_mood,
                 update_median_mood,
                 update_names_facts,
@@ -114,9 +119,16 @@ fn update_sub_mood_fact<T: ToString>(key: T, fact_db: &mut FactDb, mood: &Option
 
 fn update_mood(mut query: Query<(&mut EntityFactDatabase, &Mood), Changed<Mood>>) {
     for (mut fact_db, mood) in query.iter_mut() {
-        update_sub_mood_fact("MoodHunger", &mut fact_db.0, &mood.hunger);
         update_sub_mood_fact("MoodCleanliness", &mut fact_db.0, &mood.cleanliness);
         update_sub_mood_fact("MoodFun", &mut fact_db.0, &mood.fun);
+    }
+}
+
+fn update_hunger_mood(
+    mut query: Query<(&mut EntityFactDatabase, &MoodHunger), Changed<MoodHunger>>,
+) {
+    for (mut fact_db, mood) in query.iter_mut() {
+        fact_db.0.add("MoodHunger", mood.score());
     }
 }
 

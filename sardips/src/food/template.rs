@@ -1,14 +1,12 @@
-use bevy::{prelude::*, utils::HashSet};
+use bevy::prelude::*;
+use sardips_core::food_core::{FoodFillFactor, FoodSensations, FoodTemplate, FoodTemplateDatabase};
+use sardips_core::name::{EntityName, SpeciesName};
+use serde::{Deserialize, Serialize};
 use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
-use shared_deps::serde::{Deserialize, Serialize};
 
-use crate::{
-    layering,
-    name::{EntityName, SpeciesName},
-    pet::template::TemplateSize,
-};
+use crate::layering;
 
-use super::{FoodBundle, FoodFillFactor, FoodSensationType, FoodSensations};
+use super::FoodBundle;
 
 pub struct FoodTemplatePlugin;
 
@@ -40,52 +38,25 @@ fn load_templates(
     }
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct FoodTemplate {
-    pub name: String,
-    pub sensations: HashSet<FoodSensationType>,
-    pub texture: String,
-    pub texture_size: (u32, u32),
-    pub sprite_size: TemplateSize,
-    pub fill_factor: f32,
-}
+pub fn spawn_food(template: &FoodTemplate, commands: &mut Commands, location: Vec2) -> Entity {
+    let entity_id = commands
+        .spawn(FoodBundle {
+            sensations: FoodSensations {
+                values: template.sensations.clone(),
+            },
+            location: Transform::from_translation(Vec3::new(
+                location.x,
+                location.y,
+                layering::view_screen::FOOD,
+            )),
+            species_name: SpeciesName::new(&template.name),
+            name: EntityName::new(format!("food.{}", template.name.to_lowercase())),
+            fill_factor: FoodFillFactor(template.fill_factor),
+            ..default()
+        })
+        .id();
 
-impl FoodTemplate {
-    pub fn spawn(&self, commands: &mut Commands, location: Vec2) -> Entity {
-        let entity_id = commands
-            .spawn(FoodBundle {
-                sensations: FoodSensations {
-                    values: self.sensations.clone(),
-                },
-                location: Transform::from_translation(Vec3::new(
-                    location.x,
-                    location.y,
-                    layering::view_screen::FOOD,
-                )),
-                species_name: SpeciesName::new(&self.name),
-                name: EntityName::new(format!("food.{}", self.name.to_lowercase())),
-                fill_factor: FoodFillFactor(self.fill_factor),
-                ..default()
-            })
-            .id();
-
-        entity_id
-    }
-}
-
-#[derive(Resource)]
-pub struct FoodTemplateDatabase {
-    pub templates: Vec<FoodTemplate>,
-}
-
-impl FoodTemplateDatabase {
-    pub fn iter(&self) -> impl Iterator<Item = &FoodTemplate> {
-        self.templates.iter()
-    }
-
-    pub fn get(&self, name: &str) -> Option<&FoodTemplate> {
-        self.templates.iter().find(|template| template.name == name)
-    }
+    entity_id
 }
 
 #[derive(Asset, Serialize, Deserialize, TypePath)]

@@ -1,19 +1,18 @@
-use std::fmt;
-
 use bevy::{prelude::*, utils::HashSet};
+use sardips_core::food_core::{
+    FoodFillFactor, FoodSensationType, FoodSensations, FoodTemplateDatabase,
+};
+use sardips_core::name::{EntityName, SpeciesName};
 use shared_deps::bevy_turborand::{GlobalRng, RngComponent};
 use shared_deps::moonshine_save::save::Save;
-use shared_deps::serde::{Deserialize, Serialize};
-use shared_deps::strum_macros::EnumIter;
 
 use crate::{
     game_zone::random_point_in_game_zone,
-    name::{EntityName, SpeciesName},
     simulation::{Simulated, SimulationState},
 };
-use text_keys;
 
-use super::{template::FoodTemplateDatabase, view::spawn_food_view};
+use super::template::spawn_food;
+use super::view::spawn_food_view;
 
 pub struct FoodPlugin;
 
@@ -49,102 +48,6 @@ pub struct FoodBundle {
 // TODO: Implement despawn_food_view
 // fn despawn_food_view() {}
 
-#[derive(
-    Reflect,
-    Debug,
-    Copy,
-    Clone,
-    Eq,
-    PartialEq,
-    Hash,
-    EnumIter,
-    Serialize,
-    Deserialize,
-    PartialOrd,
-    Ord,
-)]
-#[reflect_value(PartialEq, Serialize, Deserialize)]
-pub enum FoodSensationType {
-    Spicy,
-    Cool,
-    // A drying, puckering mouthfeel
-    Astringent,
-    // Often described as savory or meaty
-    Umami,
-    Fatty,
-    Sour,
-    Bitter,
-    Sweet,
-    Salty,
-    Crunchy,
-    Creamy,
-    Fizzy,
-    Juicy,
-    Tender,
-    Dry,
-    Elastic,
-}
-
-impl FoodSensationType {
-    pub fn short_string(&self) -> &'static str {
-        match self {
-            FoodSensationType::Spicy => "Spi",
-            FoodSensationType::Cool => "Coo",
-            FoodSensationType::Astringent => "Ast",
-            FoodSensationType::Umami => "Uma",
-            FoodSensationType::Fatty => "Fat",
-            FoodSensationType::Sour => "Sou",
-            FoodSensationType::Bitter => "Bit",
-            FoodSensationType::Sweet => "Swe",
-            FoodSensationType::Salty => "Sal",
-            FoodSensationType::Crunchy => "Cru",
-            FoodSensationType::Creamy => "Cre",
-            FoodSensationType::Fizzy => "Fiz",
-            FoodSensationType::Juicy => "Jui",
-            FoodSensationType::Tender => "Ten",
-            FoodSensationType::Dry => "Dry",
-            FoodSensationType::Elastic => "Ela",
-        }
-    }
-
-    pub fn key(&self) -> &'static str {
-        match self {
-            FoodSensationType::Spicy => text_keys::SPICY,
-            FoodSensationType::Cool => text_keys::COOL,
-            FoodSensationType::Astringent => text_keys::ASTRINGENT,
-            FoodSensationType::Umami => text_keys::UMAMI,
-            FoodSensationType::Fatty => text_keys::FATTY,
-            FoodSensationType::Sour => text_keys::SOUR,
-            FoodSensationType::Bitter => text_keys::BITTER,
-            FoodSensationType::Sweet => text_keys::SWEET,
-            FoodSensationType::Salty => text_keys::SALTY,
-            FoodSensationType::Crunchy => text_keys::CRUNCHY,
-            FoodSensationType::Creamy => text_keys::CREAMY,
-            FoodSensationType::Fizzy => text_keys::FIZZY,
-            FoodSensationType::Juicy => text_keys::JUICY,
-            FoodSensationType::Tender => text_keys::TENDER,
-            FoodSensationType::Dry => text_keys::DRY,
-            FoodSensationType::Elastic => text_keys::ELASTIC,
-        }
-    }
-}
-
-impl fmt::Display for FoodSensationType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-#[derive(Debug, Component, Clone, Default, Serialize, Deserialize, Reflect)]
-#[reflect(Component)]
-pub struct FoodSensations {
-    pub values: HashSet<FoodSensationType>,
-}
-
-#[derive(Debug, Component, Default, Clone, Serialize, Deserialize, Reflect)]
-#[reflect(Component)]
-pub struct FoodFillFactor(pub f32);
-
 #[derive(Debug, Component, Default, Reflect)]
 #[reflect(Component)]
 pub struct Food;
@@ -172,7 +75,7 @@ fn spawn_pending_food(
         let mut rng = RngComponent::from(&mut global_rng);
 
         if let Some(template) = food_db.get(&event.name) {
-            template.spawn(&mut commands, random_point_in_game_zone(&mut rng));
+            spawn_food(template, &mut commands, random_point_in_game_zone(&mut rng));
         } else {
             error!("No food template found for {}", event.name);
         }

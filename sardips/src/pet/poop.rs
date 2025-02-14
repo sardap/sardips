@@ -1,17 +1,18 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
+use sardips_core::age_core::Age;
+use sardips_core::hunger_core::Hunger;
+use sardips_core::name::EntityName;
+use sardips_core::pet_core::{Diarrhea, Pooper};
+use sardips_core::view::EntityView;
 use shared_deps::bevy_turborand::prelude::*;
 use shared_deps::moonshine_save::save::Save;
-use shared_deps::serde::{Deserialize, Serialize};
 
 use crate::{
-    age::Age,
     anime::{AnimeBundle, AnimeIndices, AnimeTimer},
     layering,
-    name::EntityName,
     simulation::{Simulated, SimulationUpdate},
-    view::EntityView,
 };
 use sardips_core::{
     assets::GameImageAssets,
@@ -20,8 +21,6 @@ use sardips_core::{
     GameState,
 };
 use text_keys;
-
-use super::hunger::Hunger;
 
 pub struct PoopPlugin;
 
@@ -64,32 +63,6 @@ pub struct PoopBundleView {
     pub view: EntityView,
     pub poop_view: PoopView,
     pub simulated: Simulated,
-}
-
-#[derive(Component, Default, Serialize, Deserialize, Clone, Reflect)]
-#[reflect(Component)]
-pub struct Cleanliness;
-
-#[derive(Component, Default, Serialize, Deserialize, Clone, Reflect)]
-#[reflect(Component)]
-pub struct Diarrhea;
-
-#[derive(Component, Clone, Serialize, Deserialize, Reflect)]
-#[reflect(Component)]
-pub struct Pooper {
-    pub interval: Duration,
-    pub poop_timer: Timer,
-    pub texture: String,
-}
-
-impl Pooper {
-    pub fn new(poop_interval: Duration, texture: impl ToString) -> Self {
-        Self {
-            interval: poop_interval,
-            poop_timer: Timer::new(poop_interval, TimerMode::Repeating),
-            texture: texture.to_string(),
-        }
-    }
 }
 
 pub fn spawn_poop(commands: &mut Commands, scale: f32, location: Vec2, texture: &str) {

@@ -40,6 +40,8 @@ pub enum MiniGameState {
     PlayingEndlessShooter,
     PlayingRhythm,
     PlayingTranslate,
+    PlayingRectClash,
+    PlayingSnake,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -50,6 +52,8 @@ pub enum MiniGameType {
     EndlessShooter,
     Rhythm,
     Translate,
+    RectClash,
+    Snake,
 }
 
 #[derive(Component)]

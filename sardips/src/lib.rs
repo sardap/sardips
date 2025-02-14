@@ -15,7 +15,6 @@ pub mod game_zone;
 pub mod layering;
 pub mod minigames;
 pub mod money;
-pub mod name;
 pub mod palettes;
 pub mod pet;
 pub mod player;
@@ -25,9 +24,7 @@ pub mod simulation;
 pub mod stock_market;
 pub mod thinking;
 pub mod tools;
-pub mod view;
 
-use crate::name::NamePlugin;
 use age::AgePlugin;
 use anime::AnimePlugin;
 use bevy::{asset::AssetMetaCheck, prelude::*, window::WindowResolution};
@@ -42,7 +39,6 @@ use pet::{dipdex::DipdexPlugin, PetPlugin};
 use player::PlayerPlugin;
 use sardip_save::SardipSavePlugin;
 use scenes::GameScenePlugin;
-use shared_deps::avian2d::PhysicsPlugins;
 use shared_deps::bevy_kira_audio::prelude::*;
 use shared_deps::bevy_parallax::ParallaxPlugin;
 use shared_deps::bevy_prototype_lyon::prelude::*;
@@ -51,7 +47,6 @@ use simulation::{SimulationPlugin, SimulationState};
 use stock_market::StockMarketPlugin;
 use thinking::ThinkingPlugin;
 use tools::{poop_scooper::PoopScooperPlugin, ToolPlugin};
-use view::ViewPlugin;
 
 #[macro_use]
 extern crate lazy_static;
@@ -86,16 +81,18 @@ impl Plugin for GamePlugin {
             RngPlugin::default(),
             AudioPlugin,
             ShapePlugin,
-            PhysicsPlugins::new(FixedUpdate),
+            shared_deps::avian2d::PhysicsPlugins::new(FixedUpdate),
+            shared_deps::avian3d::PhysicsPlugins::new(FixedUpdate),
+            shared_deps::avian3d::prelude::PhysicsDebugPlugin::default(),
             FactsPlugin,
             sardips_core::SardipsCorePlugin,
+            shared_deps::bevy_rts_camera::RtsCameraPlugin,
             // shared_deps::avian2d::prelude::PhysicsDebugPlugin::default(),
         ))
         .add_plugins((
             SardipSavePlugin,
             PetPlugin,
             SimulationPlugin,
-            NamePlugin,
             FoodTemplatePlugin,
             MinigamePlugin,
             MoneyPlugin,
@@ -103,7 +100,6 @@ impl Plugin for GamePlugin {
             AgePlugin,
         ))
         .add_plugins((
-            ViewPlugin,
             AnimePlugin,
             ToolPlugin,
             PoopScooperPlugin,

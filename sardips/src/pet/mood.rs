@@ -1,26 +1,29 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use sardips_core::mood_core::{
-    AutoSetMoodImage, MoodCategory, MoodImageIndexes, SatisfactionRating,
+use sardips_core::{
+    from_hours, from_mins,
+    fun_core::Fun,
+    hunger_core::Hunger,
+    money_core::MoneyHungry,
+    mood_core::{
+        AutoSetMoodImage, MoodCategory, MoodCategoryHistory, MoodImageIndexes, SatisfactionRating,
+    },
+    pet_core::Cleanliness,
+    view::HasView,
 };
-use shared_deps::serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    money::{MoneyHungry, Wallet},
+    money::Wallet,
     player::Player,
     simulation::{
         SimulationUpdate, CLEANLINESS_MOOD_UPDATE, FUN_MOOD_UPDATE, HUNGER_MOOD_UPDATE,
-        MONEY_MOOD_UPDATE, MOOD_HISTORY_UPDATE,
+        MONEY_MOOD_UPDATE,
     },
-    view::HasView,
 };
 
-use super::{
-    fun::Fun,
-    hunger::Hunger,
-    poop::{Cleanliness, Poop},
-};
+use super::poop::Poop;
 
 pub struct MoodPlugin;
 
@@ -66,10 +69,79 @@ impl MoodState {
     }
 }
 
+pub const SCORE_QUOTA_PER_MOOD: f32 = 100.0;
+
+#[derive(Clone, Serialize, Deserialize, Reflect)]
+enum MoodHungerState {
+    Filled,
+    Hungry,
+    Starving,
+}
+
+#[derive(Component, Clone, Serialize, Deserialize, Reflect)]
+pub struct MoodHunger {
+    check_timer: Timer,
+    state: MoodHungerState,
+    state_duration: Duration,
+    dropdown_counter: Duration,
+}
+
+impl MoodHunger {
+    pub fn score(&self) -> f32 {
+        let duration = self.state_duration;
+        match self.state {
+            MoodHungerState::Filled => {
+                if duration > from_hours(2) {
+                    100.
+                } else if duration > from_mins(30) {
+                    let percent_to_next = duration.as_secs_f32() / from_hours(2).as_secs_f32();
+                    80. + (20. * percent_to_next)
+                } else {
+                    let percent_to_next = duration.as_secs_f32() / from_mins(30).as_secs_f32();
+                    60. + (20. * percent_to_next)
+                }
+            }
+            MoodHungerState::Hungry => 20.,
+            MoodHungerState::Starving => 0.,
+        }
+    }
+
+    pub fn current_satisfaction(&self) -> SatisfactionRating {
+        let score = self.score();
+        if score > 2.5 {
+            SatisfactionRating::VerySatisfied
+        } else if score > 2.0 {
+            SatisfactionRating::Satisfied
+        } else if score > 0.5 {
+            SatisfactionRating::Neutral
+        } else if score > 0. {
+            SatisfactionRating::Unsatisfied
+        } else {
+            SatisfactionRating::VeryUnsatisfied
+        }
+    }
+
+    fn change_state(&mut self, new_state: MoodHungerState) {
+        self.state = new_state;
+        self.state_duration = Duration::ZERO;
+        self.dropdown_counter = Duration::ZERO;
+    }
+}
+
+impl Default for MoodHunger {
+    fn default() -> Self {
+        Self {
+            check_timer: Timer::new(HUNGER_MOOD_UPDATE, TimerMode::Repeating),
+            state: MoodHungerState::Filled,
+            dropdown_counter: Duration::ZERO,
+            state_duration: Duration::ZERO,
+        }
+    }
+}
+
 #[derive(Component, Clone, Serialize, Deserialize, Default, Reflect)]
 #[reflect(Component)]
 pub struct Mood {
-    pub hunger: Option<MoodState>,
     pub cleanliness: Option<MoodState>,
     pub fun: Option<MoodState>,
     pub money: Option<MoodState>,
@@ -78,50 +150,6 @@ pub struct Mood {
 impl Mood {
     pub fn new() -> Self {
         Self::default()
-    }
-}
-
-impl Mood {
-    fn get_all(&self) -> Vec<&MoodState> {
-        let mut result = Vec::new();
-
-        if let Some(hunger) = &self.hunger {
-            result.push(hunger);
-        }
-
-        if let Some(cleanliness) = &self.cleanliness {
-            result.push(cleanliness);
-        }
-
-        if let Some(fun) = &self.fun {
-            result.push(fun);
-        }
-
-        if let Some(money) = &self.money {
-            result.push(money);
-        }
-
-        result
-    }
-
-    // This isn't working right
-    fn get_overall(&self) -> MoodCategory {
-        let mut ratings: Vec<SatisfactionRating> = Vec::new();
-
-        for mood in self.get_all() {
-            ratings.extend(mood.satisfaction.over_all_array());
-        }
-
-        if ratings.is_empty() {
-            return MoodCategory::Neutral;
-        }
-
-        ratings.sort();
-
-        let median = ratings.len() / 2;
-        let median = ratings[median];
-
-        median.into()
     }
 }
 
@@ -137,17 +165,42 @@ fn update_mood(time: &Time, condition: bool, mood: Option<&mut MoodState>) {
     }
 }
 
-fn add_hunger_mood(mut query: Query<&mut Mood, Added<Hunger>>) {
-    for mut mood in query.iter_mut() {
-        if mood.hunger.is_none() {
-            mood.hunger = Some(MoodState::new(HUNGER_MOOD_UPDATE));
-        }
+fn add_hunger_mood(mut commands: Commands, mut query: Query<Entity, (With<Mood>, Added<Hunger>)>) {
+    for entity in query.iter_mut() {
+        commands.entity(entity).insert(MoodHunger::default());
     }
 }
 
-fn update_hunger_mood(time: Res<Time>, mut hungry_moods: Query<(&Hunger, &mut Mood)>) {
+fn update_hunger_mood(time: Res<Time>, mut hungry_moods: Query<(&Hunger, &mut MoodHunger)>) {
     for (hunger, mut mood) in hungry_moods.iter_mut() {
-        update_mood(&time, hunger.filled_percent() > 0.15, mood.hunger.as_mut());
+        match mood.state {
+            MoodHungerState::Filled => {
+                mood.state_duration += time.delta();
+                if hunger.filled_percent() < 0.10 {
+                    mood.dropdown_counter += time.delta();
+                    if mood.dropdown_counter > from_mins(20) {
+                        mood.change_state(MoodHungerState::Hungry);
+                    }
+                }
+            }
+            MoodHungerState::Hungry => {
+                mood.state_duration += time.delta();
+                if hunger.filled_percent() < 0.05 {
+                    mood.dropdown_counter += time.delta();
+                    if mood.dropdown_counter > from_hours(1) {
+                        mood.change_state(MoodHungerState::Starving);
+                    }
+                } else if hunger.filled_percent() > 0.10 {
+                    mood.change_state(MoodHungerState::Filled);
+                }
+            }
+            MoodHungerState::Starving => {
+                mood.state_duration += time.delta();
+                if hunger.filled_percent() > 0.05 {
+                    mood.change_state(MoodHungerState::Hungry);
+                }
+            }
+        }
     }
 }
 
@@ -216,11 +269,33 @@ fn update_money_mood(
     }
 }
 
-fn update_overall_mood(mut moods: Query<(&Mood, &mut MoodCategory)>) {
-    for (mood, mut category) in moods.iter_mut() {
-        let overall = mood.get_overall();
-        if *category != overall {
-            *category = overall;
+fn update_overall_mood(
+    mut moods: Query<(Option<&MoodHunger>, &mut MoodCategory), Changed<MoodHunger>>,
+) {
+    for (hunger_mood, mut category) in moods.iter_mut() {
+        let mut max_possible = 0.;
+        let mut score_sum = 0.;
+        if let Some(hunger_mood) = hunger_mood {
+            score_sum += hunger_mood.score();
+            max_possible += SCORE_QUOTA_PER_MOOD;
+        }
+
+        let percent_fulfilled = score_sum / max_possible;
+
+        let new_mood = if percent_fulfilled > 0.8 {
+            MoodCategory::Ecstatic
+        } else if percent_fulfilled > 0.6 {
+            MoodCategory::Happy
+        } else if percent_fulfilled > 0.4 {
+            MoodCategory::Neutral
+        } else if percent_fulfilled > 0.2 {
+            MoodCategory::Sad
+        } else {
+            MoodCategory::Despairing
+        };
+
+        if *category != new_mood {
+            *category = new_mood;
         }
     }
 }
@@ -240,44 +315,6 @@ fn update_mood_images(
         if let Ok(mut atlas) = texture_atlas.get_mut(entity) {
             atlas.index = mood_images.get_index_for_mood(*category);
         }
-    }
-}
-
-#[derive(Component, Serialize, Deserialize, Clone, Reflect)]
-#[reflect(Component)]
-pub struct MoodCategoryHistory {
-    pub update_timer: Timer,
-    pub history: Vec<MoodCategory>,
-}
-
-impl Default for MoodCategoryHistory {
-    fn default() -> Self {
-        Self {
-            update_timer: Timer::new(MOOD_HISTORY_UPDATE, TimerMode::Repeating),
-            history: Vec::new(),
-        }
-    }
-}
-
-impl MoodCategoryHistory {
-    pub fn median(&self) -> MoodCategory {
-        // SLOW POINT BUT SHOULD NOT MATTER
-        let mut ratings: Vec<SatisfactionRating> = Vec::new();
-
-        for mood in &self.history {
-            ratings.extend(SatisfactionRating::from(*mood).over_all_array());
-        }
-
-        if ratings.is_empty() {
-            return MoodCategory::Neutral;
-        }
-
-        ratings.sort();
-
-        let median = ratings.len() / 2;
-        let median = ratings[median];
-
-        median.into()
     }
 }
 

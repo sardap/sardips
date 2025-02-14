@@ -169,3 +169,13 @@ pub struct DipdexImageAssets {
     #[asset(path = "textures/dipdex/known_background.png")]
     pub known_background: Handle<Image>,
 }
+
+#[derive(AssetCollection, Resource)]
+pub struct SnakeGameAssets {
+    #[asset(texture_atlas_layout(tile_size_x = 32, tile_size_y = 32, columns = 6, rows = 1,))]
+    pub snake_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "textures/mini_games/snake/snake.png")]
+    pub snake: Handle<Image>,
+    #[asset(path = "textures/mini_games/snake/background.jpg")]
+    pub background: Handle<Image>,
+}

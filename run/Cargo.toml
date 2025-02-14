@@ -10,30 +10,7 @@ embed-resource = "1"
 # dev = ["bevy/dynamic_linking"]
 
 [dependencies]
-bevy = { version = "0.14.2", default-features = false, features = [
-    "serialize",
-    "animation",
-    "bevy_asset",
-    "bevy_gilrs",
-    "bevy_scene",
-    "bevy_winit",
-    "bevy_core_pipeline",
-    "bevy_pbr",
-    "bevy_gltf",
-    "bevy_render",
-    "bevy_sprite",
-    "bevy_text",
-    "bevy_ui",
-    "png",
-    "jpeg",
-    "hdr",
-    "x11",
-    "bevy_gizmos",
-    "tonemapping_luts",
-    "default_font",
-    "webgl2",
-    "bevy_debug_stepping",
-] }
+bevy = { workspace = true }
 shared_deps = { path = "../shared_deps" }
 sardips = { path = "../sardips" }
 sardips_endless_shooter = { path = "../minigames/endless_shooter" }
@@ -42,3 +19,5 @@ sardips_tic_tac_toe = { path = "../minigames/tic_tac_toe" }
 sardips_higher_lower = { path = "../minigames/higher_lower" }
 sardips_rhythm = { path = "../minigames/rhythm" }
 sardips_translate = { path = "../minigames/translate" }
+sardips_rect_clash = { path = "../minigames/rect_clash" }
+sardips_snake = { path = "../minigames/snake" }

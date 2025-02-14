@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use sardips_core::button_hover::ButtonHover;
-use shared_deps::strum_macros::EnumIter;
 use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use crate::palettes;
 use sardips_core::{
@@ -12,8 +12,9 @@ use sardips_core::{
 };
 
 use text_keys::{
-    MINIGAME_SELECT_ENDLESS_RHYTHM, MINIGAME_SELECT_ENDLESS_SHOOTER, MINIGAME_SELECT_FOUR_IN_ROW,
-    MINIGAME_SELECT_HIGHER_LOWER, MINIGAME_SELECT_TIC_TAC_TOE, MINIGAME_SELECT_TRANSLATE,
+    MINIGAME_RECT_CLASH, MINIGAME_SELECT_ENDLESS_SHOOTER, MINIGAME_SELECT_FOUR_IN_ROW,
+    MINIGAME_SELECT_HIGHER_LOWER, MINIGAME_SELECT_SNAKE, MINIGAME_SELECT_TIC_TAC_TOE,
+    MINIGAME_SELECT_TRANSLATE,
 };
 
 pub struct MinigameScenePlugin;
@@ -109,8 +110,10 @@ fn setup_select_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                                     MinigameButton::HigherLower => MINIGAME_SELECT_HIGHER_LOWER,
                                     MinigameButton::FourInRow => MINIGAME_SELECT_FOUR_IN_ROW,
                                     MinigameButton::EndlessShooter => MINIGAME_SELECT_ENDLESS_SHOOTER,
-                                    MinigameButton::Rhythm => MINIGAME_SELECT_ENDLESS_RHYTHM,
+                                    // MinigameButton::Rhythm => MINIGAME_SELECT_ENDLESS_RHYTHM,
                                     MinigameButton::Translate => MINIGAME_SELECT_TRANSLATE,
+                                    MinigameButton::RectClash => MINIGAME_RECT_CLASH,
+                                    MinigameButton::Snake => MINIGAME_SELECT_SNAKE,
                                 }.to_string()) },
                             },
                         ));
@@ -137,8 +140,10 @@ enum MinigameButton {
     HigherLower,
     FourInRow,
     EndlessShooter,
-    Rhythm,
+    // Rhythm,
     Translate,
+    RectClash,
+    Snake,
 }
 
 fn tick_input_selecting(
@@ -155,8 +160,10 @@ fn tick_input_selecting(
             MinigameButton::HigherLower => MiniGameState::PlayingHigherLower,
             MinigameButton::FourInRow => MiniGameState::PlayingFourInRow,
             MinigameButton::EndlessShooter => MiniGameState::PlayingEndlessShooter,
-            MinigameButton::Rhythm => MiniGameState::PlayingRhythm,
+            // MinigameButton::Rhythm => MiniGameState::PlayingRhythm,
             MinigameButton::Translate => MiniGameState::PlayingTranslate,
+            MinigameButton::RectClash => MiniGameState::PlayingRectClash,
+            MinigameButton::Snake => MiniGameState::PlayingSnake,
         });
     }
 }
