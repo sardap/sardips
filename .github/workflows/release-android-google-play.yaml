@@ -6,11 +6,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'GitHub Release'
+        description: "GitHub Release"
         required: true
         type: string
       play_release:
-        description: 'Release name from google play console'
+        description: "Release name from google play console"
         required: true
         type: string
 
@@ -35,7 +35,7 @@ jobs:
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev lld llvm
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.84
       - name: Add Android targets
         run: rustup target add aarch64-linux-android armv7-linux-androideabi
       - name: Install cargo-binstall

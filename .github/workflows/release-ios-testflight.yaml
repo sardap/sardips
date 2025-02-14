@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version - in the form of v1.2.3'
+        description: "Version - in the form of v1.2.3"
         required: true
         type: string
 
@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.84
       - name: Add iOS targets
         run: rustup target add aarch64-apple-ios
       - name: Install the Apple certificate and provisioning profile

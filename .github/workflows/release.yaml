@@ -42,7 +42,7 @@ jobs:
         run: |
           rm build.rs
       - name: Install rust toolchain for Apple Silicon
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.84
         with:
           toolchain: stable
           targets: aarch64-apple-darwin
@@ -50,7 +50,7 @@ jobs:
         run: |
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --profile dist --target=aarch64-apple-darwin
       # - name: Install rust toolchain for Apple x86
-      #   uses: dtolnay/rust-toolchain@stable
+      #   uses: dtolnay/rust-toolchain@1.84
       #   with:
       #     toolchain: stable
       #     targets: x86_64-apple-darwin
@@ -89,7 +89,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.84
         with:
           toolchain: stable
       - name: Install Dependencies
@@ -129,7 +129,7 @@ jobs:
           $nuget_version = $version.TrimStart('v')
           echo "NUGET_VERSION=$nuget_version" >> $env:GITHUB_ENV
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.84
         with:
           toolchain: stable
       - name: Install dotnet
@@ -180,7 +180,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.84
         with:
           toolchain: stable
       - name: Install Dependencies
@@ -222,7 +222,7 @@ jobs:
   #     VERSION: ${{needs.get-version.outputs.version}}
   #   steps:
   #     - uses: actions/checkout@v3
-  #     - uses: dtolnay/rust-toolchain@stable
+  #     - uses: dtolnay/rust-toolchain@1.84
   #     - name: Add iOS targets
   #       run: rustup target add aarch64-apple-ios x86_64-apple-ios
   #     - name: Build app for iOS
@@ -251,7 +251,7 @@ jobs:
   #     VERSION: ${{needs.get-version.outputs.version}}
   #   steps:
   #     - uses: actions/checkout@v3
-  #     - uses: dtolnay/rust-toolchain@stable
+  #     - uses: dtolnay/rust-toolchain@1.84
   #     - name: Add Android targets
   #       # could add more targets like armv7-linux-androideabi here (then also add to cargo-apk config)
   #       run: rustup target add aarch64-linux-android
