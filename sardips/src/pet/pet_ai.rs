@@ -7,7 +7,7 @@ use sardips_core::{
     hunger_core::Hunger,
     move_towards::{MoveTowardsEvent, MovingTowards},
     name::EntityName,
-    velocity::MovementDirection,
+    velocity::MovementDirection2D,
 };
 
 use super::{
@@ -67,7 +67,7 @@ fn add_pet_ai(
         commands.entity(entity).insert((
             PetAi::default(),
             Wonder,
-            MovementDirection::default(),
+            MovementDirection2D::default(),
             RngComponent::from(&mut rng),
         ));
     }

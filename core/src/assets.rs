@@ -179,3 +179,11 @@ pub struct SnakeGameAssets {
     #[asset(path = "textures/mini_games/snake/background.jpg")]
     pub background: Handle<Image>,
 }
+
+#[derive(AssetCollection, Resource)]
+pub struct ParticleAssets {
+    #[asset(path = "textures/particles/circle.png")]
+    pub circle: Handle<Image>,
+    #[asset(path = "textures/particles/square.png")]
+    pub square: Handle<Image>,
+}
