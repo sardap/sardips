@@ -55,13 +55,25 @@ pub struct Simulated;
 
 fn sim_entities_visibility(
     sim_state: Res<State<SimulationState>>,
-    mut query: Query<&mut Visibility, With<Simulated>>,
+    mut visibility: Query<&mut Visibility>,
+    mut query: Query<(Entity, Option<&Children>), With<Simulated>>,
 ) {
-    for mut visibility in &mut query.iter_mut() {
-        *visibility = match **sim_state {
-            SimulationState::Paused => Visibility::Hidden,
-            SimulationState::Running => Visibility::Visible,
-        };
+    let mut update_vis = |entity| {
+        if let Ok(mut visibility) = visibility.get_mut(entity) {
+            *visibility = match **sim_state {
+                SimulationState::Paused => Visibility::Hidden,
+                SimulationState::Running => Visibility::Visible,
+            };
+        }
+    };
+
+    for (entity, children) in &mut query.iter_mut() {
+        update_vis(entity);
+        if let Some(children) = children {
+            for entity in children.iter() {
+                update_vis(*entity);
+            }
+        }
     }
 }
 

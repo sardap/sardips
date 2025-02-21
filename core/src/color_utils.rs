@@ -19,9 +19,9 @@ impl Default for HashableColor {
     }
 }
 
-impl Into<Color> for HashableColor {
-    fn into(self) -> Color {
-        Color::srgba_u8(self.red, self.green, self.blue, self.alpha)
+impl From<HashableColor> for Color {
+    fn from(value: HashableColor) -> Self {
+        Color::srgba_u8(value.red, value.green, value.blue, value.alpha)
     }
 }
 

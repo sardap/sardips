@@ -12,7 +12,7 @@ use bevy::prelude::*;
 use sardips_core::{
     food_core::FoodTemplateDatabase,
     name::EntityName,
-    particles::{Spewer, CONFETTI, SPARKS},
+    particles::SPARKS,
     pet_core::{PetTemplateDatabase, DEFAULT_POOP_TEXTURE},
     text_database::Language,
     text_translation::SelectedLanguageTag,

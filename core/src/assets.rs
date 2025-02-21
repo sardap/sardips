@@ -187,3 +187,6 @@ pub struct ParticleAssets {
     #[asset(path = "textures/particles/square.png")]
     pub square: Handle<Image>,
 }
+
+#[derive(AssetCollection, Resource)]
+pub struct AccessoryAssets {}

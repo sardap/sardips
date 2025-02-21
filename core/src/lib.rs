@@ -11,6 +11,7 @@ use shared_deps::{
 };
 use std::{ops::Range, time::Duration};
 
+pub mod accessory_core;
 pub mod age_core;
 pub mod assets;
 pub mod autoscroll;
@@ -72,6 +73,7 @@ impl Plugin for SardipsCorePlugin {
                 pet_core::PetCorePlugin,
                 view::ViewPlugin,
                 mood_core::MoodCorePlugin,
+                accessory_core::AccessoryCorePlugin,
             ));
     }
 }
