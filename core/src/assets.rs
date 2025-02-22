@@ -67,6 +67,11 @@ pub struct ViewScreenImageAssets {
     pub top_icons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/top_icons.png")]
     pub top_icons: Handle<Image>,
+
+    #[asset(texture_atlas_layout(tile_size_x = 44, tile_size_y = 60, columns = 16, rows = 1,))]
+    pub food_sensation_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "textures/view_screen/food_sensation.png")]
+    pub food_sensation: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]

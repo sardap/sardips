@@ -36,6 +36,7 @@ pub mod sounds;
 pub mod sprite_utils;
 pub mod text_database;
 pub mod text_translation;
+pub mod ui_utils;
 pub mod velocity;
 pub mod view;
 

@@ -163,7 +163,7 @@ fn find_food(
         let mut food_ratings = Vec::new();
         for (food_entity, trans, sensations) in &food {
             let feeling = food_preference.feeling(sensations);
-            if feeling != FoodSensationRating::Despises {
+            if feeling != FoodSensationRating::Hates {
                 food_ratings.push((food_entity, food_preference.feeling(sensations), trans));
             }
         }
