@@ -162,8 +162,8 @@ AssetPetTemplateSet(
                         Umami: Likes,
                         Elastic: Dislikes,
                         Sweet: Dislikes,
-                        Juicy: Despises,
-                        Fizzy: Despises,
+                        Juicy: Hates,
+                        Fizzy: Hates,
                     }
                 )
             ),

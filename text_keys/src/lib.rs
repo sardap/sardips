@@ -11,7 +11,6 @@ pub const LIKES: &str = "global.likes";
 pub const NEUTRAL: &str = "global.neutral";
 pub const DISLIKES: &str = "global.dislikes";
 pub const HATES: &str = "global.hates";
-pub const DESPISES: &str = "global.despises";
 
 pub const SPICY: &str = "global.spicy";
 pub const COOL: &str = "global.cool";
@@ -55,6 +54,8 @@ pub const DIPDEX_STATS_HEADER: &str = "dipdex.stats_header";
 pub const DIPDEX_SPECIES_TITLE: &str = "dipdex.species_title";
 
 pub const FOOD_BUY_SCENE_TITLE: &str = "food_buy_scene.title";
+pub const FOOD_BUY_SCENE_COST_LABEL: &str = "food_buy_scene.cost_label";
+pub const FOOD_BUY_SCENE_MONEY_LABEL: &str = "food_buy_scene.money_label";
 
 pub const MINIGAME_ENDLESS_SHOOTER_COOLDOWN: &str = "minigame.endless_shooter.cooldown";
 pub const MINIGAME_ENDLESS_SHOOTER_PISTOL: &str = "minigame.endless_shooter.pistol";

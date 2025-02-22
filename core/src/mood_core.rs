@@ -1,7 +1,7 @@
 use bevy::{prelude::*, utils::HashMap};
 use serde::{Deserialize, Serialize};
 
-use crate::MOOD_HISTORY_UPDATE;
+use crate::{MOOD_HISTORY_UPDATE, food_core::FoodSensationRating};
 
 pub struct MoodCorePlugin;
 
@@ -78,6 +78,18 @@ impl SatisfactionRating {
             SatisfactionRating::Neutral => 1.5,
             SatisfactionRating::Satisfied => 1.75,
             SatisfactionRating::VerySatisfied => 2.,
+        }
+    }
+}
+
+impl From<FoodSensationRating> for SatisfactionRating {
+    fn from(val: FoodSensationRating) -> Self {
+        match val {
+            FoodSensationRating::Hates => SatisfactionRating::VeryUnsatisfied,
+            FoodSensationRating::Dislikes => SatisfactionRating::Unsatisfied,
+            FoodSensationRating::Neutral => SatisfactionRating::Neutral,
+            FoodSensationRating::Likes => SatisfactionRating::Satisfied,
+            FoodSensationRating::Loves => SatisfactionRating::VerySatisfied,
         }
     }
 }

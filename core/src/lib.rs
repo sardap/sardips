@@ -1,3 +1,4 @@
+#![feature(hash_raw_entry)]
 #![allow(clippy::needless_lifetimes)]
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::too_many_arguments)]
@@ -10,11 +11,13 @@ use shared_deps::{
 };
 use std::{ops::Range, time::Duration};
 
+pub mod accessory_core;
 pub mod age_core;
 pub mod assets;
 pub mod autoscroll;
 pub mod breeding_core;
 pub mod button_hover;
+pub mod color_utils;
 pub mod food_core;
 pub mod fun_core;
 pub mod hunger_core;
@@ -27,11 +30,13 @@ pub mod move_towards;
 pub mod name;
 pub mod particles;
 pub mod pet_core;
+pub mod rand_utils;
 pub mod shrink;
 pub mod sounds;
 pub mod sprite_utils;
 pub mod text_database;
 pub mod text_translation;
+pub mod ui_utils;
 pub mod velocity;
 pub mod view;
 
@@ -69,6 +74,7 @@ impl Plugin for SardipsCorePlugin {
                 pet_core::PetCorePlugin,
                 view::ViewPlugin,
                 mood_core::MoodCorePlugin,
+                accessory_core::AccessoryCorePlugin,
             ));
     }
 }

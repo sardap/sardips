@@ -5,6 +5,7 @@
 #![allow(unexpected_cfgs)]
 #![feature(const_trait_impl)]
 #![feature(const_for)]
+pub mod accessory;
 pub mod age;
 pub mod anime;
 pub mod debug;
@@ -25,6 +26,7 @@ pub mod stock_market;
 pub mod thinking;
 pub mod tools;
 
+use accessory::AccessoryPlugin;
 use age::AgePlugin;
 use anime::AnimePlugin;
 use bevy::{asset::AssetMetaCheck, prelude::*, window::WindowResolution};
@@ -110,6 +112,7 @@ impl Plugin for GamePlugin {
             FoodPlugin,
             StockMarketPlugin,
             DipdexPlugin,
+            AccessoryPlugin,
         ));
 
         // #[cfg(feature = "dev")]

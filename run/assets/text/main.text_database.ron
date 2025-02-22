@@ -11,7 +11,6 @@ TextDatabase(
             "global.neutral": "Neutral",
             "global.dislikes": "Dislikes",
             "global.hates": "Hates",
-            "global.despises": "Despises",
             "global.spicy": "Spicy",
             "global.cool": "Cool",
             "global.astringent": "Astringent",
@@ -90,6 +89,8 @@ TextDatabase(
             "dipdex.species_title": "Species",
 
             "food_buy_scene.title": "Buy food",
+            "food_buy_scene.cost_label": "${0}",
+            "food_buy_scene.money_label": "Funds: ${0}",
 
             "species.blob": "Blob",
             "dipdex.blob.description": "The most basic form of a sardip. All sardips can trace their lineage back to the blob.",
@@ -267,7 +268,6 @@ TextDatabase(
             "global.neutral": "중립",
             "global.dislikes": "싫어함",
             "global.hates": "증오함",
-            "global.despises": "경멸함",
             "global.spicy": "매운",
             "global.cool": "시원한",
             "global.astringent": "떫은",

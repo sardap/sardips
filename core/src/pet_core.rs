@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use strum_macros::EnumIter;
 
 use crate::{
+    accessory_core::AnchorPointSet,
     age_core::Age,
     breeding_core::Breeds,
     food_core::{FoodSensationRating, FoodSensationType},
@@ -314,6 +315,8 @@ pub struct PetTemplate {
     pub possible_evolutions: Vec<PossibleEvolution>,
     pub image_set: PetTemplateImageSet,
     pub size: TemplateSize,
+    #[serde(default)]
+    pub anchor_points: AnchorPointSet,
     pub weight: WeightType,
     #[serde(default)]
     pub starter: bool,
