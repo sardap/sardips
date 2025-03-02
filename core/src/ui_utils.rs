@@ -20,6 +20,8 @@ pub fn spawn_back_button<T: Component + Default>(
                     width: Val::Px(200.),
                     height: Val::Px(50.),
                     margin: UiRect::top(Val::Px(20.)),
+                    align_content: AlignContent::Center,
+                    justify_content: JustifyContent::Center,
                     ..default()
                 },
                 ..default()

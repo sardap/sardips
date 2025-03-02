@@ -541,7 +541,6 @@ fn update_food_panel_sensation_text(
     let mut sensation_text = " ".to_string();
 
     for (i, sensation) in food_sensations.values.iter().enumerate() {
-        // Get first two letters of sensation
         sensation_text.push_str(sensation.short_string());
         if i < food_sensations.values.len() - 1 {
             sensation_text.push_str(", ");

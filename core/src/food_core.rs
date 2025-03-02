@@ -8,7 +8,7 @@ use std::fmt;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::pet_core::TemplateSize;
+use crate::{money_core::Money, pet_core::TemplateSize};
 
 pub struct FoodCorePlugin;
 
@@ -210,7 +210,7 @@ pub struct FoodTemplate {
     pub sprite_size: TemplateSize,
     pub fill_factor: f32,
     #[serde(default)]
-    pub cost: i64,
+    pub cost: Money,
 }
 
 #[derive(Resource)]

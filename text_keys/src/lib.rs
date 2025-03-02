@@ -57,6 +57,40 @@ pub const FOOD_BUY_SCENE_TITLE: &str = "food_buy_scene.title";
 pub const FOOD_BUY_SCENE_COST_LABEL: &str = "food_buy_scene.cost_label";
 pub const FOOD_BUY_SCENE_MONEY_LABEL: &str = "food_buy_scene.money_label";
 
+pub const STOCK_BUY_SCENE_TITLE: &str = "stock_buy_scene.title";
+pub const STOCK_BUY_SCENE_EXPAND: &str = "stock_buy_scene.expand";
+pub const STOCK_BUY_SCENE_STOCK_PRICE: &str = "stock_buy_scene.stock_price";
+pub const STOCK_BUY_SCENE_TICKER_HEADER: &str = "stock_buy_scene.ticker_header";
+pub const STOCK_BUY_SCENE_OWN_HEADER: &str = "stock_buy_scene.own_header";
+pub const STOCK_BUY_SCENE_MARKET_CAP_HEADER: &str = "stock_buy_scene.market_cap_header";
+pub const STOCK_BUY_SCENE_STOCK_PRICE_HEADER: &str = "stock_buy_scene.stock_price_header";
+pub const STOCK_BUY_SCENE_ONE_Q_CHANGE_HEADER: &str = "stock_buy_scene.one_q_change_header";
+pub const STOCK_BUY_SCENE_FEATURE_MARKET_CAP: &str = "stock_buy_scene.feature_market_cap";
+pub const STOCK_BUY_SCENE_FEATURE_STOCK_PRICE: &str = "stock_buy_scene.feature_stock_price";
+pub const STOCK_BUY_SCENE_FEATURE_ONE_Q_CHANGE: &str = "stock_buy_scene.feature_one_q_change";
+pub const STOCK_BUY_SCENE_FEATURE_ONE_YEAR_CHANGE: &str = "stock_buy_scene.feature_one_year_change";
+pub const STOCK_BUY_SCENE_FEATURE_INDUSTRY_HEADER: &str = "stock_buy_scene.feature_industry_header";
+pub const STOCK_BUY_SCENE_FEATURE_INDUSTRY_PERCENT: &str =
+    "stock_buy_scene.feature_industry_percent";
+pub const STOCK_BUY_SCENE_FEATURE_REVENUE: &str = "stock_buy_scene.feature_revenue";
+pub const STOCK_BUY_SCENE_FEATURE_EARNINGS: &str = "stock_buy_scene.feature_earnings";
+pub const STOCK_BUY_SCENE_FEATURE_NET_ASSETS: &str = "stock_buy_scene.feature_net_assets";
+pub const STOCK_BUY_SCENE_FEATURE_PE_RATIO: &str = "stock_buy_scene.feature_pe_ratio";
+pub const STOCK_BUY_SCENE_FEATURE_PB_RATIO: &str = "stock_buy_scene.feature_pb_ratio";
+pub const STOCK_BUY_SCENE_FEATURE_PEG_RATIO: &str = "stock_buy_scene.feature_peg_ratio";
+pub const STOCK_BUY_SCENE_FEATURE_PERCENTILE: &str = "stock_buy_scene.feature_percentile";
+pub const STOCK_BUY_SCENE_FEATURE_BUY_OPEN: &str = "stock_buy_scene.feature_buy_open";
+pub const STOCK_BUY_SCENE_FEATURE_BUY_OPEN_NONE: &str = "stock_buy_scene.feature_buy_open_none";
+pub const STOCK_BUY_SCENE_FEATURE_SELL_OPEN: &str = "stock_buy_scene.feature_sell_open";
+pub const STOCK_BUY_SCENE_FEATURE_SELL_OPEN_NONE: &str = "stock_buy_scene.feature_sell_open_none";
+pub const STOCK_BUY_SCENE_FEATURE_SELL_BUTTON: &str = "stock_buy_scene.feature_sell_button";
+pub const STOCK_BUY_SCENE_FEATURE_BUY_BUTTON: &str = "stock_buy_scene.feature_buy_button";
+pub const STOCK_BUY_SCENE_BUY_BUY_TITLE: &str = "stock_buy_scene.buy_buy_title";
+pub const STOCK_BUY_SCENE_BUY_EXISTING_BUY_TITLE: &str = "stock_buy_scene.buy_existing_buy_title";
+pub const STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE: &str = "stock_buy_scene.buy_existing_buy_line";
+pub const STOCK_BUY_SCENE_BUY_PLAYER_OPEN_OPEN_TITLE: &str =
+    "stock_buy_scene.buy_player_open_open_title";
+
 pub const MINIGAME_ENDLESS_SHOOTER_COOLDOWN: &str = "minigame.endless_shooter.cooldown";
 pub const MINIGAME_ENDLESS_SHOOTER_PISTOL: &str = "minigame.endless_shooter.pistol";
 pub const MINIGAME_ENDLESS_SHOOTER_PISTOL_COOLDOWN: &str =

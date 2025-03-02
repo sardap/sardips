@@ -26,6 +26,7 @@
         "Sardex",
         "sardip",
         "Sardips",
+        "srgb",
         "Srgba",
         "systemtime",
         "timestep",
@@ -41,6 +42,7 @@
             "unresolvedReference": "#ff0000",
         },
     },
+    "rust-analyzer.testExplorer": true,
     "rust-analyzer.cargo.features": [
         // "dev"
     ]

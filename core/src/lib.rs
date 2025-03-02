@@ -4,6 +4,7 @@
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
 #![allow(unexpected_cfgs)]
+#![feature(const_trait_impl)]
 use bevy::prelude::*;
 use shared_deps::{
     bevy_turborand::DelegatedRng,
@@ -39,6 +40,7 @@ pub mod text_translation;
 pub mod ui_utils;
 pub mod velocity;
 pub mod view;
+pub mod wrapped_vec;
 
 #[macro_use]
 extern crate lazy_static;
@@ -90,6 +92,7 @@ pub enum GameState {
     Template,
     DipdexView,
     FoodBuy,
+    StockBuy,
 }
 
 pub fn despawn_all<C: Component>(mut commands: Commands, query: Query<Entity, With<C>>) {
