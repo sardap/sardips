@@ -1,9 +1,10 @@
 use std::path::Path;
 
-use crate::stock_market::OrderBook;
 use bevy::prelude::*;
 use sardips_core::GameState;
 use shared_deps::moonshine_save::prelude::*;
+
+use crate::stock_market::{BuySellOrchestrator, OrderBook, QuarterManger};
 
 pub struct SardipSavePlugin;
 
@@ -14,6 +15,8 @@ impl Plugin for SardipSavePlugin {
                 PreUpdate,
                 save_default()
                     .include_resource::<OrderBook>()
+                    .include_resource::<QuarterManger>()
+                    .include_resource::<BuySellOrchestrator>()
                     .into(file_from_resource::<SaveRequest>()),
             )
             .add_systems(PreUpdate, load(file_from_resource::<LoadRequest>()))

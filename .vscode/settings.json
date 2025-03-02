@@ -26,11 +26,13 @@
         "Sardex",
         "sardip",
         "Sardips",
+        "srgb",
         "Srgba",
         "systemtime",
         "timestep",
         "turborand",
         "Umami",
+        "ushanka",
         "visislbitly",
         "wordbank"
     ],
@@ -40,6 +42,7 @@
             "unresolvedReference": "#ff0000",
         },
     },
+    "rust-analyzer.testExplorer": true,
     "rust-analyzer.cargo.features": [
         // "dev"
     ]

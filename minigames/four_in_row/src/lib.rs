@@ -22,7 +22,7 @@ use sardips_core::{
     mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     move_towards::{MoveTowardsOnSpawn, MovingTowards},
     sounds::{PlaySoundEffect, SoundEffect},
-    velocity::{MovementDirection, Speed},
+    velocity::{MovementDirection2D, Speed},
 };
 use shared_deps::bevy_prototype_lyon::prelude::*;
 
@@ -493,7 +493,7 @@ fn process_move(
                 index: current_player.to_sprite_index(),
             },
             Speed(250.),
-            MovementDirection {
+            MovementDirection2D {
                 direction: Vec2::ZERO,
             },
             Disc(square_to_index(row, column)),

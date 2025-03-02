@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use sardips_core::button_hover::ButtonHover;
+use sardips_core::{button_hover::ButtonHover, ui_utils::spawn_back_button};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -29,7 +29,8 @@ impl Plugin for MinigameScenePlugin {
             .add_systems(OnExit(MiniGameState::Selecting), cleanup_select)
             .add_systems(
                 Update,
-                (tick_input_selecting).run_if(in_state(MiniGameState::Selecting)),
+                (tick_input_selecting, exit_minigame_select)
+                    .run_if(in_state(MiniGameState::Selecting)),
             );
     }
 }
@@ -119,6 +120,13 @@ fn setup_select_ui(mut commands: Commands, fonts: Res<FontAssets>) {
                         ));
                     });
             }
+
+            spawn_back_button::<ExitMinigameSelect>(
+                parent,
+                &fonts,
+                &palettes::ui::BUTTON_SET,
+                &palettes::ui::BUTTON_BORDER_SET,
+            );
         });
 }
 
@@ -165,5 +173,21 @@ fn tick_input_selecting(
             MinigameButton::RectClash => MiniGameState::PlayingRectClash,
             MinigameButton::Snake => MiniGameState::PlayingSnake,
         });
+    }
+}
+
+#[derive(Component, Default)]
+struct ExitMinigameSelect;
+
+fn exit_minigame_select(
+    mut game_state: ResMut<NextState<GameState>>,
+    mut minigame_state: ResMut<NextState<MiniGameState>>,
+    query: Query<&Interaction, (Changed<Interaction>, With<ExitMinigameSelect>)>,
+) {
+    for interaction in &query {
+        if *interaction == Interaction::Pressed {
+            game_state.set(GameState::ViewScreen);
+            minigame_state.set(MiniGameState::None);
+        }
     }
 }

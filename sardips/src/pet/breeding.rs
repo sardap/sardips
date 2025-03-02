@@ -323,6 +323,7 @@ mod test {
                 money_hungry: None,
                 starter: true,
                 pre_calculated: PreCalculated::default(),
+                anchor_points: Default::default(),
             });
         }
 
