@@ -57,15 +57,12 @@ impl KeyString {
     pub fn resolve_string(&self, text_database: &TextDatabase, language: Language) -> String {
         match self {
             KeyString::Direct(key) => text_database.get(language, key),
-            KeyString::Format(str) => {
-                let result = FORMAT_RE
-                    .replace_all(str, |caps: &shared_deps::regex::Captures| {
-                        let key = caps.get(1).unwrap().as_str();
-                        text_database.get(language, key)
-                    })
-                    .to_string();
-                result
-            }
+            KeyString::Format(str) => FORMAT_RE
+                .replace_all(str, |caps: &shared_deps::regex::Captures| {
+                    let key = caps.get(1).unwrap().as_str();
+                    text_database.get(language, key)
+                })
+                .to_string(),
             KeyString::Value((key, values)) => {
                 let mut result = text_database.get(language, key);
                 for (i, value) in values.iter().enumerate() {
