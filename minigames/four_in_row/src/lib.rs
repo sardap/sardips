@@ -442,12 +442,7 @@ fn process_move(
     let (mut board, board_trans) = board.single_mut();
 
     for move_event in moves.read() {
-        if !board
-            .0
-            .possible_moves()
-            .iter()
-            .any(|&col| col == move_event.col)
-        {
+        if !board.0.possible_moves().contains(&move_event.col) {
             error!("Column full");
             continue;
         }

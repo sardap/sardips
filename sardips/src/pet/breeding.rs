@@ -36,7 +36,7 @@ fn breeding_result(
     mut breeding: [PetKind; 2],
     pet_db: &PetTemplateDatabase,
 ) -> Option<&PetTemplate> {
-    if breeding.iter().any(|&kind| kind == PetKind::Blob) {
+    if breeding.contains(&PetKind::Blob) {
         return None;
     }
 
