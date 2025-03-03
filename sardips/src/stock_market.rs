@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::time::Duration;
-use std::{i32, i64};
 
 use crate::{money::Wallet, sardip_save::SardipLoadingState, simulation::SimulationUpdate};
 use bevy::prelude::*;
@@ -474,9 +473,10 @@ impl BuyThreshold {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Reflect, PartialOrd)]
-#[reflect_value(Deserialize, Serialize, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Reflect)]
+#[reflect_value(Deserialize, Serialize)]
 pub struct BuyOrder {
+    pub id: u64,
     pub lifetime: Duration,
     pub cycles: u16,
     pub company: Entity,
@@ -489,6 +489,7 @@ pub struct BuyOrder {
 impl BuyOrder {
     pub fn new(company: Entity, quantity: u64, price: Money, buyer: Entity) -> Self {
         Self {
+            id: 0,
             lifetime: Duration::ZERO,
             cycles: 0,
             company,
@@ -497,6 +498,12 @@ impl BuyOrder {
             price,
             buyer,
         }
+    }
+}
+
+impl PartialOrd for BuyOrder {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.price.cmp(&other.price))
     }
 }
 
@@ -509,6 +516,7 @@ impl Ord for BuyOrder {
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Reflect, PartialOrd)]
 #[reflect_value(Deserialize, Serialize, PartialEq)]
 pub struct SellOrder {
+    pub id: u64,
     pub lifetime: Duration,
     pub cycles: u64,
     pub company: Entity,
@@ -521,6 +529,7 @@ pub struct SellOrder {
 impl SellOrder {
     pub fn new(company: Entity, quantity: u64, price: Money, seller: Entity) -> Self {
         Self {
+            id: 0,
             lifetime: Duration::ZERO,
             cycles: 0,
             company,
@@ -547,21 +556,28 @@ impl BuyOrderBrief {
 #[derive(Default, Reflect, Clone, Serialize, Deserialize, Resource)]
 #[reflect_value(Deserialize, Serialize, Resource)]
 pub struct OrderBook {
+    pub top_order_id: u64,
     pub buy_orders: Vec<BuyOrder>,
     pub sell_orders: HashMap<Entity, Vec<SellOrder>>,
 }
 
 impl OrderBook {
+    pub fn get_next_order_id(&mut self) -> u64 {
+        let id = self.top_order_id;
+        self.top_order_id += 1;
+        id
+    }
+
     pub fn add(&mut self, order: NewOrder) {
         match order {
-            NewOrder::Buy(buy_order) => {
+            NewOrder::Buy(mut buy_order) => {
+                buy_order.id = self.get_next_order_id();
                 self.buy_orders.push(buy_order);
             }
-            NewOrder::Sell(new_sell_order) => {
-                let sell_orders = self
-                    .sell_orders
-                    .entry(new_sell_order.company)
-                    .or_insert(Vec::new());
+            NewOrder::Sell(mut new_sell_order) => {
+                new_sell_order.id = self.get_next_order_id();
+
+                let sell_orders = self.sell_orders.entry(new_sell_order.company).or_default();
 
                 let index =
                     match sell_orders.binary_search_by(|x| x.price.cmp(&new_sell_order.price)) {
@@ -570,6 +586,24 @@ impl OrderBook {
                     };
 
                 sell_orders.insert(index, new_sell_order);
+            }
+        }
+    }
+
+    pub fn remove_order(&mut self, id: u64) {
+        for i in 0..self.buy_orders.len() {
+            if self.buy_orders[i].id == id {
+                self.buy_orders.remove(i);
+                return;
+            }
+        }
+
+        for (_, orders) in self.sell_orders.iter_mut() {
+            for i in 0..orders.len() {
+                if orders[i].id == id {
+                    orders.remove(i);
+                    return;
+                }
             }
         }
     }
@@ -866,9 +900,9 @@ fn allocate_stocks(
         return;
     }
 
-    let ghosts = ghosts.iter().map(|i| i).collect::<Vec<_>>();
+    let ghosts = ghosts.iter().collect::<Vec<_>>();
 
-    if ghosts.len() == 0 {
+    if ghosts.is_empty() {
         return;
     }
 
@@ -888,7 +922,7 @@ fn allocate_stocks(
             loops += 1;
         }
 
-        if to_allocate.to_allocate <= 0 {
+        if to_allocate.to_allocate == 0 {
             commands.entity(entity).remove::<StocksToAllocate>();
         }
     }
@@ -900,7 +934,6 @@ pub fn step_company_quarter<T: DelegatedRng>(
     company: &mut Company,
     share_history: &ShareHistory,
     wallet: &mut Wallet,
-    share_portfolio: &mut SharePortfolio,
     order_book: &mut OrderBook,
     rng: &mut T,
 ) {
@@ -909,7 +942,7 @@ pub fn step_company_quarter<T: DelegatedRng>(
     let next_perf = last.performance.next(rng);
 
     let mut change_func = |last: Money, range: std::ops::Range<f64>| {
-        let change = ((last as f64) * gen_f64_range(rng, &range) as f64) as Money;
+        let change = ((last as f64) * gen_f64_range(rng, &range)) as Money;
         if change > 0 {
             last.checked_add(change).unwrap_or(i64::MAX)
         } else {
@@ -1001,19 +1034,20 @@ impl QuarterManger {
     }
 }
 
-impl ToString for QuarterManger {
-    fn to_string(&self) -> String {
+impl std::fmt::Display for QuarterManger {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // Get year
         let quarter = self.current_quarter as i32 - 1;
         let year = quarter / 4 + 1991;
         let quarter = quarter % 4;
-        format!(
+        let output = format!(
             "FY {}-{} Q{} {:0>2}%",
             year,
             year + 1,
             quarter + 1,
             (self.percent_complete() * 100.).floor()
-        )
+        );
+        write!(f, "{}", output)
     }
 }
 
@@ -1048,7 +1082,7 @@ fn tick_quarter(
     {
         quarter_manager.current_quarter += 1;
 
-        for (entity, mut company, share_history, mut portfolio, mut wallet, rng) in
+        for (entity, mut company, share_history, mut _portfolio, mut wallet, rng) in
             companies.iter_mut()
         {
             let rng = rng.into_inner();
@@ -1057,9 +1091,8 @@ fn tick_quarter(
                 quarter_manager.current_quarter,
                 entity,
                 &mut company,
-                &share_history,
+                share_history,
                 &mut wallet,
-                &mut portfolio,
                 &mut order_book,
                 rng,
             );
@@ -1101,7 +1134,6 @@ fn spawn_ghosts(
         commands.spawn(StockMarketGhostBundle {
             wallet: Wallet {
                 balance: rng.i64(10000000..100000000),
-                ..default()
             },
             ai: StockMarketAI::new_from_rng(&mut rng),
             rng,
@@ -1192,9 +1224,8 @@ fn generate_buy_sell_activity(
         return;
     }
 
-    struct CompanySet<'a> {
+    struct CompanySet {
         entity: Entity,
-        company: &'a Company,
         performance: CompanyPerformance,
     }
 
@@ -1205,7 +1236,6 @@ fn generate_buy_sell_activity(
             let performance = CompanyPerformance::new(company, share_history);
             CompanySet {
                 entity,
-                company,
                 performance,
             }
         })
@@ -1346,7 +1376,6 @@ fn generate_buy_sell_activity(
 
 fn process_orders(
     time: Res<Time>,
-    quarter_manager: Res<QuarterManger>,
     order_book: ResMut<OrderBook>,
     mut share_history: Query<&mut ShareHistory>,
     mut wallets: Query<&mut Wallet>,
@@ -1357,7 +1386,7 @@ fn process_orders(
     {
         let buy_orders = &mut order_book.buy_orders;
         let sell_orders = &mut order_book.sell_orders;
-        for (i, buy_order) in buy_orders.iter_mut().enumerate() {
+        for buy_order in buy_orders.iter_mut() {
             buy_order.lifetime += time.delta();
 
             let sell_orders = match sell_orders.get_mut(&buy_order.company) {
@@ -1454,7 +1483,7 @@ fn process_orders(
 
 #[cfg(test)]
 mod test {
-    use std::{collections::HashSet, u64};
+    use std::collections::HashSet;
 
     use shared_deps::bevy_turborand::{prelude::RngPlugin, GlobalRng};
 
@@ -1691,10 +1720,7 @@ mod test {
 
             let selling_ghost_id = commands
                 .spawn(StockMarketGhostBundle {
-                    wallet: Wallet {
-                        balance: 1000000,
-                        ..default()
-                    },
+                    wallet: Wallet { balance: 1000000 },
                     rng: RngComponent::new(),
                     ..default()
                 })
@@ -1702,10 +1728,7 @@ mod test {
 
             let buying_ghost_id = commands
                 .spawn(StockMarketGhostBundle {
-                    wallet: Wallet {
-                        balance: 1000000,
-                        ..default()
-                    },
+                    wallet: Wallet { balance: 1000000 },
                     rng: RngComponent::new(),
                     share_portfolio: SharePortfolio::default(),
                     ..default()

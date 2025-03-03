@@ -128,6 +128,14 @@ impl KeyText {
     pub fn set_section(&mut self, index: usize, key: KeyString) {
         self.keys.insert(index, key);
     }
+
+    pub fn replace_value<T: ToString>(&mut self, index: usize, value_index: usize, value: T) {
+        if let Some(key_str) = self.keys.get_mut(&index)
+            && let KeyString::Value((_, values)) = key_str
+        {
+            values[value_index] = value.to_string();
+        }
+    }
 }
 
 pub fn warp_recursive_value_key<T: ToString>(key: T) -> String {
@@ -179,10 +187,7 @@ fn language_changed(
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        text_database::{Language, TextDatabase},
-        text_translation::KeyText,
-    };
+    use crate::text_database::{Language, TextDatabase};
 
     use super::KeyString;
 

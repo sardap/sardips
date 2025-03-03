@@ -209,7 +209,7 @@ fn update_stock_ticker_rows(
 
                     to_push.push_str(&format!("{:.2}", percent_change));
 
-                    to_push.push_str(" ");
+                    to_push.push(' ');
 
                     let color = if real_change > 0. {
                         Color::srgb_u8(0, 255, 0)

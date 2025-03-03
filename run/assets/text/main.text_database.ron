@@ -122,6 +122,16 @@ TextDatabase(
             "stock_buy_scene.buy_buy_title": "BUY",
             "stock_buy_scene.buy_existing_buy_line": "{0} ${1}",
             "stock_buy_scene.buy_existing_buy_title": "OPEN BUY",
+            "stock_buy_scene.buy_player_money": "FUNDS: ${0}",
+            "stock_buy_scene.buy_player_stocks": "OWN: {0}",
+            "stock_buy_scene.buy_buy_higher": "+",
+            "stock_buy_scene.buy_buy_much_higher": "++",
+            "stock_buy_scene.buy_buy_lower": "-",
+            "stock_buy_scene.buy_buy_much_lower": "--",
+            "stock_buy_scene.buy_buy_quantity": "QTY: {0}",
+            "stock_buy_scene.buy_buy_total": "TOTAL: ${0}",
+            "stock_buy_scene.buy_player_open_open_title": "PLAYER OPEN BUY'S",
+            "stock_buy_scene.buy_remove_order_button": "-",
 
 
             "industry.tech.name": "Technology",

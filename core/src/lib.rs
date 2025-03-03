@@ -1,10 +1,11 @@
-#![feature(hash_raw_entry)]
 #![allow(clippy::needless_lifetimes)]
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::type_complexity)]
 #![allow(unexpected_cfgs)]
+#![feature(hash_raw_entry)]
 #![feature(const_trait_impl)]
+#![feature(let_chains)]
 use bevy::prelude::*;
 use shared_deps::{
     bevy_turborand::DelegatedRng,

@@ -32,17 +32,16 @@ pub fn gcd_for_slice(slice: &[u32]) -> u32 {
         None => return 1,
     };
 
-    let gcd = iter.fold(
+    iter.fold(
         first,
         |acc, cur| {
             if *cur == 0 { acc } else { gcd(*cur, acc) }
         },
-    );
-    gcd
+    )
 }
 
 fn sum(index_weights: &[u32]) -> u32 {
-    index_weights.iter().fold(0, |acc, cur| acc + cur)
+    index_weights.iter().sum()
 }
 
 /// Calculates the mean of `index_weights`.
@@ -58,24 +57,19 @@ fn calc_table(index_weights: &[u32]) -> (Vec<usize>, Vec<f32>) {
 
     let mut aliases = vec![0; table_len];
     let mut probs = vec![0.0; table_len];
-    loop {
-        match below_vec.pop() {
-            Some(below) => {
-                if let Some(above) = above_vec.pop() {
-                    let diff = mean - below.1;
-                    aliases[below.0] = above.0 as usize;
-                    probs[below.0] = diff as f32 / mean as f32;
-                    if above.1 - diff <= mean {
-                        below_vec.push((above.0, above.1 - diff));
-                    } else {
-                        above_vec.push((above.0, above.1 - diff));
-                    }
-                } else {
-                    aliases[below.0] = below.0 as usize;
-                    probs[below.0] = below.1 as f32 / mean as f32;
-                }
+    while let Some(below) = below_vec.pop() {
+        if let Some(above) = above_vec.pop() {
+            let diff = mean - below.1;
+            aliases[below.0] = above.0;
+            probs[below.0] = diff as f32 / mean as f32;
+            if above.1 - diff <= mean {
+                below_vec.push((above.0, above.1 - diff));
+            } else {
+                above_vec.push((above.0, above.1 - diff));
             }
-            None => break,
+        } else {
+            aliases[below.0] = below.0;
+            probs[below.0] = below.1 as f32 / mean as f32;
         }
     }
 
@@ -99,7 +93,7 @@ fn separate_weight(index_weights: &[u32]) -> (Vec<(usize, u32)>, Vec<(usize, u32
 }
 
 pub trait NewBuilder<T> {
-    fn new(index_weights: &[T]) -> WalkerTable;
+    fn new(index_weights: &[T]) -> Self;
 }
 
 impl NewBuilder<u32> for WalkerTable {
