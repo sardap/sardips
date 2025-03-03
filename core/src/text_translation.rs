@@ -35,6 +35,7 @@ pub enum KeyString {
 
 lazy_static! {
     static ref FORMAT_RE: Regex = Regex::new(r"~(.*?)~").unwrap();
+    static ref RECURSIVE_VALUE_RE: Regex = Regex::new(r"R\$(.*)").unwrap();
 }
 
 impl KeyString {
@@ -56,61 +57,31 @@ impl KeyString {
     pub fn resolve_string(&self, text_database: &TextDatabase, language: Language) -> String {
         match self {
             KeyString::Direct(key) => text_database.get(language, key),
-            KeyString::Format(str) => {
-                let result = FORMAT_RE
-                    .replace_all(str, |caps: &shared_deps::regex::Captures| {
-                        let key = caps.get(1).unwrap().as_str();
-                        text_database.get(language, key)
-                    })
-                    .to_string();
-                result
-            }
+            KeyString::Format(str) => FORMAT_RE
+                .replace_all(str, |caps: &shared_deps::regex::Captures| {
+                    let key = caps.get(1).unwrap().as_str();
+                    text_database.get(language, key)
+                })
+                .to_string(),
             KeyString::Value((key, values)) => {
                 let mut result = text_database.get(language, key);
                 for (i, value) in values.iter().enumerate() {
+                    let value = if RECURSIVE_VALUE_RE.is_match(value) {
+                        let value_key = RECURSIVE_VALUE_RE
+                            .captures(value)
+                            .unwrap()
+                            .get(1)
+                            .unwrap()
+                            .as_str();
+                        &text_database.get(language, value_key)
+                    } else {
+                        value
+                    };
                     result = result.replace(&format!("{{{}}}", i), value);
                 }
                 result
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use crate::text_database::{Language, TextDatabase};
-
-    #[test]
-    fn test_resolve_format_string() {
-        let mut text_db = TextDatabase::default();
-        text_db.values.insert(
-            Language::English,
-            vec![
-                ("global.foo".to_string(), "foo".to_string()),
-                ("global.bar".to_string(), "bar".to_string()),
-            ]
-            .into_iter()
-            .collect(),
-        );
-        text_db.values.insert(
-            Language::Korean,
-            vec![("global.bar".to_string(), "바".to_string())]
-                .into_iter()
-                .collect(),
-        );
-
-        let string = "~global.foo~: ~global.bar~";
-
-        let key_string = super::KeyString::Format(string.to_string());
-
-        assert_eq!(
-            key_string.resolve_string(&text_db, Language::English),
-            "foo: bar"
-        );
-        assert_eq!(
-            key_string.resolve_string(&text_db, Language::Korean),
-            "foo: 바"
-        );
     }
 }
 
@@ -154,6 +125,18 @@ impl KeyText {
     pub fn set_section(&mut self, index: usize, key: KeyString) {
         self.keys.insert(index, key);
     }
+
+    pub fn replace_value<T: ToString>(&mut self, index: usize, value_index: usize, value: T) {
+        if let Some(key_str) = self.keys.get_mut(&index)
+            && let KeyString::Value((_, values)) = key_str
+        {
+            values[value_index] = value.to_string();
+        }
+    }
+}
+
+pub fn warp_recursive_value_key<T: ToString>(key: T) -> String {
+    format!("R${}", key.to_string())
 }
 
 fn translate_text(
@@ -196,5 +179,69 @@ fn language_changed(
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::text_database::{Language, TextDatabase};
+
+    use super::KeyString;
+
+    #[test]
+    fn test_resolve_format_string() {
+        let mut text_db = TextDatabase::default();
+        text_db.values.insert(
+            Language::English,
+            vec![
+                ("global.foo".to_string(), "foo".to_string()),
+                ("global.bar".to_string(), "bar".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+        );
+        text_db.values.insert(
+            Language::Korean,
+            vec![("global.bar".to_string(), "바".to_string())]
+                .into_iter()
+                .collect(),
+        );
+
+        let string = "~global.foo~: ~global.bar~";
+
+        let key_string = super::KeyString::Format(string.to_string());
+
+        assert_eq!(
+            key_string.resolve_string(&text_db, Language::English),
+            "foo: bar"
+        );
+        assert_eq!(
+            key_string.resolve_string(&text_db, Language::Korean),
+            "foo: 바"
+        );
+    }
+
+    // Test recursive value
+    #[test]
+    fn test_recursive_value() {
+        let mut text_db = TextDatabase::default();
+        text_db.values.insert(
+            Language::English,
+            vec![
+                ("global.foo".to_string(), "foo".to_string()),
+                ("global.bar".to_string(), "bar".to_string()),
+            ]
+            .into_iter()
+            .collect(),
+        );
+
+        let key_string = KeyString::Value(("{0}({1}%)".to_string(), vec![
+            super::warp_recursive_value_key("global.bar"),
+            "25.55".to_string(),
+        ]));
+
+        let x = key_string.resolve_string(&text_db, Language::English);
+
+        assert_eq!(x, "bar(25.55%)");
     }
 }

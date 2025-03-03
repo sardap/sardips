@@ -1,9 +1,9 @@
 use crate::{
     GameState,
     assets::{
-        AudioAssets, BackgroundTexturesAssets, DipdexImageAssets, EndlessShooterAssets, FontAssets,
-        FourInRowAssets, GameImageAssets, HigherLowerAssets, SnakeGameAssets, TicTacToeAssets,
-        TranslateAssets, ViewScreenImageAssets,
+        AccessoryAssets, AudioAssets, BackgroundTexturesAssets, DipdexImageAssets,
+        EndlessShooterAssets, FontAssets, FourInRowAssets, GameImageAssets, HigherLowerAssets,
+        ParticleAssets, SnakeGameAssets, TicTacToeAssets, TranslateAssets, ViewScreenImageAssets,
     },
 };
 use bevy::prelude::*;
@@ -29,7 +29,9 @@ impl Plugin for LoadingPlugin {
                 .load_collection::<EndlessShooterAssets>()
                 .load_collection::<TranslateAssets>()
                 .load_collection::<DipdexImageAssets>()
-                .load_collection::<SnakeGameAssets>(),
+                .load_collection::<SnakeGameAssets>()
+                .load_collection::<ParticleAssets>()
+                .load_collection::<AccessoryAssets>(),
         );
     }
 }

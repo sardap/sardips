@@ -2,8 +2,8 @@ use bevy::prelude::*;
 use shared_deps::moonshine_save::save::Save;
 
 use crate::{
-    money::Wallet, pet::dipdex::DipdexDiscoveredEntries, sardip_save::SardipLoadingState,
-    stock_market::SharePortfolio,
+    food::FoodDiscoveredEntries, money::Wallet, pet::dipdex::DipdexDiscoveredEntries,
+    sardip_save::SardipLoadingState, stock_market::SharePortfolio,
 };
 
 pub struct PlayerPlugin;
@@ -20,7 +20,8 @@ pub struct PlayerBundle {
     pub player: Player,
     pub wallet: Wallet,
     pub share_portfolio: SharePortfolio,
-    pub entries: DipdexDiscoveredEntries,
+    pub dipdex_entries: DipdexDiscoveredEntries,
+    pub food_entires: FoodDiscoveredEntries,
     pub save: Save,
 }
 

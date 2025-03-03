@@ -5,6 +5,8 @@
 #![allow(unexpected_cfgs)]
 #![feature(const_trait_impl)]
 #![feature(const_for)]
+#![feature(duration_constructors)]
+pub mod accessory;
 pub mod age;
 pub mod anime;
 pub mod debug;
@@ -22,9 +24,11 @@ pub mod sardip_save;
 pub mod scenes;
 pub mod simulation;
 pub mod stock_market;
+pub mod stock_ticker;
 pub mod thinking;
 pub mod tools;
 
+use accessory::AccessoryPlugin;
 use age::AgePlugin;
 use anime::AnimePlugin;
 use bevy::{asset::AssetMetaCheck, prelude::*, window::WindowResolution};
@@ -45,8 +49,12 @@ use shared_deps::bevy_prototype_lyon::prelude::*;
 use shared_deps::bevy_turborand::prelude::*;
 use simulation::{SimulationPlugin, SimulationState};
 use stock_market::StockMarketPlugin;
+use stock_ticker::StockTickerPlugin;
 use thinking::ThinkingPlugin;
 use tools::{poop_scooper::PoopScooperPlugin, ToolPlugin};
+
+#[macro_use]
+extern crate strum_macros;
 
 #[macro_use]
 extern crate lazy_static;
@@ -109,7 +117,9 @@ impl Plugin for GamePlugin {
             ThinkingPlugin,
             FoodPlugin,
             StockMarketPlugin,
+            StockTickerPlugin,
             DipdexPlugin,
+            AccessoryPlugin,
         ));
 
         // #[cfg(feature = "dev")]

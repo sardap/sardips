@@ -21,14 +21,21 @@ impl Plugin for FoodPlugin {
         app.add_event::<SpawnFoodEvent>()
             .register_type::<Food>()
             .register_type::<FoodSensationType>()
+            .register_type::<std::collections::HashSet<String>>()
             .register_type::<HashSet<FoodSensationType>>()
             .register_type_data::<HashSet<FoodSensationType>, ReflectSerialize>()
             .register_type_data::<HashSet<FoodSensationType>, ReflectDeserialize>()
             .register_type::<FoodSensations>()
             .register_type::<FoodFillFactor>()
+            .register_type::<FoodDiscoveredEntries>()
             .add_systems(
                 Update,
-                (spawn_pending_food, spawn_food_view).run_if(in_state(SimulationState::Running)),
+                (add_starting_food_discovered_entries, spawn_pending_food)
+                    .run_if(resource_exists::<FoodTemplateDatabase>),
+            )
+            .add_systems(
+                Update,
+                spawn_food_view.run_if(in_state(SimulationState::Running)),
             );
     }
 }
@@ -78,6 +85,27 @@ fn spawn_pending_food(
             spawn_food(template, &mut commands, random_point_in_game_zone(&mut rng));
         } else {
             error!("No food template found for {}", event.name);
+        }
+    }
+}
+
+#[derive(Component, Default, Clone, Reflect)]
+#[reflect(Component)]
+pub struct FoodDiscoveredEntries {
+    pub entries: std::collections::HashSet<String>,
+}
+
+fn add_starting_food_discovered_entries(
+    food_db: Res<FoodTemplateDatabase>,
+    global_rng: ResMut<GlobalRng>,
+    mut added: Query<&mut FoodDiscoveredEntries, Added<FoodDiscoveredEntries>>,
+) {
+    let rng = global_rng.into_inner();
+
+    for mut discovered in added.iter_mut() {
+        while discovered.entries.len() < 10 {
+            let to_add = food_db.random(rng);
+            discovered.entries.insert(to_add.name.clone());
         }
     }
 }

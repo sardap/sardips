@@ -17,6 +17,7 @@ impl Plugin for ButtonHoverPlugin {
     }
 }
 
+#[derive(Copy, Clone)]
 pub struct ButtonColorSet {
     pub normal: Color,
     pub hover: Color,

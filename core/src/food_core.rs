@@ -8,7 +8,7 @@ use std::fmt;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::pet_core::TemplateSize;
+use crate::{money_core::Money, pet_core::TemplateSize};
 
 pub struct FoodCorePlugin;
 
@@ -55,22 +55,22 @@ pub enum FoodSensationType {
 impl FoodSensationType {
     pub fn short_string(&self) -> &'static str {
         match self {
-            FoodSensationType::Spicy => "Spi",
-            FoodSensationType::Cool => "Coo",
-            FoodSensationType::Astringent => "Ast",
-            FoodSensationType::Umami => "Uma",
-            FoodSensationType::Fatty => "Fat",
-            FoodSensationType::Sour => "Sou",
-            FoodSensationType::Bitter => "Bit",
-            FoodSensationType::Sweet => "Swe",
-            FoodSensationType::Salty => "Sal",
-            FoodSensationType::Crunchy => "Cru",
-            FoodSensationType::Creamy => "Cre",
-            FoodSensationType::Fizzy => "Fiz",
-            FoodSensationType::Juicy => "Jui",
-            FoodSensationType::Tender => "Ten",
-            FoodSensationType::Dry => "Dry",
-            FoodSensationType::Elastic => "Ela",
+            FoodSensationType::Spicy => "SPC",
+            FoodSensationType::Cool => "COL",
+            FoodSensationType::Astringent => "AST",
+            FoodSensationType::Umami => "UMA",
+            FoodSensationType::Fatty => "FAT",
+            FoodSensationType::Sour => "SOR",
+            FoodSensationType::Bitter => "BIT",
+            FoodSensationType::Sweet => "SWT",
+            FoodSensationType::Salty => "SLT",
+            FoodSensationType::Crunchy => "CRN",
+            FoodSensationType::Creamy => "CRM",
+            FoodSensationType::Fizzy => "FIZ",
+            FoodSensationType::Juicy => "JUC",
+            FoodSensationType::Tender => "TND",
+            FoodSensationType::Dry => "DRY",
+            FoodSensationType::Elastic => "ELS",
         }
     }
 
@@ -92,6 +92,27 @@ impl FoodSensationType {
             FoodSensationType::Tender => text_keys::TENDER,
             FoodSensationType::Dry => text_keys::DRY,
             FoodSensationType::Elastic => text_keys::ELASTIC,
+        }
+    }
+
+    pub fn icon_index(&self) -> usize {
+        match self {
+            FoodSensationType::Spicy => 0,
+            FoodSensationType::Cool => 1,
+            FoodSensationType::Astringent => 2,
+            FoodSensationType::Umami => 3,
+            FoodSensationType::Fatty => 4,
+            FoodSensationType::Sour => 5,
+            FoodSensationType::Bitter => 6,
+            FoodSensationType::Sweet => 7,
+            FoodSensationType::Salty => 8,
+            FoodSensationType::Crunchy => 9,
+            FoodSensationType::Creamy => 10,
+            FoodSensationType::Fizzy => 11,
+            FoodSensationType::Juicy => 12,
+            FoodSensationType::Tender => 13,
+            FoodSensationType::Dry => 14,
+            FoodSensationType::Elastic => 15,
         }
     }
 }
@@ -119,7 +140,6 @@ pub enum FoodSensationRating {
     Neutral,
     Dislikes,
     Hates,
-    Despises,
 }
 
 impl FoodSensationRating {
@@ -130,7 +150,6 @@ impl FoodSensationRating {
             FoodSensationRating::Neutral => 0.0,
             FoodSensationRating::Dislikes => -7.0,
             FoodSensationRating::Hates => -10.0,
-            FoodSensationRating::Despises => -100.0,
         }
     }
 
@@ -141,7 +160,6 @@ impl FoodSensationRating {
             FoodSensationRating::Neutral => text_keys::NEUTRAL,
             FoodSensationRating::Dislikes => text_keys::DISLIKES,
             FoodSensationRating::Hates => text_keys::HATES,
-            FoodSensationRating::Despises => text_keys::DESPISES,
         }
     }
 }
@@ -154,7 +172,7 @@ impl From<f32> for FoodSensationRating {
             }
         }
 
-        FoodSensationRating::Despises
+        FoodSensationRating::Hates
     }
 }
 
@@ -191,6 +209,8 @@ pub struct FoodTemplate {
     pub texture_size: (u32, u32),
     pub sprite_size: TemplateSize,
     pub fill_factor: f32,
+    #[serde(default)]
+    pub cost: Money,
 }
 
 #[derive(Resource)]

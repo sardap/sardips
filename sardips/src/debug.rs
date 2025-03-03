@@ -2,16 +2,20 @@ use std::{collections::HashMap, str::FromStr};
 
 use crate::{
     food::{Food, SpawnFoodEvent},
+    money::Wallet,
     pet::{
         dipdex::DipdexDiscoveredEntries, evolve::ShouldEvolve, poop::spawn_poop,
         template::SpawnPetEvent, Pet,
     },
+    player::Player,
     simulation::SimTimeScale,
 };
 use bevy::prelude::*;
 use sardips_core::{
     food_core::FoodTemplateDatabase,
+    money_core::Money,
     name::EntityName,
+    particles::SPARKS,
     pet_core::{PetTemplateDatabase, DEFAULT_POOP_TEXTURE},
     text_database::Language,
     text_translation::SelectedLanguageTag,
@@ -516,6 +520,18 @@ fn dev_console_text_input(
             DevConsoleCommand::DISCOVER_COMPLETE_DIPDEX_COMMAND => {
                 dev_console_commands.send(DevConsoleCommand::DiscoverCompleteDipdex);
             }
+            DevConsoleCommand::SPAWN_SPEWER_COMMAND => {
+                dev_console_commands.send(DevConsoleCommand::SpawnSpewer);
+            }
+            DevConsoleCommand::GIVE_MONEY_COMMAND => {
+                if splits.len() > 1 {
+                    if let Ok(money) = splits[1].parse::<Money>() {
+                        dev_console_commands.send(DevConsoleCommand::GiveMoney(money));
+                    }
+                } else {
+                    dev_console_commands.send(DevConsoleCommand::GiveMoney(100));
+                }
+            }
             _ => {
                 error!("Unknown command: {}", splits[0]);
                 history.push_command_output(format!("Unknown command: \"{}\"", splits[0]));
@@ -535,11 +551,13 @@ enum DevConsoleCommand {
     SpawnPet(String),
     EvolvePet(String),
     SpawnFood(String),
+    SpawnSpewer,
     SpawnPoop,
     ClearAllPets,
     ClearAllFoods,
     ChangeLanguage(String),
     DiscoverCompleteDipdex,
+    GiveMoney(Money),
 }
 
 impl DevConsoleCommand {
@@ -552,6 +570,8 @@ impl DevConsoleCommand {
     const CLEAR_ALL_FOODS_COMMAND: &'static str = "clear_all_foods";
     const CHANGE_LANGUAGE_COMMAND: &'static str = "change_language";
     const DISCOVER_COMPLETE_DIPDEX_COMMAND: &'static str = "discover_complete_dipdex";
+    const SPAWN_SPEWER_COMMAND: &'static str = "spawn_spewer";
+    const GIVE_MONEY_COMMAND: &'static str = "give_money";
 
     pub const fn command_str(&self) -> &'static str {
         match self {
@@ -564,6 +584,8 @@ impl DevConsoleCommand {
             DevConsoleCommand::ClearAllFoods => Self::CLEAR_ALL_FOODS_COMMAND,
             DevConsoleCommand::ChangeLanguage(_) => Self::CHANGE_LANGUAGE_COMMAND,
             DevConsoleCommand::DiscoverCompleteDipdex => Self::DISCOVER_COMPLETE_DIPDEX_COMMAND,
+            DevConsoleCommand::SpawnSpewer => Self::SPAWN_SPEWER_COMMAND,
+            DevConsoleCommand::GiveMoney(_) => Self::GIVE_MONEY_COMMAND,
         }
     }
 
@@ -593,6 +615,7 @@ fn action_dev_console_command(
     mut dipdex: Query<&mut DipdexDiscoveredEntries>,
     pets: Query<(Entity, &EntityName), With<Pet>>,
     foods: Query<Entity, With<Food>>,
+    mut player_wallet: Query<&mut Wallet, With<Player>>,
 ) {
     let mut history = match history.get_single_mut() {
         Ok(history) => history,
@@ -659,6 +682,17 @@ fn action_dev_console_command(
                     history.push_command_output("Discovered all pets in dipdex");
                 } else {
                     error!("Pet database not available");
+                }
+            }
+            DevConsoleCommand::SpawnSpewer => {
+                commands.spawn((
+                    Transform::from_translation(Vec3::new(0., 0., 0.)),
+                    SPARKS.clone(),
+                ));
+            }
+            DevConsoleCommand::GiveMoney(amount) => {
+                for mut wallet in player_wallet.iter_mut() {
+                    wallet.balance += *amount;
                 }
             }
         }
