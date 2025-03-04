@@ -10,8 +10,8 @@ use crate::{
     palettes,
     player::Player,
     stock_market::{
-        BuyOrder, BuyOrderBrief, Company, CompanyPerformance, CompanyRank, NewOrder, OrderBook,
-        ShareHistory, SharePortfolio,
+        BuyOrder, Company, CompanyPerformance, CompanyRank, NewOrder, OrderBook, OrderBrief,
+        SellOrder, ShareHistory, SharePortfolio,
     },
 };
 use sardips_core::{
@@ -25,9 +25,9 @@ use sardips_core::{
     GameState,
 };
 use text_keys::{
-    STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE, STOCK_BUY_SCENE_BUY_PLAYER_OPEN_OPEN_TITLE,
-    STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON, STOCK_BUY_SCENE_EXPAND,
-    STOCK_BUY_SCENE_FEATURE_BUY_BUTTON, STOCK_BUY_SCENE_FEATURE_BUY_OPEN,
+    STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE, STOCK_BUY_SCENE_BUY_MODE,
+    STOCK_BUY_SCENE_BUY_PLAYER_OPEN_BUY_TITLE, STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON,
+    STOCK_BUY_SCENE_EXPAND, STOCK_BUY_SCENE_FEATURE_BUY_BUTTON, STOCK_BUY_SCENE_FEATURE_BUY_OPEN,
     STOCK_BUY_SCENE_FEATURE_BUY_OPEN_NONE, STOCK_BUY_SCENE_FEATURE_EARNINGS,
     STOCK_BUY_SCENE_FEATURE_INDUSTRY_HEADER, STOCK_BUY_SCENE_FEATURE_INDUSTRY_PERCENT,
     STOCK_BUY_SCENE_FEATURE_MARKET_CAP, STOCK_BUY_SCENE_FEATURE_NET_ASSETS,
@@ -37,8 +37,9 @@ use text_keys::{
     STOCK_BUY_SCENE_FEATURE_REVENUE, STOCK_BUY_SCENE_FEATURE_SELL_BUTTON,
     STOCK_BUY_SCENE_FEATURE_SELL_OPEN, STOCK_BUY_SCENE_FEATURE_SELL_OPEN_NONE,
     STOCK_BUY_SCENE_FEATURE_STOCK_PRICE, STOCK_BUY_SCENE_MARKET_CAP_HEADER,
-    STOCK_BUY_SCENE_ONE_Q_CHANGE_HEADER, STOCK_BUY_SCENE_OWN_HEADER, STOCK_BUY_SCENE_STOCK_PRICE,
-    STOCK_BUY_SCENE_STOCK_PRICE_HEADER, STOCK_BUY_SCENE_TICKER_HEADER, STOCK_BUY_SCENE_TITLE,
+    STOCK_BUY_SCENE_ONE_Q_CHANGE_HEADER, STOCK_BUY_SCENE_OWN_HEADER, STOCK_BUY_SCENE_SELL_MODE,
+    STOCK_BUY_SCENE_STOCK_PRICE, STOCK_BUY_SCENE_STOCK_PRICE_HEADER, STOCK_BUY_SCENE_TICKER_HEADER,
+    STOCK_BUY_SCENE_TITLE,
 };
 
 pub struct StockScenePlugin;
@@ -95,9 +96,13 @@ impl Plugin for StockScenePlugin {
                     update_player_stock_quantity_input_text,
                     update_stock_total_price_text,
                     buy_stock_button_interacted,
-                    update_buy_orders,
-                    disable_buy_button_no_funds,
+                    update_buy_order_list,
+                    disable_buy_button,
                     remove_order_button,
+                    toggle_buy_sell_mode,
+                    update_but_sell_select_mode_text,
+                    update_buy_sell_button_text,
+                    update_sell_orders,
                 )
                     .run_if(in_state(StockBuySceneState::Buy)),
             )
@@ -487,7 +492,7 @@ fn setup_selecting_ui(
                                 let change =
                                     share_history.cached_price - last_performance.stock_price;
                                 let (color, symbol) = match change.cmp(&0) {
-                                    Ordering::Less => (BAD_COLOR, "-"),
+                                    Ordering::Less => (BAD_COLOR, ""),
                                     Ordering::Equal => (Color::BLACK, ""),
                                     Ordering::Greater => (GOOD_COLOR, "+"),
                                 };
@@ -640,6 +645,8 @@ fn expand_button_pressed(
         state.set(StockBuySceneState::FeatureCompany);
     }
 }
+
+const BODY_SIZE: f32 = 30.;
 
 #[derive(Component)]
 struct SelectedExpandedCompany(Entity);
@@ -1565,6 +1572,263 @@ fn setup_buy_screen(
                 PlayerBuySceneStocks,
             ));
 
+            // Buy / Sell form
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        // height: Val::Px(200.0),
+                        width: Val::Percent(100.0),
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        ..default()
+                    },
+                    background_color: BackgroundColor(Color::srgba(0.5, 0., 0.5, 0.5)),
+                    ..default()
+                })
+                .with_children(|parent| {
+                    // Mode selector
+                    parent
+                        .spawn((
+                            ButtonBundle {
+                                style: Style {
+                                    border: UiRect::all(Val::Px(2.0)),
+                                    margin: UiRect::all(Val::Px(5.0)),
+                                    align_content: AlignContent::Center,
+                                    justify_content: JustifyContent::Center,
+                                    ..default()
+                                },
+                                ..default()
+                            },
+                            BuySellModeSelectButton::default(),
+                            ButtonHover::default()
+                                .with_background(palettes::ui::BUTTON_SET)
+                                .with_border(palettes::ui::BUTTON_BORDER_SET),
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                TextBundle::from_section(
+                                    "",
+                                    TextStyle {
+                                        font: font_assets.monospace.clone(),
+                                        font_size: BODY_SIZE,
+                                        color: Color::BLACK,
+                                    },
+                                ),
+                                KeyText::new().with(0, STOCK_BUY_SCENE_BUY_MODE),
+                                BuySelectModeText,
+                            ));
+                        });
+
+                    let price_input_id = parent
+                        .spawn((
+                            TextBundle::from_section(
+                                "",
+                                TextStyle {
+                                    font: font_assets.monospace.clone(),
+                                    font_size: BODY_SIZE,
+                                    color: Color::BLACK,
+                                },
+                            ),
+                            KeyText::new().with_value(0, STOCK_BUY_SCENE_STOCK_PRICE, &[""]),
+                            StockPriceInput {
+                                current: share_history.cached_price,
+                            },
+                        ))
+                        .id();
+
+                    let button_width =
+                        Val::Percent(100. / StockPriceInputKind::iter().count() as f32);
+
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                width: Val::Percent(100.0),
+                                height: Val::Px(30.0),
+                                flex_direction: FlexDirection::Row,
+                                justify_content: JustifyContent::SpaceAround,
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            for kind in StockPriceInputKind::iter() {
+                                parent
+                                    .spawn((
+                                        ButtonBundle {
+                                            style: Style {
+                                                width: button_width,
+                                                height: Val::Px(30.0),
+                                                align_content: AlignContent::Center,
+                                                margin: UiRect::all(Val::Px(2.0)),
+                                                padding: UiRect::all(Val::Px(2.0)),
+                                                justify_content: JustifyContent::Center,
+                                                border: UiRect::all(Val::Px(2.0)),
+                                                ..default()
+                                            },
+                                            ..default()
+                                        },
+                                        ButtonHover::default()
+                                            .with_background(palettes::ui::BUTTON_SET)
+                                            .with_border(palettes::ui::BUTTON_BORDER_SET),
+                                        kind,
+                                        StockPriceInputButton {
+                                            for_price: price_input_id,
+                                        },
+                                    ))
+                                    .with_children(|parent| {
+                                        parent.spawn((
+                                            TextBundle::from_section(
+                                                "",
+                                                TextStyle {
+                                                    font: font_assets.monospace.clone(),
+                                                    font_size: 20.,
+                                                    color: Color::BLACK,
+                                                },
+                                            ),
+                                            KeyText::new().with(0, kind.get_text_key()),
+                                        ));
+                                    });
+                            }
+                        });
+
+                    // Quantity
+                    let qty_input_id = parent
+                        .spawn((
+                            TextBundle::from_section(
+                                "",
+                                TextStyle {
+                                    font: font_assets.monospace.clone(),
+                                    font_size: BODY_SIZE,
+                                    color: Color::BLACK,
+                                },
+                            ),
+                            KeyText::new().with_value(
+                                0,
+                                text_keys::STOCK_BUY_SCENE_BUY_BUY_QUANTITY,
+                                &[""],
+                            ),
+                            StockQuantityInput { current: 1 },
+                        ))
+                        .id();
+
+                    parent
+                        .spawn(NodeBundle {
+                            style: Style {
+                                width: Val::Percent(100.0),
+                                height: Val::Px(30.0),
+                                flex_direction: FlexDirection::Row,
+                                justify_content: JustifyContent::SpaceAround,
+                                ..default()
+                            },
+                            ..default()
+                        })
+                        .with_children(|parent| {
+                            for kind in StockPriceInputKind::iter() {
+                                parent
+                                    .spawn((
+                                        ButtonBundle {
+                                            style: Style {
+                                                width: button_width,
+                                                height: Val::Px(30.0),
+                                                align_content: AlignContent::Center,
+                                                margin: UiRect::all(Val::Px(2.0)),
+                                                padding: UiRect::all(Val::Px(2.0)),
+                                                justify_content: JustifyContent::Center,
+                                                border: UiRect::all(Val::Px(2.0)),
+                                                ..default()
+                                            },
+                                            ..default()
+                                        },
+                                        ButtonHover::default()
+                                            .with_background(palettes::ui::BUTTON_SET)
+                                            .with_border(palettes::ui::BUTTON_BORDER_SET),
+                                        kind,
+                                        StockQuantityInputButton {
+                                            for_quantity: qty_input_id,
+                                        },
+                                    ))
+                                    .with_children(|parent| {
+                                        parent.spawn((
+                                            TextBundle::from_section(
+                                                "",
+                                                TextStyle {
+                                                    font: font_assets.monospace.clone(),
+                                                    font_size: 20.,
+                                                    color: Color::BLACK,
+                                                },
+                                            ),
+                                            KeyText::new().with(0, kind.get_text_key()),
+                                        ));
+                                    });
+                            }
+                        });
+
+                    // Total price display
+                    parent.spawn((
+                        TextBundle::from_section(
+                            "",
+                            TextStyle {
+                                font: font_assets.monospace.clone(),
+                                font_size: BODY_SIZE,
+                                color: Color::BLACK,
+                            },
+                        ),
+                        KeyText::new().with_value(
+                            0,
+                            text_keys::STOCK_BUY_SCENE_BUY_BUY_TOTAL,
+                            &[""],
+                        ),
+                        StockTotalPriceDisplay {
+                            price_input: price_input_id,
+                            quantity_input: qty_input_id,
+                        },
+                    ));
+
+                    // Buy Button
+                    parent
+                        .spawn((
+                            ButtonBundle {
+                                style: Style {
+                                    width: Val::Px(70.0),
+                                    height: Val::Px(30.0),
+                                    margin: UiRect::all(Val::Px(5.0)),
+                                    align_content: AlignContent::Center,
+                                    justify_content: JustifyContent::Center,
+                                    border: UiRect::all(Val::Px(2.0)),
+                                    ..default()
+                                },
+                                ..default()
+                            },
+                            BuySellStockButton {
+                                price_input: price_input_id,
+                                quantity_input: qty_input_id,
+                            },
+                            ButtonHover::default()
+                                .with_background(palettes::ui::BUTTON_SET)
+                                .with_border(palettes::ui::BUTTON_BORDER_SET),
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn((
+                                TextBundle::from_section(
+                                    "",
+                                    TextStyle {
+                                        font: font_assets.monospace.clone(),
+                                        font_size: 25.,
+                                        color: Color::BLACK,
+                                    },
+                                )
+                                .with_style(Style {
+                                    align_content: AlignContent::Center,
+                                    justify_content: JustifyContent::Center,
+                                    ..default()
+                                }),
+                                KeyText::new(),
+                                BuySellButtonText,
+                            ));
+                        });
+                });
+
             parent
                 .spawn(NodeBundle {
                     style: Style {
@@ -1583,9 +1847,6 @@ fn setup_buy_screen(
                     ..default()
                 })
                 .with_children(|parent| {
-                    const TITLE_SIZE: f32 = 40.;
-                    const BODY_SIZE: f32 = 30.;
-
                     // Buy Side
                     parent
                         .spawn(NodeBundle {
@@ -1600,266 +1861,6 @@ fn setup_buy_screen(
                             ..default()
                         })
                         .with_children(|parent| {
-                            // Title
-                            parent.spawn((
-                                TextBundle::from_section(
-                                    "",
-                                    TextStyle {
-                                        font: font_assets.monospace.clone(),
-                                        font_size: TITLE_SIZE,
-                                        color: Color::BLACK,
-                                    },
-                                ),
-                                KeyText::new().with(0, text_keys::STOCK_BUY_SCENE_BUY_BUY_TITLE),
-                            ));
-
-                            // Buy form
-                            parent
-                                .spawn(NodeBundle {
-                                    style: Style {
-                                        height: Val::Px(200.0),
-                                        width: Val::Percent(100.0),
-                                        flex_direction: FlexDirection::Column,
-                                        align_items: AlignItems::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    },
-                                    background_color: BackgroundColor(Color::srgba(
-                                        0.5, 0., 0.5, 0.5,
-                                    )),
-                                    ..default()
-                                })
-                                .with_children(|parent| {
-                                    let price_input_id = parent
-                                        .spawn((
-                                            TextBundle::from_section(
-                                                "",
-                                                TextStyle {
-                                                    font: font_assets.monospace.clone(),
-                                                    font_size: BODY_SIZE,
-                                                    color: Color::BLACK,
-                                                },
-                                            ),
-                                            KeyText::new().with_value(
-                                                0,
-                                                STOCK_BUY_SCENE_STOCK_PRICE,
-                                                &[""],
-                                            ),
-                                            StockPriceInput {
-                                                current: share_history.cached_price,
-                                            },
-                                        ))
-                                        .id();
-
-                                    let button_width = Val::Percent(
-                                        100. / StockPriceInputKind::iter().count() as f32,
-                                    );
-
-                                    parent
-                                        .spawn(NodeBundle {
-                                            style: Style {
-                                                width: Val::Percent(100.0),
-                                                height: Val::Px(30.0),
-                                                flex_direction: FlexDirection::Row,
-                                                justify_content: JustifyContent::SpaceAround,
-                                                ..default()
-                                            },
-                                            ..default()
-                                        })
-                                        .with_children(|parent| {
-                                            for kind in StockPriceInputKind::iter() {
-                                                parent
-                                                    .spawn((
-                                                        ButtonBundle {
-                                                            style: Style {
-                                                                width: button_width,
-                                                                height: Val::Px(30.0),
-                                                                align_content: AlignContent::Center,
-                                                                margin: UiRect::all(Val::Px(2.0)),
-                                                                padding: UiRect::all(Val::Px(2.0)),
-                                                                justify_content:
-                                                                    JustifyContent::Center,
-                                                                border: UiRect::all(Val::Px(2.0)),
-                                                                ..default()
-                                                            },
-                                                            ..default()
-                                                        },
-                                                        ButtonHover::default()
-                                                            .with_background(
-                                                                palettes::ui::BUTTON_SET,
-                                                            )
-                                                            .with_border(
-                                                                palettes::ui::BUTTON_BORDER_SET,
-                                                            ),
-                                                        kind,
-                                                        StockPriceInputButton {
-                                                            for_price: price_input_id,
-                                                        },
-                                                    ))
-                                                    .with_children(|parent| {
-                                                        parent.spawn((
-                                                            TextBundle::from_section(
-                                                                "",
-                                                                TextStyle {
-                                                                    font: font_assets
-                                                                        .monospace
-                                                                        .clone(),
-                                                                    font_size: 20.,
-                                                                    color: Color::BLACK,
-                                                                },
-                                                            ),
-                                                            KeyText::new()
-                                                                .with(0, kind.get_text_key()),
-                                                        ));
-                                                    });
-                                            }
-                                        });
-
-                                    // Quantity
-                                    let qty_input_id = parent
-                                        .spawn((
-                                            TextBundle::from_section(
-                                                "",
-                                                TextStyle {
-                                                    font: font_assets.monospace.clone(),
-                                                    font_size: BODY_SIZE,
-                                                    color: Color::BLACK,
-                                                },
-                                            ),
-                                            KeyText::new().with_value(
-                                                0,
-                                                text_keys::STOCK_BUY_SCENE_BUY_BUY_QUANTITY,
-                                                &[""],
-                                            ),
-                                            StockQuantityInput { current: 1 },
-                                        ))
-                                        .id();
-
-                                    parent
-                                        .spawn(NodeBundle {
-                                            style: Style {
-                                                width: Val::Percent(100.0),
-                                                height: Val::Px(30.0),
-                                                flex_direction: FlexDirection::Row,
-                                                justify_content: JustifyContent::SpaceAround,
-                                                ..default()
-                                            },
-                                            ..default()
-                                        })
-                                        .with_children(|parent| {
-                                            for kind in StockPriceInputKind::iter() {
-                                                parent
-                                                    .spawn((
-                                                        ButtonBundle {
-                                                            style: Style {
-                                                                width: button_width,
-                                                                height: Val::Px(30.0),
-                                                                align_content: AlignContent::Center,
-                                                                margin: UiRect::all(Val::Px(2.0)),
-                                                                padding: UiRect::all(Val::Px(2.0)),
-                                                                justify_content:
-                                                                    JustifyContent::Center,
-                                                                border: UiRect::all(Val::Px(2.0)),
-                                                                ..default()
-                                                            },
-                                                            ..default()
-                                                        },
-                                                        ButtonHover::default()
-                                                            .with_background(
-                                                                palettes::ui::BUTTON_SET,
-                                                            )
-                                                            .with_border(
-                                                                palettes::ui::BUTTON_BORDER_SET,
-                                                            ),
-                                                        kind,
-                                                        StockQuantityInputButton {
-                                                            for_quantity: qty_input_id,
-                                                        },
-                                                    ))
-                                                    .with_children(|parent| {
-                                                        parent.spawn((
-                                                            TextBundle::from_section(
-                                                                "",
-                                                                TextStyle {
-                                                                    font: font_assets
-                                                                        .monospace
-                                                                        .clone(),
-                                                                    font_size: 20.,
-                                                                    color: Color::BLACK,
-                                                                },
-                                                            ),
-                                                            KeyText::new()
-                                                                .with(0, kind.get_text_key()),
-                                                        ));
-                                                    });
-                                            }
-                                        });
-
-                                    // Total price display
-                                    parent.spawn((
-                                        TextBundle::from_section(
-                                            "",
-                                            TextStyle {
-                                                font: font_assets.monospace.clone(),
-                                                font_size: BODY_SIZE,
-                                                color: Color::BLACK,
-                                            },
-                                        ),
-                                        KeyText::new().with_value(
-                                            0,
-                                            text_keys::STOCK_BUY_SCENE_BUY_BUY_TOTAL,
-                                            &[""],
-                                        ),
-                                        StockTotalPriceDisplay {
-                                            price_input: price_input_id,
-                                            quantity_input: qty_input_id,
-                                        },
-                                    ));
-
-                                    // Buy Button
-                                    parent
-                                        .spawn((
-                                            ButtonBundle {
-                                                style: Style {
-                                                    width: Val::Px(70.0),
-                                                    height: Val::Px(30.0),
-                                                    margin: UiRect::all(Val::Px(5.0)),
-                                                    align_content: AlignContent::Center,
-                                                    justify_content: JustifyContent::Center,
-                                                    border: UiRect::all(Val::Px(2.0)),
-                                                    ..default()
-                                                },
-                                                ..default()
-                                            },
-                                            BuyStockButton {
-                                                price_input: price_input_id,
-                                                quantity_input: qty_input_id,
-                                            },
-                                            ButtonHover::default()
-                                                .with_background(palettes::ui::BUTTON_SET)
-                                                .with_border(palettes::ui::BUTTON_BORDER_SET),
-                                        ))
-                                        .with_children(|parent| {
-                                            parent.spawn((
-                                                TextBundle::from_section(
-                                                    "",
-                                                    TextStyle {
-                                                        font: font_assets.monospace.clone(),
-                                                        font_size: 25.,
-                                                        color: Color::BLACK,
-                                                    },
-                                                )
-                                                .with_style(Style {
-                                                    align_content: AlignContent::Center,
-                                                    justify_content: JustifyContent::Center,
-                                                    ..default()
-                                                }),
-                                                KeyText::new()
-                                                    .with(0, STOCK_BUY_SCENE_FEATURE_BUY_BUTTON),
-                                            ));
-                                        });
-                                });
-
                             parent.spawn((
                                 NodeBundle {
                                     style: Style {
@@ -1887,7 +1888,22 @@ fn setup_buy_screen(
                             background_color: BackgroundColor(Color::srgba(1., 0., 1., 0.5)),
                             ..default()
                         })
-                        .with_children(|_parent| {});
+                        .with_children(|parent| {
+                            parent.spawn((
+                                NodeBundle {
+                                    style: Style {
+                                        width: Val::Percent(100.0),
+                                        height: Val::Percent(100.0),
+                                        flex_direction: FlexDirection::Column,
+                                        align_items: AlignItems::Center,
+                                        justify_content: JustifyContent::Center,
+                                        ..default()
+                                    },
+                                    ..default()
+                                },
+                                SellOrderList,
+                            ));
+                        });
                 });
 
             spawn_back_button::<BuySellBack>(
@@ -2096,18 +2112,38 @@ fn disable_stock_quantity_input_buttons(
     without_interaction: Query<Entity, (With<StockQuantityInputButton>, Without<Interaction>)>,
     input: Query<&StockQuantityInput>,
     buttons: Query<(Entity, &StockPriceInputKind, &StockQuantityInputButton)>,
+    player_share_portfolio: Query<&SharePortfolio, With<Player>>,
+    selected: Query<&SelectedExpandedCompany>,
+    buy_sell_mode: Query<&BuySellModeSelectButton>,
 ) {
+    let buy_mode = buy_sell_mode.single();
+    let selected = selected.single().0;
+    let player_portfolio = player_share_portfolio.single();
+
     for (entity, kind, button) in &buttons {
         let current = input.get(button.for_quantity).unwrap().current;
-        match kind {
+
+        let mut enabled = true;
+
+        match *kind {
             StockPriceInputKind::Lower | StockPriceInputKind::MuchLower => {
-                if current == 1 && with_interaction.get(entity).is_ok() {
-                    commands.entity(entity).remove::<Interaction>();
-                } else if current > 1 && without_interaction.get(entity).is_ok() {
-                    commands.entity(entity).insert(Interaction::default());
+                if current <= 1 {
+                    enabled = false;
                 }
             }
-            _ => {}
+            StockPriceInputKind::Higher | StockPriceInputKind::MuchHigher => {
+                if *buy_mode == BuySellModeSelectButton::Sell
+                    && player_portfolio.get_count(&selected) < current + 1
+                {
+                    enabled = false;
+                }
+            }
+        }
+
+        if enabled && without_interaction.get(entity).is_ok() {
+            commands.entity(entity).insert(Interaction::None);
+        } else if !enabled && with_interaction.get(entity).is_ok() {
+            commands.entity(entity).remove::<Interaction>();
         }
     }
 }
@@ -2136,30 +2172,29 @@ struct BuyOrderList;
 
 #[derive(Default)]
 struct LocalUpdateBuyOrders {
-    last_buy_orders_len: usize,
+    orders_len: usize,
 }
 
-fn update_buy_orders(
+const ORDER_LIST_BODY_SIZE: f32 = 30.;
+const MAX_BUY_ORDERS_SHOWN: usize = 4;
+
+fn update_buy_order_list(
     mut local: Local<LocalUpdateBuyOrders>,
     mut commands: Commands,
     font_assets: Res<FontAssets>,
     order_book: Res<OrderBook>,
     should_update: Query<Entity, Or<(Added<BuyOrderList>, Changed<SharePortfolio>)>>,
+    buy_order_list: Query<Entity, With<BuyOrderList>>,
     selected: Query<&SelectedExpandedCompany>,
-    order_ui_list: Query<Entity, With<BuyOrderList>>,
     player: Query<Entity, With<Player>>,
 ) {
-    const BODY_SIZE: f32 = 30.;
-    const MAX_BUY_ORDERS_SHOWN: usize = 4;
-
-    if should_update.iter().count() == 0 && local.last_buy_orders_len == order_book.buy_orders.len()
-    {
+    if should_update.iter().count() == 0 && local.orders_len == order_book.buy_orders.len() {
         return;
     }
 
-    local.last_buy_orders_len = order_book.buy_orders.len();
+    let buy_order_list = buy_order_list.single();
 
-    let buy_order_list = order_ui_list.single();
+    local.orders_len = order_book.buy_orders.len();
 
     commands.entity(buy_order_list).despawn_descendants();
 
@@ -2173,7 +2208,7 @@ fn update_buy_orders(
             .filter(|order| order.company == selected)
             .collect();
 
-        let mut non_player_buy_orders: Vec<BuyOrderBrief> = vec![];
+        let mut non_player_buy_orders: Vec<OrderBrief> = vec![];
         let mut player_buy_orders = vec![];
         {
             for buy_order in open_buy_orders {
@@ -2187,7 +2222,7 @@ fn update_buy_orders(
                         }
                     }
                     non_player_buy_orders
-                        .push(BuyOrderBrief::new(buy_order.quantity, buy_order.price));
+                        .push(OrderBrief::new(buy_order.quantity, buy_order.price));
                 }
             }
         }
@@ -2201,11 +2236,11 @@ fn update_buy_orders(
                     "",
                     TextStyle {
                         font: font_assets.monospace.clone(),
-                        font_size: BODY_SIZE - 3.,
+                        font_size: ORDER_LIST_BODY_SIZE - 3.,
                         color: Color::BLACK,
                     },
                 ),
-                KeyText::new().with(0, STOCK_BUY_SCENE_BUY_PLAYER_OPEN_OPEN_TITLE),
+                KeyText::new().with(0, STOCK_BUY_SCENE_BUY_PLAYER_OPEN_BUY_TITLE),
             ));
 
             for order in player_buy_orders.iter().take(MAX_BUY_ORDERS_SHOWN) {
@@ -2224,7 +2259,7 @@ fn update_buy_orders(
                                 "",
                                 TextStyle {
                                     font: font_assets.monospace.clone(),
-                                    font_size: BODY_SIZE,
+                                    font_size: ORDER_LIST_BODY_SIZE,
                                     color: Color::BLACK,
                                 },
                             )]),
@@ -2261,7 +2296,7 @@ fn update_buy_orders(
                                         "",
                                         TextStyle {
                                             font: font_assets.monospace.clone(),
-                                            font_size: BODY_SIZE,
+                                            font_size: ORDER_LIST_BODY_SIZE,
                                             color: Color::BLACK,
                                         },
                                     )
@@ -2287,7 +2322,7 @@ fn update_buy_orders(
                     "",
                     TextStyle {
                         font: font_assets.monospace.clone(),
-                        font_size: BODY_SIZE,
+                        font_size: ORDER_LIST_BODY_SIZE,
                         color: Color::BLACK,
                     },
                 ),
@@ -2300,7 +2335,7 @@ fn update_buy_orders(
                         "",
                         TextStyle {
                             font: font_assets.monospace.clone(),
-                            font_size: BODY_SIZE,
+                            font_size: ORDER_LIST_BODY_SIZE,
                             color: Color::BLACK,
                         },
                     )]),
@@ -2320,7 +2355,7 @@ fn update_buy_orders(
                     "",
                     TextStyle {
                         font: font_assets.monospace.clone(),
-                        font_size: BODY_SIZE,
+                        font_size: ORDER_LIST_BODY_SIZE,
                         color: Color::BLACK,
                     },
                 )]),
@@ -2331,7 +2366,7 @@ fn update_buy_orders(
 }
 
 #[derive(Component)]
-struct BuyStockButton {
+struct BuySellStockButton {
     price_input: Entity,
     quantity_input: Entity,
 }
@@ -2341,61 +2376,100 @@ fn buy_stock_button_interacted(
     selected: Query<&SelectedExpandedCompany>,
     price_input: Query<&StockPriceInput>,
     quantity_input: Query<&StockQuantityInput>,
-    mut player_wallet: Query<(Entity, &mut Wallet), With<Player>>,
-    buttons: Query<(&Interaction, &BuyStockButton), Changed<Interaction>>,
+    mut player: Query<(Entity, &mut Wallet, &mut SharePortfolio), With<Player>>,
+    buttons: Query<(&Interaction, &BuySellStockButton), Changed<Interaction>>,
+    buy_sell_mode: Query<&BuySellModeSelectButton>,
 ) {
-    for (interaction, buy_button) in &buttons {
-        if *interaction != Interaction::Pressed {
-            continue;
+    let (interaction, buy_button) = match buttons.get_single() {
+        Ok(button) => button,
+        Err(_) => return,
+    };
+    if *interaction != Interaction::Pressed {
+        return;
+    }
+
+    let buy_sell_mode = buy_sell_mode.single();
+    let price = price_input.get(buy_button.price_input).unwrap().current;
+    let quantity = quantity_input
+        .get(buy_button.quantity_input)
+        .unwrap()
+        .current;
+    let (player_entity, mut player_wallet, mut share_portfolio) = player.single_mut();
+
+    match *buy_sell_mode {
+        BuySellModeSelectButton::Buy => {
+            let selected = selected.single().0;
+
+            let total_price = price * quantity as i64;
+            if total_price > player_wallet.balance {
+                return;
+            }
+
+            player_wallet.balance -= total_price;
+
+            order_book.add(NewOrder::Buy(BuyOrder::new(
+                selected,
+                quantity,
+                price,
+                player_entity,
+            )));
         }
+        BuySellModeSelectButton::Sell => {
+            let selected = selected.single().0;
 
-        let selected = selected.single().0;
-        let (player_entity, mut player_wallet) = player_wallet.single_mut();
-        let price = price_input.get(buy_button.price_input).unwrap().current;
-        let quantity = quantity_input
-            .get(buy_button.quantity_input)
-            .unwrap()
-            .current;
+            share_portfolio.remove_shares(selected, quantity);
 
-        let total_price = price * quantity as i64;
-        if total_price > player_wallet.balance {
-            return;
+            order_book.add(NewOrder::Sell(SellOrder::new(
+                selected,
+                quantity,
+                price,
+                player_entity,
+            )));
         }
-
-        player_wallet.balance -= total_price;
-
-        order_book.add(NewOrder::Buy(BuyOrder::new(
-            selected,
-            quantity,
-            price,
-            player_entity,
-        )));
     }
 }
 
-fn disable_buy_button_no_funds(
+fn disable_buy_button(
     mut commands: Commands,
     price_input: Query<&StockPriceInput>,
     quantity_input: Query<&StockQuantityInput>,
     player_wallet: Query<&Wallet, With<Player>>,
-    buttons: Query<(Entity, &BuyStockButton)>,
-    without_interaction: Query<Entity, (With<BuyStockButton>, Without<Interaction>)>,
-    with_interaction: Query<Entity, (With<BuyStockButton>, With<Interaction>)>,
+    share_portfolio: Query<&SharePortfolio, With<Player>>,
+    selected: Query<&SelectedExpandedCompany>,
+    buttons: Query<(Entity, &BuySellStockButton)>,
+    without_interaction: Query<Entity, (With<BuySellStockButton>, Without<Interaction>)>,
+    with_interaction: Query<Entity, (With<BuySellStockButton>, With<Interaction>)>,
+    current_mode: Query<&BuySellModeSelectButton>,
 ) {
-    for (entity, buy_button) in &buttons {
-        let player_wallet = player_wallet.single();
-        let price = price_input.get(buy_button.price_input).unwrap().current;
-        let quantity = quantity_input
-            .get(buy_button.quantity_input)
-            .unwrap()
-            .current;
+    let current_mode = current_mode.single();
+    let selected = selected.single().0;
+    let (entity, buy_button) = buttons.single();
+    let quantity = quantity_input
+        .get(buy_button.quantity_input)
+        .unwrap()
+        .current;
 
-        let total_price = price * quantity as i64;
+    match *current_mode {
+        BuySellModeSelectButton::Sell => {
+            let player_share_portfolio = share_portfolio.single();
+            let count = player_share_portfolio.get_count(&selected);
+            if (quantity == 0 || count < quantity) && with_interaction.get(entity).is_ok() {
+                commands.entity(entity).remove::<Interaction>();
+            } else if count > quantity && without_interaction.get(entity).is_ok() {
+                commands.entity(entity).insert(Interaction::default());
+            }
+        }
+        BuySellModeSelectButton::Buy => {
+            let player_wallet = player_wallet.single();
+            let price = price_input.get(buy_button.price_input).unwrap().current;
 
-        if total_price < player_wallet.balance && without_interaction.get(entity).is_ok() {
-            commands.entity(entity).insert(Interaction::default());
-        } else if total_price > player_wallet.balance && with_interaction.get(entity).is_ok() {
-            commands.entity(entity).remove::<Interaction>();
+            let total_price = price * quantity as i64;
+
+            if total_price < player_wallet.balance && without_interaction.get(entity).is_ok() {
+                commands.entity(entity).insert(Interaction::default());
+            } else if total_price > player_wallet.balance && with_interaction.get(entity).is_ok() {
+                commands.entity(entity).remove::<Interaction>();
+            }
         }
     }
 }
@@ -2414,4 +2488,292 @@ fn remove_order_button(
 
         order_book.remove_order(button.0);
     }
+}
+
+#[derive(Component, Default, PartialEq, Eq, Clone, Copy)]
+enum BuySellModeSelectButton {
+    #[default]
+    Buy,
+    Sell,
+}
+
+fn toggle_buy_sell_mode(
+    selected: Query<&SelectedExpandedCompany>,
+    player: Query<&SharePortfolio, With<Player>>,
+    companies: Query<&ShareHistory, With<Company>>,
+    mut price_input: Query<&mut StockPriceInput>,
+    mut quantity_input: Query<&mut StockQuantityInput>,
+    mut buttons: Query<(&Interaction, &mut BuySellModeSelectButton), Changed<Interaction>>,
+) {
+    for (interaction, mut button) in &mut buttons {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+
+        let selected = selected.single().0;
+        let share_portfolio = player.single();
+
+        let share_history = companies.get(selected).unwrap();
+
+        for mut input in &mut price_input {
+            input.current = share_history.cached_price;
+        }
+
+        let next_mode = match *button {
+            BuySellModeSelectButton::Buy => BuySellModeSelectButton::Sell,
+            BuySellModeSelectButton::Sell => BuySellModeSelectButton::Buy,
+        };
+
+        for mut input in &mut quantity_input {
+            input.current = match next_mode {
+                BuySellModeSelectButton::Buy => 1,
+                BuySellModeSelectButton::Sell => share_portfolio.get_count(&selected).min(1),
+            };
+        }
+
+        *button = next_mode;
+    }
+}
+
+#[derive(Component)]
+struct BuySelectModeText;
+
+fn update_but_sell_select_mode_text(
+    buy_select_mode: Query<
+        (&BuySellModeSelectButton, &Children),
+        Or<(
+            Changed<BuySellModeSelectButton>,
+            Added<BuySellModeSelectButton>,
+        )>,
+    >,
+    mut text: Query<&mut KeyText, With<BuySelectModeText>>,
+) {
+    for (mode, children) in &buy_select_mode {
+        for child in children {
+            if let Ok(mut text) = text.get_mut(*child) {
+                *text = KeyText::new().with(
+                    0,
+                    match mode {
+                        BuySellModeSelectButton::Buy => STOCK_BUY_SCENE_BUY_MODE,
+                        BuySellModeSelectButton::Sell => STOCK_BUY_SCENE_SELL_MODE,
+                    },
+                );
+            }
+        }
+    }
+}
+
+#[derive(Component)]
+struct BuySellButtonText;
+
+fn update_buy_sell_button_text(
+    buy_sell_mode: Query<
+        &BuySellModeSelectButton,
+        Or<(
+            Added<BuySellModeSelectButton>,
+            Changed<BuySellModeSelectButton>,
+        )>,
+    >,
+    mut text: Query<&mut KeyText, With<BuySellButtonText>>,
+) {
+    for mode in &buy_sell_mode {
+        for mut text in &mut text {
+            *text = KeyText::new().with(
+                0,
+                match mode {
+                    BuySellModeSelectButton::Buy => STOCK_BUY_SCENE_FEATURE_BUY_BUTTON,
+                    BuySellModeSelectButton::Sell => STOCK_BUY_SCENE_FEATURE_SELL_BUTTON,
+                },
+            );
+        }
+    }
+}
+
+#[derive(Component)]
+struct SellOrderList;
+
+fn update_sell_orders(
+    mut local: Local<LocalUpdateBuyOrders>,
+    mut commands: Commands,
+    font_assets: Res<FontAssets>,
+    order_book: Res<OrderBook>,
+    should_update: Query<Entity, Or<(Added<SellOrderList>, Changed<SharePortfolio>)>>,
+    sell_order_list: Query<Entity, With<SellOrderList>>,
+    selected: Query<&SelectedExpandedCompany>,
+    player: Query<Entity, With<Player>>,
+) {
+    if should_update.iter().count() == 0 && local.orders_len == order_book.total_sell_orders() {
+        return;
+    }
+
+    let sell_order_list = sell_order_list.single();
+
+    local.orders_len = order_book.total_sell_orders();
+
+    commands.entity(sell_order_list).despawn_descendants();
+
+    let selected = selected.single().0;
+    let player_entity = player.single();
+
+    commands.entity(sell_order_list).with_children(|parent| {
+        let open_sell_orders = order_book.get_sell_orders(selected);
+
+        let mut non_player_sell_orders: Vec<OrderBrief> = vec![];
+        let mut player_sell_orders = vec![];
+        {
+            for sell_order in open_sell_orders {
+                if sell_order.seller == player_entity {
+                    player_sell_orders.push(sell_order)
+                } else {
+                    if let Some(last) = non_player_sell_orders.iter_mut().last() {
+                        if last.price == sell_order.price {
+                            last.quantity += sell_order.remaining_quantity;
+                            continue;
+                        }
+                    }
+                    non_player_sell_orders
+                        .push(OrderBrief::new(sell_order.quantity, sell_order.price));
+                }
+            }
+        }
+
+        non_player_sell_orders.sort_by(|a, b| a.price.cmp(&b.price));
+
+        // Players Open orders
+        if !player_sell_orders.is_empty() {
+            parent.spawn((
+                TextBundle::from_section(
+                    "",
+                    TextStyle {
+                        font: font_assets.monospace.clone(),
+                        font_size: ORDER_LIST_BODY_SIZE - 3.,
+                        color: Color::BLACK,
+                    },
+                ),
+                KeyText::new().with(0, text_keys::STOCK_BUY_SCENE_BUY_PLAYER_OPEN_SELL_TITLE),
+            ));
+
+            for order in player_sell_orders.iter().take(MAX_BUY_ORDERS_SHOWN) {
+                parent
+                    .spawn(NodeBundle {
+                        style: Style {
+                            width: Val::Percent(100.0),
+                            flex_direction: FlexDirection::Row,
+                            ..default()
+                        },
+                        ..default()
+                    })
+                    .with_children(|parent| {
+                        parent.spawn((
+                            TextBundle::from_sections(vec![TextSection::new(
+                                "",
+                                TextStyle {
+                                    font: font_assets.monospace.clone(),
+                                    font_size: ORDER_LIST_BODY_SIZE,
+                                    color: Color::BLACK,
+                                },
+                            )]),
+                            KeyText::new().with_value(
+                                0,
+                                STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
+                                &[
+                                    &format!("{: >4}", order.remaining_quantity),
+                                    &money_display(order.price),
+                                ],
+                            ),
+                        ));
+
+                        parent
+                            .spawn((
+                                ButtonBundle {
+                                    style: Style {
+                                        width: Val::Px(30.0),
+                                        border: UiRect::all(Val::Px(2.0)),
+                                        align_content: AlignContent::Center,
+                                        justify_content: JustifyContent::Center,
+                                        ..default()
+                                    },
+                                    ..default()
+                                },
+                                RemoveOrderButton(order.id),
+                                ButtonHover::default()
+                                    .with_background(palettes::ui::BUTTON_SET)
+                                    .with_border(palettes::ui::BUTTON_BORDER_SET),
+                            ))
+                            .with_children(|parent| {
+                                parent.spawn((
+                                    TextBundle::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: font_assets.monospace.clone(),
+                                            font_size: ORDER_LIST_BODY_SIZE,
+                                            color: Color::BLACK,
+                                        },
+                                    )
+                                    .with_style(Style {
+                                        align_content: AlignContent::Center,
+                                        justify_content: JustifyContent::Center,
+                                        ..default()
+                                    }),
+                                    KeyText::new().with(0, STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON),
+                                ));
+                            });
+                    });
+            }
+        }
+
+        // Non Player open orders
+        let non_player_orders_to_show =
+            MAX_BUY_ORDERS_SHOWN.saturating_sub(player_sell_orders.len());
+
+        if !non_player_sell_orders.is_empty() {
+            parent.spawn((
+                TextBundle::from_section(
+                    "",
+                    TextStyle {
+                        font: font_assets.monospace.clone(),
+                        font_size: ORDER_LIST_BODY_SIZE,
+                        color: Color::BLACK,
+                    },
+                ),
+                KeyText::new().with(0, text_keys::STOCK_BUY_SCENE_BUY_EXISTING_SELL_TITLE),
+            ));
+
+            for order in non_player_sell_orders
+                .iter()
+                .take(non_player_orders_to_show)
+            {
+                parent.spawn((
+                    TextBundle::from_sections(vec![TextSection::new(
+                        "",
+                        TextStyle {
+                            font: font_assets.monospace.clone(),
+                            font_size: ORDER_LIST_BODY_SIZE,
+                            color: Color::BLACK,
+                        },
+                    )]),
+                    KeyText::new().with_value(
+                        0,
+                        STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
+                        &[
+                            &format!("{: >4}", order.quantity),
+                            &money_display(order.price),
+                        ],
+                    ),
+                ));
+            }
+        } else if non_player_orders_to_show > 0 {
+            parent.spawn((
+                TextBundle::from_sections(vec![TextSection::new(
+                    "",
+                    TextStyle {
+                        font: font_assets.monospace.clone(),
+                        font_size: ORDER_LIST_BODY_SIZE,
+                        color: Color::BLACK,
+                    },
+                )]),
+                KeyText::new().with(0, STOCK_BUY_SCENE_FEATURE_SELL_OPEN_NONE),
+            ));
+        }
+    });
 }

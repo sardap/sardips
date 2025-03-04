@@ -119,9 +119,9 @@ TextDatabase(
             "stock_buy_scene.feature_sell_open_none": "NO OPEN SELL ORDERS",
             "stock_buy_scene.feature_sell_button": "SELL",
             "stock_buy_scene.feature_buy_button": "BUY",
-            "stock_buy_scene.buy_buy_title": "BUY",
             "stock_buy_scene.buy_existing_buy_line": "{0} ${1}",
             "stock_buy_scene.buy_existing_buy_title": "OPEN BUY",
+            "stock_buy_scene.buy_existing_sell_title": "OPEN SELL",
             "stock_buy_scene.buy_player_money": "FUNDS: ${0}",
             "stock_buy_scene.buy_player_stocks": "OWN: {0}",
             "stock_buy_scene.buy_buy_higher": "+",
@@ -130,8 +130,11 @@ TextDatabase(
             "stock_buy_scene.buy_buy_much_lower": "--",
             "stock_buy_scene.buy_buy_quantity": "QTY: {0}",
             "stock_buy_scene.buy_buy_total": "TOTAL: ${0}",
-            "stock_buy_scene.buy_player_open_open_title": "PLAYER OPEN BUY'S",
+            "stock_buy_scene.buy_player_open_buy_title": "PLAYER OPEN BUY'S",
+            "stock_buy_scene.buy_player_open_sell_title": "PLAYER OPEN SELL'S",
             "stock_buy_scene.buy_remove_order_button": "-",
+            "stock_buy_scene.buy_mode_text": "BUY MODE",
+            "stock_buy_scene.sell_mode_text": "SELL MODE",
 
 
             "industry.tech.name": "Technology",

@@ -85,11 +85,14 @@ pub const STOCK_BUY_SCENE_FEATURE_SELL_OPEN: &str = "stock_buy_scene.feature_sel
 pub const STOCK_BUY_SCENE_FEATURE_SELL_OPEN_NONE: &str = "stock_buy_scene.feature_sell_open_none";
 pub const STOCK_BUY_SCENE_FEATURE_SELL_BUTTON: &str = "stock_buy_scene.feature_sell_button";
 pub const STOCK_BUY_SCENE_FEATURE_BUY_BUTTON: &str = "stock_buy_scene.feature_buy_button";
-pub const STOCK_BUY_SCENE_BUY_BUY_TITLE: &str = "stock_buy_scene.buy_buy_title";
 pub const STOCK_BUY_SCENE_BUY_EXISTING_BUY_TITLE: &str = "stock_buy_scene.buy_existing_buy_title";
+pub const STOCK_BUY_SCENE_BUY_EXISTING_SELL_TITLE: &str = "stock_buy_scene.buy_existing_sell_title";
 pub const STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE: &str = "stock_buy_scene.buy_existing_buy_line";
-pub const STOCK_BUY_SCENE_BUY_PLAYER_OPEN_OPEN_TITLE: &str =
-    "stock_buy_scene.buy_player_open_open_title";
+pub const STOCK_BUY_SCENE_BUY_PLAYER_OPEN_BUY_TITLE: &str =
+    "stock_buy_scene.buy_player_open_buy_title";
+    pub const STOCK_BUY_SCENE_BUY_PLAYER_OPEN_SELL_TITLE: &str =
+    "stock_buy_scene.buy_player_open_sell_title";
+    
 pub const STOCK_BUY_SCENE_BUY_PLAYER_MONEY: &str = "stock_buy_scene.buy_player_money";
 pub const STOCK_BUY_SCENE_BUY_PLAYER_OWNS_STOCKS: &str = "stock_buy_scene.buy_player_stocks";
 pub const STOCK_BUY_SCENE_BUY_BUY_HIGHER: &str = "stock_buy_scene.buy_buy_higher";
@@ -99,6 +102,8 @@ pub const STOCK_BUY_SCENE_BUY_BUY_MUCH_LOWER: &str = "stock_buy_scene.buy_buy_mu
 pub const STOCK_BUY_SCENE_BUY_BUY_QUANTITY: &str = "stock_buy_scene.buy_buy_quantity";
 pub const STOCK_BUY_SCENE_BUY_BUY_TOTAL: &str = "stock_buy_scene.buy_buy_total";
 pub const STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON: &str = "stock_buy_scene.buy_remove_order_button";
+pub const STOCK_BUY_SCENE_BUY_MODE: &str = "stock_buy_scene.buy_mode_text";
+pub const STOCK_BUY_SCENE_SELL_MODE: &str = "stock_buy_scene.sell_mode_text";
 
 pub const MINIGAME_ENDLESS_SHOOTER_COOLDOWN: &str = "minigame.endless_shooter.cooldown";
 pub const MINIGAME_ENDLESS_SHOOTER_PISTOL: &str = "minigame.endless_shooter.pistol";

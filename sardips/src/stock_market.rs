@@ -9,6 +9,7 @@ use sardips_core::rand_utils::{gen_f32_range, gen_f64_range, NewBuilder, WalkerT
 use sardips_core::wrapped_vec::WrappingVec;
 use serde::{Deserialize, Serialize};
 use shared_deps::bevy_turborand::{DelegatedRng, GlobalRng, RngComponent};
+use shared_deps::chrono::{DateTime, Utc};
 use shared_deps::moonshine_save::save::Save;
 
 pub struct StockMarketPlugin;
@@ -23,6 +24,7 @@ impl Plugin for StockMarketPlugin {
             .register_type::<BuySellOrchestrator>()
             .register_type::<StockMarketAI>()
             .register_type::<ShareHistory>()
+            .register_type::<CompleteShareOrderHistory>()
             .add_systems(
                 OnEnter(SardipLoadingState::Loaded),
                 (
@@ -206,7 +208,7 @@ impl PerformanceRanking {
 #[derive(Default, Component, Deserialize, Serialize, Clone, Reflect)]
 #[reflect_value(Deserialize, Serialize, Component)]
 pub struct ShareHistory {
-    pub history: WrappingVec<BuyOrderBrief, 300>,
+    pub history: WrappingVec<OrderBrief, 300>,
     pub cached_price: Money,
     pub dirty_price: bool,
 }
@@ -214,7 +216,7 @@ pub struct ShareHistory {
 impl ShareHistory {
     pub fn new(starting_price: Money) -> Self {
         let mut history = WrappingVec::new();
-        history.push(BuyOrderBrief::new(1000, starting_price));
+        history.push(OrderBrief::new(1000, starting_price));
 
         Self {
             history,
@@ -224,7 +226,7 @@ impl ShareHistory {
     }
 
     pub fn add_entry(&mut self, price: Money, volume: u64) {
-        self.history.push(BuyOrderBrief::new(volume, price));
+        self.history.push(OrderBrief::new(volume, price));
         self.dirty_price = true;
     }
 
@@ -542,12 +544,12 @@ impl SellOrder {
 }
 #[derive(Default, Reflect, Clone, Serialize, Deserialize)]
 #[reflect_value(Deserialize, Serialize)]
-pub struct BuyOrderBrief {
+pub struct OrderBrief {
     pub quantity: u64,
     pub price: Money,
 }
 
-impl BuyOrderBrief {
+impl OrderBrief {
     pub fn new(quantity: u64, price: Money) -> Self {
         Self { quantity, price }
     }
@@ -617,6 +619,10 @@ impl OrderBook {
         self.sell_orders
             .get(&company)
             .map_or(&(*EMPTY), |orders| orders)
+    }
+
+    pub fn total_sell_orders(&self) -> usize {
+        self.sell_orders.values().map(|x| x.len()).sum()
     }
 }
 
@@ -1220,6 +1226,7 @@ fn generate_buy_sell_activity(
     )>,
     companies: Query<(Entity, &Company, &ShareHistory)>,
 ) {
+    // This should 100% run every tick and only run on a subset of ghosts every tick say 10% or whatever
     if !orchestrator.buy_timer.tick(time.delta()).finished() {
         return;
     }
@@ -1344,7 +1351,7 @@ fn generate_buy_sell_activity(
 
             let sell_threshold = ai.get_buy_threshold(rank).invert();
 
-            if rng.f32() < sell_threshold.buy_prob() {
+            if rng.f32() < sell_threshold.buy_prob() - (sell_threshold.buy_prob() * 0.5) {
                 continue;
             }
 
@@ -1379,6 +1386,7 @@ fn process_orders(
     order_book: ResMut<OrderBook>,
     mut share_history: Query<&mut ShareHistory>,
     mut wallets: Query<&mut Wallet>,
+    mut history: Query<&mut CompleteShareOrderHistory>,
     mut share_portfolios: Query<&mut SharePortfolio>,
 ) {
     let order_book = order_book.into_inner();
@@ -1418,6 +1426,7 @@ fn process_orders(
                     Err(_) => break,
                 };
 
+                let order_action_time = shared_deps::chrono::Utc::now();
                 buyer_portfolio.add_shares(sell_order.company, quantity);
                 seller_wallet.balance += quantity as i64 * sell_order.price;
 
@@ -1426,6 +1435,27 @@ fn process_orders(
 
                 if let Ok(mut share_history) = share_history.get_mut(sell_order.company) {
                     share_history.add_entry(sell_order.price, quantity);
+                }
+
+                // Update history for entities
+                if let Ok(mut share_order_history) = history.get_mut(buy_order.buyer) {
+                    share_order_history.orders.push(OrderHistoryEntry::new(
+                        OrderKind::Buy,
+                        sell_order.company,
+                        sell_order.price,
+                        quantity,
+                        order_action_time,
+                    ));
+                }
+
+                if let Ok(mut share_order_history) = history.get_mut(sell_order.seller) {
+                    share_order_history.orders.push(OrderHistoryEntry::new(
+                        OrderKind::Sell,
+                        sell_order.company,
+                        sell_order.price,
+                        quantity,
+                        order_action_time,
+                    ));
                 }
 
                 if buy_order.remaining_quantity == 0 {
@@ -1479,6 +1509,46 @@ fn process_orders(
 
         !orders.is_empty()
     });
+}
+
+#[derive(Reflect, Serialize, Deserialize, Component)]
+#[reflect(Component, Serialize, Deserialize)]
+enum OrderKind {
+    Buy,
+    Sell,
+}
+
+#[derive(Serialize, Deserialize, Reflect)]
+struct OrderHistoryEntry {
+    pub kind: OrderKind,
+    pub company: Entity,
+    pub price: Money,
+    pub quantity: u64,
+    pub timestamp: i64,
+}
+
+impl OrderHistoryEntry {
+    pub fn new(
+        kind: OrderKind,
+        company: Entity,
+        price: Money,
+        quantity: u64,
+        time: DateTime<Utc>,
+    ) -> Self {
+        Self {
+            kind,
+            company,
+            price,
+            quantity,
+            timestamp: time.timestamp(),
+        }
+    }
+}
+
+#[derive(Default, Reflect, Serialize, Deserialize, Component)]
+#[reflect(Component, Serialize, Deserialize)]
+pub struct CompleteShareOrderHistory {
+    orders: Vec<OrderHistoryEntry>,
 }
 
 #[cfg(test)]

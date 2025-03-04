@@ -36,7 +36,7 @@
         "visislbitly",
         "wordbank"
     ],
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.semanticTokenColorCustomizations": {
         "rules": {
             "unresolvedReference": "#ff0000",
