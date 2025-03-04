@@ -14,4 +14,4 @@ pub extern crate moonshine_save;
 pub extern crate rand;
 pub extern crate regex;
 pub extern crate ron;
-pub extern crate weighted_rand;
+pub extern crate sorted_vec;

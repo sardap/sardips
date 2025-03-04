@@ -3,7 +3,7 @@ use sardips_core::{
     food_core::FoodTemplateDatabase,
     interaction::Clickable,
     name::{HasNameTag, NameTag, NameTagBundle, SpeciesName},
-    view::EntityView,
+    view::{EntityView, HasView},
 };
 
 use crate::{layering, simulation::Simulated};
@@ -26,7 +26,7 @@ pub fn spawn_food_view(
     mut commands: Commands,
     template_db: Res<FoodTemplateDatabase>,
     asset_server: Res<AssetServer>,
-    query: Query<(Entity, &Transform, &SpeciesName), Added<Food>>,
+    query: Query<(Entity, &Transform, &SpeciesName), (With<Food>, Without<HasView>)>,
 ) {
     for (food, location, name) in query.iter() {
         let entry = template_db.get(&name.0).unwrap();

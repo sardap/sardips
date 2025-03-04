@@ -618,6 +618,7 @@ fn update_dipdex_entry_view(
     view_screen_images: Res<ViewScreenImageAssets>,
     dipdex_assets: Res<DipdexImageAssets>,
     text_db: Res<TextDatabase>,
+    view_assets: Res<ViewScreenImageAssets>,
     entry_view: Query<(Entity, &DipdexEntryView)>,
 ) {
     let (entity, entry) = entry_view.single();
@@ -885,12 +886,6 @@ fn update_dipdex_entry_view(
                         ));
 
                         for rating in FoodSensationRating::iter() {
-                            let text_style = TextStyle {
-                                font_size: BODY_SIZE,
-                                color: Color::BLACK,
-                                font: font_assets.main_font.clone(),
-                            };
-
                             let mut sensations: Vec<_> = stomach
                                 .sensations
                                 .iter()
@@ -903,23 +898,57 @@ fn update_dipdex_entry_view(
                                 continue;
                             }
 
-                            let rating_key = rating.key();
+                            let rating_satisfaction: SatisfactionRating = rating.into();
 
-                            let mut text = format!("~{rating_key}~: ");
+                            parent
+                                .spawn(NodeBundle {
+                                    style: Style {
+                                        flex_direction: FlexDirection::Row,
+                                        // align_items: AlignItems::Center,
+                                        // justify_content: JustifyContent::Center,
+                                        ..default()
+                                    },
+                                    ..default()
+                                })
+                                .with_children(|parent| {
+                                    parent.spawn((
+                                        ImageBundle {
+                                            style: Style {
+                                                width: Val::Px(28.8),
+                                                height: Val::Px(28.8),
+                                                margin: UiRect::all(Val::Px(5.)),
+                                                ..default()
+                                            },
+                                            image: UiImage::new(view_screen_images.moods.clone()),
+                                            ..default()
+                                        },
+                                        TextureAtlas {
+                                            layout: view_screen_images.moods_layout.clone(),
+                                            index: rating_satisfaction.atlas_index(),
+                                        },
+                                    ));
 
-                            for sen in &sensations {
-                                let key = sen.key();
-                                text.push_str(&format!("~{key}~"));
-
-                                if sen != sensations.last().unwrap() {
-                                    text.push_str(", ");
-                                }
-                            }
-
-                            parent.spawn((
-                                TextBundle::from_section("", text_style.clone()),
-                                KeyText::new().with_format(0, text),
-                            ));
+                                    for sensation in &sensations {
+                                        parent.spawn((
+                                            ImageBundle {
+                                                style: Style {
+                                                    width: Val::Px(26.4),
+                                                    height: Val::Px(36.),
+                                                    margin: UiRect::all(Val::Px(2.)),
+                                                    ..default()
+                                                },
+                                                image: UiImage::new(
+                                                    view_assets.food_sensation.clone(),
+                                                ),
+                                                ..default()
+                                            },
+                                            TextureAtlas {
+                                                layout: view_assets.food_sensation_layout.clone(),
+                                                index: sensation.icon_index(),
+                                            },
+                                        ));
+                                    }
+                                });
                         }
                     });
             }

@@ -22,7 +22,7 @@ use sardips_core::{
     mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes},
     move_towards::{MoveTowardsOnSpawn, MovingTowards},
     sounds::{PlaySoundEffect, SoundEffect},
-    velocity::{MovementDirection, Speed},
+    velocity::{MovementDirection2D, Speed},
 };
 use shared_deps::bevy_prototype_lyon::prelude::*;
 
@@ -442,12 +442,7 @@ fn process_move(
     let (mut board, board_trans) = board.single_mut();
 
     for move_event in moves.read() {
-        if !board
-            .0
-            .possible_moves()
-            .iter()
-            .any(|&col| col == move_event.col)
-        {
+        if !board.0.possible_moves().contains(&move_event.col) {
             error!("Column full");
             continue;
         }
@@ -493,7 +488,7 @@ fn process_move(
                 index: current_player.to_sprite_index(),
             },
             Speed(250.),
-            MovementDirection {
+            MovementDirection2D {
                 direction: Vec2::ZERO,
             },
             Disc(square_to_index(row, column)),

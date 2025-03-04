@@ -2083,7 +2083,7 @@ checksum = "af9673d8203fcb076b19dfd17e38b3d4ae9f44959416ea532ce72415a6020365"
 
 [[package]]
 name = "fact_db"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "lazy_static",
@@ -4076,7 +4076,7 @@ dependencies = [
 
 [[package]]
 name = "sardips"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -4093,7 +4093,7 @@ dependencies = [
 
 [[package]]
 name = "sardips-run"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "embed-resource",
@@ -4111,7 +4111,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_core"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -4127,7 +4127,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_endless_shooter"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "maplit",
@@ -4138,7 +4138,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_four_in_row"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "lazy_static",
@@ -4148,7 +4148,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_higher_lower"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "sardips_core",
@@ -4170,7 +4170,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_rhythm"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "sardips_core",
@@ -4191,7 +4191,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_tic_tac_toe"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "lazy_static",
@@ -4202,7 +4202,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_translate"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "bevy",
  "sardips_core",
@@ -4280,7 +4280,7 @@ dependencies = [
 
 [[package]]
 name = "shared_deps"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-std",
  "avian2d",
@@ -4301,9 +4301,9 @@ dependencies = [
  "rand",
  "regex",
  "ron",
+ "sorted-vec",
  "uuid",
  "webbrowser",
- "weighted_rand",
 ]
 
 [[package]]
@@ -4369,6 +4369,15 @@ name = "smol_str"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd538fb6910ac1099850255cf94a94df6551fbdd602454387d0adb2d1ca6dead"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "sorted-vec"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d372029cb5195f9ab4e4b9aef550787dce78b124fcaee8d82519925defcd6f0d"
 dependencies = [
  "serde",
 ]
@@ -4592,7 +4601,7 @@ dependencies = [
 
 [[package]]
 name = "text_keys"
-version = "0.4.0"
+version = "0.5.0"
 
 [[package]]
 name = "thiserror"
@@ -5037,16 +5046,6 @@ dependencies = [
  "raw-window-handle 0.5.2",
  "url",
  "web-sys",
-]
-
-[[package]]
-name = "weighted_rand"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ab9b6b2a8470ef752f01ec563216a4aa4fbb2ef285f4506b241095c1ef0b16e"
-dependencies = [
- "rand",
- "serde",
 ]
 
 [[package]]

@@ -7,7 +7,7 @@ use sardips_core::{
     hunger_core::Hunger,
     move_towards::{MoveTowardsEvent, MovingTowards},
     name::EntityName,
-    velocity::MovementDirection,
+    velocity::MovementDirection2D,
 };
 
 use super::{
@@ -67,7 +67,7 @@ fn add_pet_ai(
         commands.entity(entity).insert((
             PetAi::default(),
             Wonder,
-            MovementDirection::default(),
+            MovementDirection2D::default(),
             RngComponent::from(&mut rng),
         ));
     }
@@ -163,7 +163,7 @@ fn find_food(
         let mut food_ratings = Vec::new();
         for (food_entity, trans, sensations) in &food {
             let feeling = food_preference.feeling(sensations);
-            if feeling != FoodSensationRating::Despises {
+            if feeling != FoodSensationRating::Hates {
                 food_ratings.push((food_entity, food_preference.feeling(sensations), trans));
             }
         }

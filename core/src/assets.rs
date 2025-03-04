@@ -16,6 +16,8 @@ impl BackgroundTexturesAssets {
 pub struct FontAssets {
     #[asset(path = "fonts/main_font.ttf")]
     pub main_font: Handle<Font>,
+    #[asset(path = "fonts/monospace.ttf")]
+    pub monospace: Handle<Font>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -48,7 +50,7 @@ pub struct AudioAssets {
 
 #[derive(AssetCollection, Resource)]
 pub struct ViewScreenImageAssets {
-    #[asset(texture_atlas_layout(tile_size_x = 70, tile_size_y = 70, columns = 5, rows = 1,))]
+    #[asset(texture_atlas_layout(tile_size_x = 70, tile_size_y = 70, columns = 6, rows = 1,))]
     pub view_buttons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/view_buttons.png")]
     pub view_buttons: Handle<Image>,
@@ -67,6 +69,11 @@ pub struct ViewScreenImageAssets {
     pub top_icons_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/top_icons.png")]
     pub top_icons: Handle<Image>,
+
+    #[asset(texture_atlas_layout(tile_size_x = 44, tile_size_y = 60, columns = 16, rows = 1,))]
+    pub food_sensation_layout: Handle<TextureAtlasLayout>,
+    #[asset(path = "textures/view_screen/food_sensation.png")]
+    pub food_sensation: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -179,3 +186,14 @@ pub struct SnakeGameAssets {
     #[asset(path = "textures/mini_games/snake/background.jpg")]
     pub background: Handle<Image>,
 }
+
+#[derive(AssetCollection, Resource)]
+pub struct ParticleAssets {
+    #[asset(path = "textures/particles/circle.png")]
+    pub circle: Handle<Image>,
+    #[asset(path = "textures/particles/square.png")]
+    pub square: Handle<Image>,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct AccessoryAssets {}

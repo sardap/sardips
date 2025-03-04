@@ -23,19 +23,16 @@ use sardips_core::{
     GameState,
 };
 
-use super::info_panel::{
-    create_info_panel, InfoPanelPlugin, InfoPanelUpdate, InfoPanelsClear, PanelType,
-};
+use super::info_panel::{create_info_panel, InfoPanelUpdate, InfoPanelsClear, PanelType};
 
 pub struct ViewScreenPlugin;
 
 impl Plugin for ViewScreenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(InfoPanelPlugin);
         app.insert_state::<VSSubState>(VSSubState::default());
         app.add_systems(
             OnEnter(GameState::ViewScreen),
-            (setup_ui, setup_background, setup_state),
+            (setup_ui, setup_camera, setup_state),
         );
         app.add_systems(OnExit(GameState::ViewScreen), teardown);
         app.add_systems(
@@ -73,17 +70,19 @@ enum MenuOption {
     Tools,
     MiniGames,
     Dipdex,
+    Stocks,
     Options,
 }
 
 impl MenuOption {
-    pub fn get_index(&self) -> usize {
+    pub fn get_texture_index(&self) -> usize {
         match self {
             MenuOption::None => 0,
             MenuOption::Tools => 1,
             MenuOption::Food => 2,
             MenuOption::MiniGames => 3,
             MenuOption::Dipdex => 4,
+            MenuOption::Stocks => 5,
             MenuOption::Options => 0,
         }
     }
@@ -214,7 +213,7 @@ fn setup_ui(
                             },
                             TextureAtlas {
                                 layout: view_screen_images.view_buttons_layout.clone(),
-                                index: option.get_index(),
+                                index: option.get_texture_index(),
                             },
                         ));
                     });
@@ -229,10 +228,11 @@ fn setup_ui(
 #[derive(Component)]
 pub struct ViewScreenCamera;
 
-fn setup_background(mut commands: Commands) {
+fn setup_camera(mut commands: Commands) {
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
+                order: 1,
                 clear_color: ClearColorConfig::Custom(palettes::view_screen::BACKGROUND),
                 ..default()
             },
@@ -329,6 +329,10 @@ fn menu_button_interaction(
             MenuOption::Dipdex => {
                 vs_state.set(VSSubState::None);
                 game_state.set(GameState::DipdexView);
+            }
+            MenuOption::Stocks => {
+                vs_state.set(VSSubState::None);
+                game_state.set(GameState::StockBuy);
             }
             MenuOption::Options => {
                 vs_state.set(VSSubState::None);

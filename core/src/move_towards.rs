@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::velocity::MovementDirection;
+use crate::velocity::MovementDirection2D;
 
 pub struct MoveTowardsPlugin;
 
@@ -46,7 +46,7 @@ fn set_target(
     mut move_target_events_reader: EventReader<MoveTowardsEvent>,
     mut query: Query<(
         &Transform,
-        &mut MovementDirection,
+        &mut MovementDirection2D,
         Option<&mut MovingTowards>,
     )>,
 ) {
@@ -89,7 +89,7 @@ fn check_target_reached(
         Entity,
         &MovingTowards,
         &mut Transform,
-        &mut MovementDirection,
+        &mut MovementDirection2D,
     )>,
 ) {
     for (entity, move_towards, mut transform, mut move_direction) in query.iter_mut() {
@@ -108,7 +108,7 @@ fn check_target_reached(
 
 fn on_remove_moving_towards(
     mut removed: RemovedComponents<MovingTowards>,
-    mut query: Query<&mut MovementDirection>,
+    mut query: Query<&mut MovementDirection2D>,
 ) {
     for entity in removed.read() {
         if let Ok(mut move_direction) = query.get_mut(entity) {
