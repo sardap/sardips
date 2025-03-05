@@ -103,7 +103,8 @@ jobs:
           mv target/dist/${{ env.GAME_EXECUTABLE_NAME }} .
       - name: Bundle release
         run: |
-          tar -czf ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz ${{ env.GAME_EXECUTABLE_NAME }} run/assets credits
+          mv run/assets ./assets
+          tar -czf ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz ${{ env.GAME_EXECUTABLE_NAME }} assets credits
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:

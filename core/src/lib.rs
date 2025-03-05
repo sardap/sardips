@@ -42,6 +42,7 @@ pub mod ui_utils;
 pub mod velocity;
 pub mod view;
 pub mod wrapped_vec;
+pub mod persistent_id;
 
 #[macro_use]
 extern crate lazy_static;
@@ -53,6 +54,7 @@ impl Plugin for SardipsCorePlugin {
         app.insert_state(GameState::default())
             .add_plugins((SavePlugin, LoadPlugin))
             .add_plugins((
+                persistent_id::PersistentIdPlugin,
                 loading::LoadingPlugin,
                 particles::ParticlesPlugin,
                 shrink::ShrinkPlugin,
@@ -67,9 +69,9 @@ impl Plugin for SardipsCorePlugin {
                 text_translation::TextTranslationPlugin,
                 age_core::AgeCorePlugin,
                 breeding_core::BreedingCorePlugin,
-                food_core::FoodCorePlugin,
             ))
             .add_plugins((
+                food_core::FoodCorePlugin,
                 fun_core::FunCorePlugin,
                 hunger_core::HungerCorePlugin,
                 money_core::MoneyCorePlugin,
