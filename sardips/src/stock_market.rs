@@ -1259,7 +1259,7 @@ fn generate_buy_sell_activity(
     )>,
     companies: Query<(&PersistentId, &Company, &ShareHistory)>,
 ) {
-    const MAX_MODULO: u64 = 50;
+    const MAX_MODULO: u64 = 20;
 
     if local.last_update.tick(time.delta()).just_finished() || local.ranking.is_none() {
         local.ranking = Some(CompanyRank::new_ranking(
