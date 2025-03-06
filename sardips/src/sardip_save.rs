@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use bevy::prelude::*;
-use sardips_core::GameState;
+use sardips_core::{persistent_id::PersistentIdGenerator, GameState};
 use shared_deps::moonshine_save::prelude::*;
 
 use crate::stock_market::{BuySellOrchestrator, OrderBook, QuarterManger};
@@ -17,6 +17,7 @@ impl Plugin for SardipSavePlugin {
                     .include_resource::<OrderBook>()
                     .include_resource::<QuarterManger>()
                     .include_resource::<BuySellOrchestrator>()
+                    .include_resource::<PersistentIdGenerator>()
                     .into(file_from_resource::<SaveRequest>()),
             )
             .add_systems(PreUpdate, load(file_from_resource::<LoadRequest>()))

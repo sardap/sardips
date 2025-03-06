@@ -35,7 +35,7 @@ impl Plugin for InfoPanelPlugin {
                 update_info_panel,
                 pet_panel_selection_valid,
                 (
-                    update_food_panel_sensation_text,
+                    update_food_panel_sensation_icons,
                     update_food_panel_visibility,
                     update_food_panel_fill_factor,
                     update_pet_panel_visibility,
@@ -342,7 +342,15 @@ pub fn create_info_panel(
             parent
                 .spawn((
                     NodeBundle {
-                        style: style.clone(),
+                        style: Style {
+                            position_type: PositionType::Absolute,
+                            width: Val::Percent(100.),
+                            margin: UiRect::all(Val::Px(10.)),
+                            justify_content: JustifyContent::Center,
+                            align_items: AlignItems::Center,
+                            flex_direction: FlexDirection::Row,
+                            ..default()
+                        },
                         visibility: Visibility::Hidden,
                         ..default()
                     },
@@ -350,25 +358,13 @@ pub fn create_info_panel(
                     InfoPanel,
                 ))
                 .with_children(|parent| {
-                    parent
-                        .spawn(NodeBundle {
+                    parent.spawn((
+                        NodeBundle {
                             style: child_element_style.clone(),
                             ..default()
-                        })
-                        .with_children(|parent| {
-                            parent.spawn((
-                                TextBundle::from_section(
-                                    "Sensations:",
-                                    TextStyle {
-                                        font: fonts.main_font.clone(),
-                                        font_size: INFO_PANEL_TEXT_SIZE,
-                                        color: Color::BLACK,
-                                    },
-                                ),
-                                Label,
-                                FoodInfoPanelSensation,
-                            ));
-                        });
+                        },
+                        FoodInfoPanelSensation,
+                    ));
 
                     parent
                         .spawn(NodeBundle {
@@ -424,7 +420,7 @@ fn spawn_panel<T: Component + Default, J: Component + Default>(
                     ..default()
                 },
                 TextureAtlas {
-                    layout: view_screen_images.moods_layout.clone(),
+                    layout: view_screen_images.mood_icons_layout.clone(),
                     index: icon_index,
                 },
             ));
@@ -511,11 +507,16 @@ fn update_food_panel_visibility(
     };
 }
 
-fn update_food_panel_sensation_text(
-    fonts: Res<FontAssets>,
+#[derive(Component)]
+struct FoodInfoSensationIcon;
+
+fn update_food_panel_sensation_icons(
+    mut commands: Commands,
+    view_assets: Res<ViewScreenImageAssets>,
     food_info_panel: Query<&FoodInfoPanel, Changed<FoodInfoPanel>>,
     foods: Query<&FoodSensations, With<Food>>,
-    mut text: Query<&mut Text, With<FoodInfoPanelSensation>>,
+    food_sensations_holder: Query<(Entity, Option<&Children>), With<FoodInfoPanelSensation>>,
+    existing: Query<Entity, With<FoodInfoSensationIcon>>,
 ) {
     let food_info_panel = match food_info_panel.get_single() {
         Ok(val) => val,
@@ -527,33 +528,42 @@ fn update_food_panel_sensation_text(
         None => return,
     };
 
-    let mut text = text.single_mut();
+    let (sen_holder_entity, children) = food_sensations_holder.single();
 
     let food_sensations = foods.get(food_entity).unwrap();
 
     // Handle food clicked
-    while text.sections.len() > 1 {
-        text.sections.pop();
-    }
-
-    let font_size = text.sections[0].style.font_size;
-
-    let mut sensation_text = " ".to_string();
-
-    for (i, sensation) in food_sensations.values.iter().enumerate() {
-        sensation_text.push_str(sensation.short_string());
-        if i < food_sensations.values.len() - 1 {
-            sensation_text.push_str(", ");
+    if let Some(children) = children {
+        for entity in children.iter() {
+            if existing.get(*entity).is_ok() {
+                commands.entity(*entity).despawn_recursive();
+            }
         }
     }
 
-    text.sections.push(TextSection {
-        value: sensation_text,
-        style: TextStyle {
-            font: fonts.main_font.clone(),
-            font_size,
-            color: Color::BLACK,
-        },
+    let mut sensations: Vec<_> = food_sensations.values.iter().collect();
+    sensations.sort_by_key(|s| s.icon_index());
+
+    commands.entity(sen_holder_entity).with_children(|parent| {
+        for sensation in sensations {
+            parent.spawn((
+                ImageBundle {
+                    style: Style {
+                        width: Val::Px(26.4),
+                        height: Val::Px(36.),
+                        margin: UiRect::all(Val::Px(2.)),
+                        ..default()
+                    },
+                    image: UiImage::new(view_assets.food_sensation.clone()),
+                    ..default()
+                },
+                TextureAtlas {
+                    layout: view_assets.food_sensation_layout.clone(),
+                    index: sensation.icon_index(),
+                },
+                FoodInfoSensationIcon,
+            ));
+        }
     });
 }
 

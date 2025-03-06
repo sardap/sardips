@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 
-use bevy::prelude::*;
-use shared_deps::bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
+use bevy::{prelude::*, utils::HashMap};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
@@ -9,9 +8,10 @@ use crate::{
     money::{money_aberration_decimal_display, money_aberration_display, money_display, Wallet},
     palettes,
     player::Player,
+    simulation::SimulationState,
     stock_market::{
-        BuyOrder, Company, CompanyPerformance, CompanyRank, NewOrder, OrderBook, OrderBrief,
-        SellOrder, ShareHistory, SharePortfolio,
+        Company, CompanyPerformance, CompanyRank, OrderBook, OrderBrief, OrderKind, ShareHistory,
+        SharePortfolio, StockOrder,
     },
 };
 use sardips_core::{
@@ -19,6 +19,7 @@ use sardips_core::{
     button_hover::ButtonHover,
     despawn_all,
     money_core::Money,
+    persistent_id::PersistentId,
     rgb_to_color,
     text_translation::{warp_recursive_value_key, KeyText},
     ui_utils::spawn_back_button,
@@ -26,8 +27,8 @@ use sardips_core::{
 };
 use text_keys::{
     STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE, STOCK_BUY_SCENE_BUY_MODE,
-    STOCK_BUY_SCENE_BUY_PLAYER_OPEN_BUY_TITLE, STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON,
-    STOCK_BUY_SCENE_EXPAND, STOCK_BUY_SCENE_FEATURE_BUY_BUTTON, STOCK_BUY_SCENE_FEATURE_BUY_OPEN,
+    STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON, STOCK_BUY_SCENE_EXPAND,
+    STOCK_BUY_SCENE_FEATURE_BUY_BUTTON, STOCK_BUY_SCENE_FEATURE_BUY_OPEN,
     STOCK_BUY_SCENE_FEATURE_BUY_OPEN_NONE, STOCK_BUY_SCENE_FEATURE_EARNINGS,
     STOCK_BUY_SCENE_FEATURE_INDUSTRY_HEADER, STOCK_BUY_SCENE_FEATURE_INDUSTRY_PERCENT,
     STOCK_BUY_SCENE_FEATURE_MARKET_CAP, STOCK_BUY_SCENE_FEATURE_NET_ASSETS,
@@ -49,8 +50,14 @@ impl Plugin for StockScenePlugin {
         app.insert_state(StockBuySceneState::default())
             .add_systems(
                 OnEnter(GameState::StockBuy),
-                (setup_camera, setup_state, setup_selecting_entity),
+                (
+                    setup_camera,
+                    setup_state,
+                    setup_selecting_entity,
+                    start_sim_state,
+                ),
             )
+            .add_systems(OnExit(GameState::StockBuy), (stop_sim_state, cleanup))
             .add_systems(
                 OnEnter(StockBuySceneState::SelectingCompany),
                 setup_selecting_ui,
@@ -61,7 +68,7 @@ impl Plugin for StockScenePlugin {
             )
             .add_systems(
                 Update,
-                (tick_input, exit_scene, rotate_static, expand_button_pressed)
+                (exit_scene, expand_button_pressed, update_select_rows)
                     .run_if(in_state(StockBuySceneState::SelectingCompany)),
             )
             .add_systems(
@@ -74,15 +81,17 @@ impl Plugin for StockScenePlugin {
             )
             .add_systems(
                 Update,
-                (open_sell_button_interacted, open_buy_button_interacted)
-                    .run_if(in_state(StockBuySceneState::FeatureCompany)),
+                open_buy_button_interacted.run_if(in_state(StockBuySceneState::FeatureCompany)),
             )
             .add_systems(
                 Update,
                 feature_back_pressed.run_if(in_state(StockBuySceneState::FeatureCompany)),
             )
-            .add_systems(OnEnter(StockBuySceneState::Buy), setup_buy_screen)
-            .add_systems(OnExit(StockBuySceneState::Buy), despawn_all::<BuyScreen>)
+            .add_systems(OnEnter(StockBuySceneState::BuySell), setup_buy_screen)
+            .add_systems(
+                OnExit(StockBuySceneState::BuySell),
+                despawn_all::<BuyScreen>,
+            )
             .add_systems(
                 Update,
                 (
@@ -96,18 +105,24 @@ impl Plugin for StockScenePlugin {
                     update_player_stock_quantity_input_text,
                     update_stock_total_price_text,
                     buy_stock_button_interacted,
-                    update_buy_order_list,
                     disable_buy_button,
                     remove_order_button,
                     toggle_buy_sell_mode,
                     update_but_sell_select_mode_text,
                     update_buy_sell_button_text,
-                    update_sell_orders,
+                    update_order_rows,
                 )
-                    .run_if(in_state(StockBuySceneState::Buy)),
-            )
-            .add_systems(OnExit(GameState::StockBuy), cleanup);
+                    .run_if(in_state(StockBuySceneState::BuySell)),
+            );
     }
+}
+
+fn start_sim_state(mut sim_state: ResMut<NextState<SimulationState>>) {
+    sim_state.set(SimulationState::Running);
+}
+
+fn stop_sim_state(mut sim_state: ResMut<NextState<SimulationState>>) {
+    sim_state.set(SimulationState::Paused);
 }
 
 #[derive(States, Debug, Clone, Eq, PartialEq, Hash, Default)]
@@ -116,8 +131,7 @@ enum StockBuySceneState {
     None,
     SelectingCompany,
     FeatureCompany,
-    Sell,
-    Buy,
+    BuySell,
 }
 
 fn setup_state(mut state: ResMut<NextState<StockBuySceneState>>) {
@@ -155,19 +169,16 @@ fn setup_selecting_ui(
     mut commands: Commands,
     fonts: Res<FontAssets>,
     font_assets: Res<FontAssets>,
-    companies: Query<(Entity, &Company, &ShareHistory)>,
-    player: Query<&SharePortfolio, With<Player>>,
+    companies: Query<(Entity, &PersistentId, &Company, &ShareHistory)>,
 ) {
     let mut companies: Vec<_> = companies.iter().collect();
     companies.sort_by(|a, b| {
-        let a_market_cap = a.1.existing_shares as i128 * a.2.cached_price as i128;
-        let b_market_cap = b.1.existing_shares as i128 * b.2.cached_price as i128;
+        let a_market_cap = a.2.existing_shares as i128 * a.3.cached_price as i128;
+        let b_market_cap = b.2.existing_shares as i128 * b.3.cached_price as i128;
         b_market_cap.cmp(&a_market_cap)
     });
 
     let font = font_assets.monospace.clone();
-
-    let share_portfolio = player.single();
 
     commands
         .spawn((
@@ -353,7 +364,14 @@ fn setup_selecting_ui(
                     },));
                 });
 
-            for (company_entity, company, share_history) in companies {
+            for i in 0..12 {
+                let mut ticker_text: Entity = Entity::PLACEHOLDER;
+                let mut own_text: Entity = Entity::PLACEHOLDER;
+                let mut market_cap_text: Entity = Entity::PLACEHOLDER;
+                let mut stock_price_text: Entity = Entity::PLACEHOLDER;
+                let mut one_q_change_text: Entity = Entity::PLACEHOLDER;
+                let mut expand_button: Entity = Entity::PLACEHOLDER;
+
                 parent
                     .spawn((NodeBundle {
                         style: Style {
@@ -385,14 +403,16 @@ fn setup_selecting_ui(
                                 ..default()
                             })
                             .with_children(|parent| {
-                                parent.spawn((TextBundle::from_section(
-                                    &company.ticker,
-                                    TextStyle {
-                                        font: font.clone(),
-                                        font_size: ROW_TEXT_SIZE,
-                                        color: Color::BLACK,
-                                    },
-                                ),));
+                                ticker_text = parent
+                                    .spawn((TextBundle::from_section(
+                                        "",
+                                        TextStyle {
+                                            font: font.clone(),
+                                            font_size: ROW_TEXT_SIZE,
+                                            color: Color::BLACK,
+                                        },
+                                    ),))
+                                    .id();
                             });
 
                         // Player Own
@@ -406,16 +426,16 @@ fn setup_selecting_ui(
                                 ..default()
                             })
                             .with_children(|parent| {
-                                parent.spawn((TextBundle::from_section(
-                                    money_aberration_display(
-                                        share_portfolio.get_count(&company_entity) * 100,
-                                    ),
-                                    TextStyle {
-                                        font: font.clone(),
-                                        font_size: ROW_TEXT_SIZE,
-                                        color: Color::BLACK,
-                                    },
-                                ),));
+                                own_text = parent
+                                    .spawn((TextBundle::from_section(
+                                        money_aberration_display(0),
+                                        TextStyle {
+                                            font: font.clone(),
+                                            font_size: ROW_TEXT_SIZE,
+                                            color: Color::BLACK,
+                                        },
+                                    ),))
+                                    .id();
                             });
 
                         // Market cap
@@ -429,27 +449,26 @@ fn setup_selecting_ui(
                                 ..default()
                             })
                             .with_children(|parent| {
-                                parent.spawn((
-                                    TextBundle::from_section(
-                                        "",
-                                        TextStyle {
-                                            font: font.clone(),
-                                            font_size: ROW_TEXT_SIZE,
-                                            color: Color::BLACK,
-                                        },
-                                    ),
-                                    KeyText::new().with_value(
-                                        0,
-                                        STOCK_BUY_SCENE_STOCK_PRICE,
-                                        &[money_aberration_display(
-                                            company.existing_shares as i128
-                                                * share_history.cached_price as i128,
-                                        )
-                                        .as_str()],
-                                    ),
-                                ));
+                                market_cap_text = parent
+                                    .spawn((
+                                        TextBundle::from_section(
+                                            "",
+                                            TextStyle {
+                                                font: font.clone(),
+                                                font_size: ROW_TEXT_SIZE,
+                                                color: Color::BLACK,
+                                            },
+                                        ),
+                                        KeyText::new().with_value(
+                                            0,
+                                            STOCK_BUY_SCENE_STOCK_PRICE,
+                                            &[money_aberration_display(0).as_str()],
+                                        ),
+                                    ))
+                                    .id();
                             });
 
+                        // Stock price
                         parent
                             .spawn(NodeBundle {
                                 style: Style {
@@ -460,21 +479,23 @@ fn setup_selecting_ui(
                                 ..default()
                             })
                             .with_children(|parent| {
-                                parent.spawn((
-                                    TextBundle::from_section(
-                                        "",
-                                        TextStyle {
-                                            font: font.clone(),
-                                            font_size: ROW_TEXT_SIZE,
-                                            color: Color::BLACK,
-                                        },
-                                    ),
-                                    KeyText::new().with_value(
-                                        0,
-                                        STOCK_BUY_SCENE_STOCK_PRICE,
-                                        &[money_display(share_history.cached_price).as_str()],
-                                    ),
-                                ));
+                                stock_price_text = parent
+                                    .spawn((
+                                        TextBundle::from_section(
+                                            "",
+                                            TextStyle {
+                                                font: font.clone(),
+                                                font_size: ROW_TEXT_SIZE,
+                                                color: Color::BLACK,
+                                            },
+                                        ),
+                                        KeyText::new().with_value(
+                                            0,
+                                            STOCK_BUY_SCENE_STOCK_PRICE,
+                                            &[money_display(0).as_str()],
+                                        ),
+                                    ))
+                                    .id();
                             });
 
                         // Change 1q
@@ -488,25 +509,16 @@ fn setup_selecting_ui(
                                 ..default()
                             })
                             .with_children(|parent| {
-                                let last_performance = company.performance_history.last().unwrap();
-                                let change =
-                                    share_history.cached_price - last_performance.stock_price;
-                                let (color, symbol) = match change.cmp(&0) {
-                                    Ordering::Less => (BAD_COLOR, ""),
-                                    Ordering::Equal => (Color::BLACK, ""),
-                                    Ordering::Greater => (GOOD_COLOR, "+"),
-                                };
-                                let percent_change =
-                                    change as f32 / last_performance.stock_price as f32 * 100.0;
-
-                                parent.spawn((TextBundle::from_section(
-                                    format!("{}{:.2}%", symbol, percent_change),
-                                    TextStyle {
-                                        font: font.clone(),
-                                        font_size: ROW_TEXT_SIZE,
-                                        color,
-                                    },
-                                ),));
+                                one_q_change_text = parent
+                                    .spawn((TextBundle::from_section(
+                                        "0.00%",
+                                        TextStyle {
+                                            font: font.clone(),
+                                            font_size: ROW_TEXT_SIZE,
+                                            color: Color::BLACK,
+                                        },
+                                    ),))
+                                    .id();
                             });
 
                         // Expand button
@@ -523,24 +535,34 @@ fn setup_selecting_ui(
                                     },
                                     ..default()
                                 },
-                                ExpandButton(company_entity),
                                 ButtonHover::default()
                                     .with_background(palettes::ui::BUTTON_SET)
                                     .with_border(palettes::ui::BUTTON_BORDER_SET),
                             ))
                             .with_children(|parent| {
-                                parent.spawn((
-                                    TextBundle::from_section(
-                                        "",
-                                        TextStyle {
-                                            font: font.clone(),
-                                            font_size: ROW_TEXT_SIZE,
-                                            color: Color::BLACK,
-                                        },
-                                    ),
-                                    KeyText::new().with(0, STOCK_BUY_SCENE_EXPAND),
-                                ));
+                                expand_button = parent
+                                    .spawn((
+                                        TextBundle::from_section(
+                                            "",
+                                            TextStyle {
+                                                font: font.clone(),
+                                                font_size: ROW_TEXT_SIZE,
+                                                color: Color::BLACK,
+                                            },
+                                        ),
+                                        KeyText::new().with(0, STOCK_BUY_SCENE_EXPAND),
+                                    ))
+                                    .id();
                             });
+                    })
+                    .insert(SelectScreenRow {
+                        index: i,
+                        ticker_text,
+                        own_text,
+                        market_cap_text,
+                        stock_price_text,
+                        one_q_change_text,
+                        expand_button,
                     });
             }
 
@@ -551,6 +573,112 @@ fn setup_selecting_ui(
                 &palettes::ui::BUTTON_BORDER_SET,
             );
         });
+}
+
+#[derive(Component)]
+struct SelectScreenRow {
+    index: u32,
+    ticker_text: Entity,
+    own_text: Entity,
+    market_cap_text: Entity,
+    stock_price_text: Entity,
+    one_q_change_text: Entity,
+    expand_button: Entity,
+}
+
+fn update_select_rows(
+    mut commands: Commands,
+    mut text: Query<&mut Text>,
+    mut key_texts: Query<&mut KeyText>,
+    mut select_rows: Query<(&SelectScreenRow, &Children, &mut Visibility)>,
+    mut expanded_buttons: Query<&mut ExpandButton>,
+    companies: Query<(Entity, &PersistentId, &Company, &ShareHistory)>,
+    player: Query<&SharePortfolio, With<Player>>,
+) {
+    let mut companies: Vec<_> = companies.iter().collect();
+    companies.sort_by(|a, b| {
+        let a_market_cap = a.2.existing_shares as i128 * a.3.cached_price as i128;
+        let b_market_cap = b.2.existing_shares as i128 * b.3.cached_price as i128;
+        b_market_cap.cmp(&a_market_cap)
+    });
+
+    let share_portfolio = player.single();
+
+    let mut select_rows = select_rows.iter_mut().collect::<Vec<_>>();
+    select_rows.sort_by_key(|(row, _, _)| row.index);
+
+    for (select_row, children, mut visibility) in select_rows {
+        let (company_entity, company_per_id, company, share_history) =
+            match companies.get(select_row.index as usize) {
+                Some(x) => (x.0, x.1, x.2, x.3),
+                None => {
+                    *visibility = Visibility::Hidden;
+                    continue;
+                }
+            };
+        *visibility = Visibility::Visible;
+
+        // Update Ticker
+        {
+            let mut text = text.get_mut(select_row.ticker_text).unwrap();
+            text.sections[0].value = company.ticker.clone();
+        }
+
+        // Update Own
+        {
+            let mut text = text.get_mut(select_row.own_text).unwrap();
+            text.sections[0].value =
+                money_aberration_display(share_portfolio.get_count(company_per_id) * 100);
+        }
+
+        // Update M Cap
+        {
+            let mut key_text = key_texts.get_mut(select_row.market_cap_text).unwrap();
+            key_text.replace_value(
+                0,
+                0,
+                money_aberration_display(
+                    company.existing_shares as i128 * share_history.cached_price as i128,
+                ),
+            );
+        }
+
+        // Update Price
+        {
+            let mut key_text = key_texts.get_mut(select_row.stock_price_text).unwrap();
+            key_text.replace_value(0, 0, money_display(share_history.cached_price));
+        }
+
+        // Update 1Q Change
+        {
+            let last_performance = company.performance_history.last().unwrap();
+            let change = share_history.cached_price - last_performance.stock_price;
+            let (color, symbol) = match change.cmp(&0) {
+                Ordering::Less => (BAD_COLOR, ""),
+                Ordering::Equal => (Color::BLACK, ""),
+                Ordering::Greater => (GOOD_COLOR, "+"),
+            };
+            let percent_change = change as f32 / last_performance.stock_price as f32 * 100.0;
+
+            let mut text = text.get_mut(select_row.one_q_change_text).unwrap();
+            text.sections[0].value = format!("{}{:.2}%", symbol, percent_change);
+            text.sections[0].style.color = color;
+        }
+
+        // Update expand button
+        {
+            let mut expand_button = match expanded_buttons.get_mut(select_row.expand_button) {
+                Ok(x) => x,
+                Err(_) => {
+                    commands
+                        .entity(children[5])
+                        .insert(ExpandButton(company_entity));
+                    continue;
+                }
+            };
+            expand_button.0 = company_entity;
+        }
+    }
 }
 
 fn cleanup(
@@ -570,19 +698,6 @@ struct StockSceneCamera;
 #[derive(Component)]
 struct StockScene;
 
-#[derive(Component, EnumIter, Copy, Clone, PartialEq, Eq, Hash)]
-enum FoodBuySceneButton {
-    Quit,
-}
-
-fn tick_input(query: Query<(&Interaction, &FoodBuySceneButton), Changed<Interaction>>) {
-    for (interaction, _) in query.iter() {
-        if *interaction != Interaction::Pressed {
-            continue;
-        }
-    }
-}
-
 #[derive(Component, Default)]
 struct ExitScene;
 
@@ -595,33 +710,6 @@ fn exit_scene(
         if *interaction == Interaction::Pressed {
             game_state.set(GameState::ViewScreen);
             buy_state.set(StockBuySceneState::None);
-        }
-    }
-}
-
-#[derive(Component)]
-struct RotateStatic {
-    timer: Timer,
-}
-
-impl Default for RotateStatic {
-    fn default() -> Self {
-        Self {
-            timer: Timer::from_seconds(0.2, TimerMode::Repeating),
-        }
-    }
-}
-
-fn rotate_static(
-    time: Res<Time>,
-    mut rand: ResMut<GlobalRng>,
-    mut rotate: Query<(&mut TextureAtlas, &mut RotateStatic)>,
-) {
-    let rand = rand.get_mut();
-
-    for (mut layout, mut rotate) in rotate.iter_mut() {
-        if rotate.timer.tick(time.delta()).just_finished() {
-            layout.index = rand.gen_usize() % 64;
         }
     }
 }
@@ -658,22 +746,21 @@ fn setup_company_focus_screen(
     mut commands: Commands,
     font_assets: Res<FontAssets>,
     order_book: Res<OrderBook>,
-    player_portfolio: Query<&SharePortfolio, With<Player>>,
     selected: Query<&SelectedExpandedCompany>,
-    companies: Query<(Entity, &Company, &ShareHistory)>,
+    companies: Query<(&PersistentId, &Company, &ShareHistory)>,
+    company_per_id: Query<&PersistentId, With<Company>>,
 ) {
     let selected = selected.single().0;
+    let company_per_id = *company_per_id.get(selected).unwrap();
 
     let ranking = CompanyRank::new_ranking(
         &companies
             .iter()
-            .map(|(entity, company, share_history)| {
-                (entity, CompanyPerformance::new(company, share_history))
+            .map(|(per_id, company, share_history)| {
+                (*per_id, CompanyPerformance::new(company, share_history))
             })
             .collect::<Vec<_>>(),
     );
-
-    let player_portfolio = player_portfolio.single();
 
     let root = commands
         .spawn((
@@ -1034,7 +1121,7 @@ fn setup_company_focus_screen(
 
             parent.spawn(divider.clone());
 
-            let rank = ranking.get(&selected).unwrap();
+            let rank = ranking.get(&company_per_id).unwrap();
 
             parent.spawn((
                 TextBundle::from_sections(vec![
@@ -1171,7 +1258,7 @@ fn setup_company_focus_screen(
             let top_buy_order = {
                 let mut found: Option<OrderBrief> = None;
                 for buy_order in &order_book.buy_orders {
-                    if buy_order.company == selected {
+                    if buy_order.company == company_per_id {
                         match &mut found {
                             Some(prev) => match buy_order.price.cmp(&prev.price) {
                                 Ordering::Less => {}
@@ -1252,7 +1339,7 @@ fn setup_company_focus_screen(
                                 },
                                 ..default()
                             },
-                            OpenBuyButton,
+                            OpenBuySellButton,
                             ButtonHover::default()
                                 .with_background(palettes::ui::BUTTON_SET)
                                 .with_border(palettes::ui::BUTTON_BORDER_SET),
@@ -1280,7 +1367,7 @@ fn setup_company_focus_screen(
             // Sell order
             let top_sell_order = {
                 let mut found: Option<OrderBrief> = None;
-                let fuck = order_book.get_sell_orders(selected);
+                let fuck = order_book.get_sell_orders(company_per_id);
                 for sell_order in fuck {
                     match &mut found {
                         Some(prev) => {
@@ -1342,46 +1429,6 @@ fn setup_company_focus_screen(
                             )]),
                             KeyText::new().with(0, STOCK_BUY_SCENE_FEATURE_SELL_OPEN_NONE),
                         ));
-                    }
-
-                    if player_portfolio.get_count(&selected) > 0 {
-                        parent
-                            .spawn((
-                                ButtonBundle {
-                                    style: Style {
-                                        width: Val::Px(60.0),
-                                        height: Val::Px(30.0),
-                                        margin: UiRect::all(Val::Px(5.0)),
-                                        align_content: AlignContent::Center,
-                                        justify_content: JustifyContent::Center,
-                                        border: UiRect::all(Val::Px(2.0)),
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                OpenSellButton,
-                                ButtonHover::default()
-                                    .with_background(palettes::ui::BUTTON_SET)
-                                    .with_border(palettes::ui::BUTTON_BORDER_SET),
-                            ))
-                            .with_children(|parent| {
-                                parent.spawn((
-                                    TextBundle::from_section(
-                                        "",
-                                        TextStyle {
-                                            font: font_assets.monospace.clone(),
-                                            font_size: STATS_SIZE,
-                                            color: Color::BLACK,
-                                        },
-                                    )
-                                    .with_style(Style {
-                                        align_content: AlignContent::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    }),
-                                    KeyText::new().with(0, STOCK_BUY_SCENE_FEATURE_SELL_BUTTON),
-                                ));
-                            });
                     }
                 });
 
@@ -1452,29 +1499,15 @@ fn get_percent_change_set<T: Into<Money>, J: Into<Money>>(
 }
 
 #[derive(Component)]
-struct OpenSellButton;
-
-fn open_sell_button_interacted(
-    mut buy_state: ResMut<NextState<StockBuySceneState>>,
-    buttons: Query<&Interaction, (With<OpenSellButton>, Changed<Interaction>)>,
-) {
-    for interaction in &buttons {
-        if *interaction == Interaction::Pressed {
-            buy_state.set(StockBuySceneState::Sell);
-        }
-    }
-}
-
-#[derive(Component)]
-struct OpenBuyButton;
+struct OpenBuySellButton;
 
 fn open_buy_button_interacted(
     mut buy_state: ResMut<NextState<StockBuySceneState>>,
-    buttons: Query<&Interaction, (With<OpenBuyButton>, Changed<Interaction>)>,
+    buttons: Query<&Interaction, (With<OpenBuySellButton>, Changed<Interaction>)>,
 ) {
     for interaction in &buttons {
         if *interaction == Interaction::Pressed {
-            buy_state.set(StockBuySceneState::Buy);
+            buy_state.set(StockBuySceneState::BuySell);
         }
     }
 }
@@ -1488,8 +1521,10 @@ fn setup_buy_screen(
     selected_company: Query<&SelectedExpandedCompany>,
     player: Query<(&Wallet, &SharePortfolio), With<Player>>,
     companies: Query<(&Company, &ShareHistory)>,
+    company_per_id: Query<&PersistentId, With<Company>>,
 ) {
     let selected = selected_company.single().0;
+    let company_per_id = *company_per_id.get(selected).unwrap();
 
     let (wallet, share_portfolio) = player.single();
 
@@ -1566,7 +1601,7 @@ fn setup_buy_screen(
                     KeyText::new().with_value(
                         0,
                         text_keys::STOCK_BUY_SCENE_BUY_PLAYER_OWNS_STOCKS,
-                        &[&share_portfolio.get_count(&selected).to_string()],
+                        &[&share_portfolio.get_count(&company_per_id).to_string()],
                     ),
                 ),
                 PlayerBuySceneStocks,
@@ -1847,6 +1882,8 @@ fn setup_buy_screen(
                     ..default()
                 })
                 .with_children(|parent| {
+                    const ORDER_ROWS: u32 = 4;
+
                     // Buy Side
                     parent
                         .spawn(NodeBundle {
@@ -1861,20 +1898,117 @@ fn setup_buy_screen(
                             ..default()
                         })
                         .with_children(|parent| {
-                            parent.spawn((
-                                NodeBundle {
-                                    style: Style {
-                                        width: Val::Percent(100.0),
-                                        height: Val::Percent(100.0),
-                                        flex_direction: FlexDirection::Column,
-                                        align_items: AlignItems::Center,
-                                        justify_content: JustifyContent::Center,
+                            parent
+                                .spawn((
+                                    NodeBundle {
+                                        style: Style {
+                                            width: Val::Percent(100.0),
+                                            height: Val::Percent(100.0),
+                                            flex_direction: FlexDirection::Column,
+                                            align_items: AlignItems::Center,
+                                            justify_content: JustifyContent::Center,
+                                            ..default()
+                                        },
                                         ..default()
                                     },
-                                    ..default()
-                                },
-                                BuyOrderList,
-                            ));
+                                    BuyOrderList,
+                                ))
+                                .with_children(|parent| {
+                                    parent.spawn((
+                                        TextBundle::from_section(
+                                            "",
+                                            TextStyle {
+                                                font: font_assets.monospace.clone(),
+                                                font_size: ORDER_LIST_BODY_SIZE - 3.,
+                                                color: Color::BLACK,
+                                            },
+                                        ),
+                                        KeyText::new().with(
+                                            0,
+                                            text_keys::STOCK_BUY_SCENE_BUY_EXISTING_BUY_TITLE,
+                                        ),
+                                    ));
+
+                                    for i in 0..=ORDER_ROWS {
+                                        parent
+                                            .spawn((
+                                                NodeBundle {
+                                                    style: Style {
+                                                        width: Val::Percent(100.0),
+                                                        flex_direction: FlexDirection::Row,
+                                                        ..default()
+                                                    },
+                                                    ..default()
+                                                },
+                                                OrderRow {
+                                                    index: i,
+                                                    kind: OrderKind::Buy,
+                                                },
+                                            ))
+                                            .with_children(|parent| {
+                                                parent.spawn((
+                                                    TextBundle::from_sections(vec![
+                                                        TextSection::new(
+                                                            "",
+                                                            TextStyle {
+                                                                font: font_assets.monospace.clone(),
+                                                                font_size: ORDER_LIST_BODY_SIZE,
+                                                                color: Color::BLACK,
+                                                            },
+                                                        ),
+                                                    ]),
+                                                    KeyText::new().with_value(
+                                                        0,
+                                                        STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
+                                                        &[""],
+                                                    ),
+                                                    OrderRowText,
+                                                ));
+
+                                                parent
+                                                    .spawn((
+                                                        ButtonBundle {
+                                                            style: Style {
+                                                                width: Val::Px(30.0),
+                                                                border: UiRect::all(Val::Px(2.0)),
+                                                                align_content: AlignContent::Center,
+                                                                justify_content: JustifyContent::Center,
+                                                                ..default()
+                                                            },
+                                                            visibility: Visibility::Hidden,
+                                                            ..default()
+                                                        },
+                                                        RemoveOrderButton(0),
+                                                        ButtonHover::default()
+                                                            .with_background(palettes::ui::BUTTON_SET)
+                                                            .with_border(palettes::ui::BUTTON_BORDER_SET),
+                                                    ))
+                                                    .with_children(|parent| {
+                                                        parent.spawn((
+                                                            TextBundle::from_section(
+                                                                "",
+                                                                TextStyle {
+                                                                    font: font_assets.monospace.clone(),
+                                                                    font_size: ORDER_LIST_BODY_SIZE,
+                                                                    color: Color::BLACK,
+                                                                },
+                                                            )
+                                                            .with_style(Style {
+                                                                align_content: AlignContent::Center,
+                                                                justify_content: JustifyContent::Center,
+                                                                ..default()
+                                                            }),
+                                                            KeyText::new().with(
+                                                                0,
+                                                                STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON,
+                                                            ),
+                                                        ));
+                                                    });
+
+                                            });
+
+                                    }
+                                });
                         });
 
                     // Sell Side
@@ -1889,8 +2023,8 @@ fn setup_buy_screen(
                             ..default()
                         })
                         .with_children(|parent| {
-                            parent.spawn((
-                                NodeBundle {
+                            parent
+                                .spawn((NodeBundle {
                                     style: Style {
                                         width: Val::Percent(100.0),
                                         height: Val::Percent(100.0),
@@ -1900,9 +2034,103 @@ fn setup_buy_screen(
                                         ..default()
                                     },
                                     ..default()
-                                },
-                                SellOrderList,
-                            ));
+                                },))
+                                .with_children(|parent| {
+                                    parent.spawn((
+                                        TextBundle::from_section(
+                                            "",
+                                            TextStyle {
+                                                font: font_assets.monospace.clone(),
+                                                font_size: ORDER_LIST_BODY_SIZE - 3.,
+                                                color: Color::BLACK,
+                                            },
+                                        ),
+                                        KeyText::new().with(
+                                            0,
+                                            text_keys::STOCK_BUY_SCENE_BUY_EXISTING_SELL_TITLE,
+                                        ),
+                                    ));
+
+                                    for i in 0..=ORDER_ROWS {
+                                        parent
+                                            .spawn((
+                                                NodeBundle {
+                                                    style: Style {
+                                                        width: Val::Percent(100.0),
+                                                        flex_direction: FlexDirection::Row,
+                                                        ..default()
+                                                    },
+                                                    ..default()
+                                                },
+                                                OrderRow {
+                                                    index: i,
+                                                    kind: OrderKind::Sell,
+                                                },
+                                            ))
+                                            .with_children(|parent| {
+                                                parent.spawn((
+                                                    TextBundle::from_sections(vec![
+                                                        TextSection::new(
+                                                            "",
+                                                            TextStyle {
+                                                                font: font_assets.monospace.clone(),
+                                                                font_size: ORDER_LIST_BODY_SIZE,
+                                                                color: Color::BLACK,
+                                                            },
+                                                        ),
+                                                    ]),
+                                                    KeyText::new().with_value(
+                                                        0,
+                                                        STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
+                                                        &[""],
+                                                    ),
+                                                    OrderRowText,
+                                                ));
+
+                                        parent
+                                            .spawn((
+                                                ButtonBundle {
+                                                    style: Style {
+                                                        width: Val::Px(30.0),
+                                                        border: UiRect::all(Val::Px(2.0)),
+                                                        align_content: AlignContent::Center,
+                                                        justify_content: JustifyContent::Center,
+                                                        ..default()
+                                                    },
+                                                    visibility: Visibility::Hidden,
+                                                    ..default()
+                                                },
+                                                RemoveOrderButton(0),
+                                                ButtonHover::default()
+                                                    .with_background(palettes::ui::BUTTON_SET)
+                                                    .with_border(palettes::ui::BUTTON_BORDER_SET),
+                                            ))
+                                            .with_children(|parent| {
+                                                parent.spawn((
+                                                    TextBundle::from_section(
+                                                        "",
+                                                        TextStyle {
+                                                            font: font_assets.monospace.clone(),
+                                                            font_size: ORDER_LIST_BODY_SIZE,
+                                                            color: Color::BLACK,
+                                                        },
+                                                    )
+                                                    .with_style(Style {
+                                                        align_content: AlignContent::Center,
+                                                        justify_content: JustifyContent::Center,
+                                                        ..default()
+                                                    }),
+                                                    KeyText::new().with(
+                                                        0,
+                                                        STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON,
+                                                    ),
+                                                ));
+                                            });
+
+                                        });
+
+                                    }
+                                });
                         });
                 });
 
@@ -1952,6 +2180,7 @@ struct PlayerBuySceneStocks;
 fn update_player_stocks_text(
     player: Query<&SharePortfolio, (With<Player>, Changed<SharePortfolio>)>,
     selected: Query<&SelectedExpandedCompany>,
+    company_per_id: Query<&PersistentId, With<Company>>,
     mut text: Query<&mut KeyText, With<PlayerBuySceneStocks>>,
 ) {
     let portfolio = match player.get_single() {
@@ -1960,9 +2189,10 @@ fn update_player_stocks_text(
     };
 
     let selected = selected.single().0;
+    let company_per_id = *company_per_id.get(selected).unwrap();
 
     for mut text in &mut text {
-        text.replace_value(0, 0, portfolio.get_count(&selected).to_string());
+        text.replace_value(0, 0, portfolio.get_count(&company_per_id).to_string());
     }
 }
 
@@ -2114,10 +2344,12 @@ fn disable_stock_quantity_input_buttons(
     buttons: Query<(Entity, &StockPriceInputKind, &StockQuantityInputButton)>,
     player_share_portfolio: Query<&SharePortfolio, With<Player>>,
     selected: Query<&SelectedExpandedCompany>,
+    company_per_id: Query<&PersistentId, With<Company>>,
     buy_sell_mode: Query<&BuySellModeSelectButton>,
 ) {
     let buy_mode = buy_sell_mode.single();
     let selected = selected.single().0;
+    let company_per_id = *company_per_id.get(selected).unwrap();
     let player_portfolio = player_share_portfolio.single();
 
     for (entity, kind, button) in &buttons {
@@ -2133,7 +2365,7 @@ fn disable_stock_quantity_input_buttons(
             }
             StockPriceInputKind::Higher | StockPriceInputKind::MuchHigher => {
                 if *buy_mode == BuySellModeSelectButton::Sell
-                    && player_portfolio.get_count(&selected) < current + 1
+                    && player_portfolio.get_count(&company_per_id) < current + 1
                 {
                     enabled = false;
                 }
@@ -2170,175 +2402,114 @@ fn update_stock_total_price_text(
 #[derive(Component)]
 struct BuyOrderList;
 
-#[derive(Default)]
-struct LocalUpdateBuyOrders {
-    orders_len: usize,
+#[derive(Component)]
+struct OrderRow {
+    index: u32,
+    kind: OrderKind,
 }
 
-const ORDER_LIST_BODY_SIZE: f32 = 30.;
-const MAX_BUY_ORDERS_SHOWN: usize = 4;
+#[derive(Component)]
+struct OrderRowText;
 
-fn update_buy_order_list(
-    mut local: Local<LocalUpdateBuyOrders>,
-    mut commands: Commands,
-    font_assets: Res<FontAssets>,
+const ORDER_LIST_BODY_SIZE: f32 = 30.;
+
+#[derive(Default)]
+struct UpdateOrderLocal {
+    buy_order_len: usize,
+    sell_order_len: usize,
+}
+
+fn update_order_rows(
+    mut local: Local<UpdateOrderLocal>,
     order_book: Res<OrderBook>,
-    should_update: Query<Entity, Or<(Added<BuyOrderList>, Changed<SharePortfolio>)>>,
-    buy_order_list: Query<Entity, With<BuyOrderList>>,
     selected: Query<&SelectedExpandedCompany>,
-    player: Query<Entity, With<Player>>,
+    companies_per_id: Query<&PersistentId, With<Company>>,
+    player: Query<&PersistentId, With<Player>>,
+    order_rows: Query<(&Children, &OrderRow)>,
+    mut order_row_text: Query<&mut KeyText, With<OrderRowText>>,
+    mut order_row_remove_buttons: Query<(&mut Visibility, &mut RemoveOrderButton)>,
 ) {
-    if should_update.iter().count() == 0 && local.orders_len == order_book.buy_orders.len() {
+    if local.buy_order_len == order_book.buy_orders.len()
+        && local.sell_order_len == order_book.sell_orders.len()
+    {
         return;
     }
 
-    let buy_order_list = buy_order_list.single();
-
-    local.orders_len = order_book.buy_orders.len();
-
-    commands.entity(buy_order_list).despawn_descendants();
+    local.buy_order_len = order_book.buy_orders.len();
+    local.sell_order_len = order_book.sell_orders.len();
 
     let selected = selected.single().0;
-    let player_entity = player.single();
+    let company_per_id = *companies_per_id.get(selected).unwrap();
+    let player_per_id = *player.single();
 
-    commands.entity(buy_order_list).with_children(|parent| {
-        let open_buy_orders: Vec<_> = order_book
-            .buy_orders
-            .iter()
-            .filter(|order| order.company == selected)
-            .collect();
+    // Reallocate the id's for all the rows
+    let open_buy_orders: Vec<_> = order_book
+        .buy_orders
+        .iter()
+        .filter(|order| order.company == company_per_id)
+        .collect();
 
-        let mut non_player_buy_orders: Vec<OrderBrief> = vec![];
-        let mut player_buy_orders = vec![];
-        {
-            for buy_order in open_buy_orders {
-                if buy_order.buyer == player_entity {
-                    player_buy_orders.push(buy_order)
-                } else {
-                    if let Some(last) = non_player_buy_orders.iter_mut().last() {
-                        if last.price == buy_order.price {
-                            last.quantity += buy_order.remaining_quantity;
-                            continue;
-                        }
+    let mut non_player_buy_orders: HashMap<Money, u64> = HashMap::new();
+    let mut player_buy_orders = vec![];
+    {
+        for buy_order in open_buy_orders {
+            if buy_order.owner == player_per_id {
+                player_buy_orders.push(buy_order)
+            } else {
+                non_player_buy_orders
+                    .entry(buy_order.price)
+                    .and_modify(|e| *e += buy_order.remaining_quantity)
+                    .or_insert(buy_order.remaining_quantity);
+            }
+        }
+    }
+
+    let mut non_player_buy_orders = non_player_buy_orders
+        .iter()
+        .map(|(price, quantity)| OrderBrief::new(*quantity, *price))
+        .collect::<Vec<_>>();
+    non_player_buy_orders.sort_by(|a, b| a.price.cmp(&b.price));
+
+    let mut non_player_sell_orders: Vec<OrderBrief> = vec![];
+    let mut player_sell_orders = vec![];
+    {
+        for sell_order in order_book.get_sell_orders(company_per_id) {
+            if sell_order.owner == player_per_id {
+                player_sell_orders.push(sell_order)
+            } else {
+                if let Some(last) = non_player_sell_orders.iter_mut().last() {
+                    if last.price == sell_order.price {
+                        last.quantity += sell_order.remaining_quantity;
+                        continue;
                     }
-                    non_player_buy_orders
-                        .push(OrderBrief::new(buy_order.quantity, buy_order.price));
                 }
+                non_player_sell_orders.push(OrderBrief::new(sell_order.quantity, sell_order.price));
             }
         }
+    }
+    // This is so fucking stupid
+    non_player_sell_orders.sort_by(|a, b| a.price.cmp(&b.price).reverse());
 
-        non_player_buy_orders.sort_by(|a, b| a.price.cmp(&b.price));
+    let mut order_rows = order_rows.iter().collect::<Vec<_>>();
+    order_rows.sort_by(|a, b| a.1.index.cmp(&b.1.index));
 
-        // Players Open orders
-        if !player_buy_orders.is_empty() {
-            parent.spawn((
-                TextBundle::from_section(
-                    "",
-                    TextStyle {
-                        font: font_assets.monospace.clone(),
-                        font_size: ORDER_LIST_BODY_SIZE - 3.,
-                        color: Color::BLACK,
-                    },
-                ),
-                KeyText::new().with(0, STOCK_BUY_SCENE_BUY_PLAYER_OPEN_BUY_TITLE),
-            ));
+    for (children, row) in order_rows {
+        let mut text = order_row_text.get_mut(children[0]).unwrap();
 
-            for order in player_buy_orders.iter().take(MAX_BUY_ORDERS_SHOWN) {
-                parent
-                    .spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            flex_direction: FlexDirection::Row,
-                            ..default()
-                        },
-                        ..default()
-                    })
-                    .with_children(|parent| {
-                        parent.spawn((
-                            TextBundle::from_sections(vec![TextSection::new(
-                                "",
-                                TextStyle {
-                                    font: font_assets.monospace.clone(),
-                                    font_size: ORDER_LIST_BODY_SIZE,
-                                    color: Color::BLACK,
-                                },
-                            )]),
-                            KeyText::new().with_value(
-                                0,
-                                STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
-                                &[
-                                    &format!("{: >4}", order.remaining_quantity),
-                                    &money_display(order.price),
-                                ],
-                            ),
-                        ));
-
-                        parent
-                            .spawn((
-                                ButtonBundle {
-                                    style: Style {
-                                        width: Val::Px(30.0),
-                                        border: UiRect::all(Val::Px(2.0)),
-                                        align_content: AlignContent::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                RemoveOrderButton(order.id),
-                                ButtonHover::default()
-                                    .with_background(palettes::ui::BUTTON_SET)
-                                    .with_border(palettes::ui::BUTTON_BORDER_SET),
-                            ))
-                            .with_children(|parent| {
-                                parent.spawn((
-                                    TextBundle::from_section(
-                                        "",
-                                        TextStyle {
-                                            font: font_assets.monospace.clone(),
-                                            font_size: ORDER_LIST_BODY_SIZE,
-                                            color: Color::BLACK,
-                                        },
-                                    )
-                                    .with_style(Style {
-                                        align_content: AlignContent::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    }),
-                                    KeyText::new().with(0, STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON),
-                                ));
-                            });
-                    });
-            }
-        }
-
-        // Non Player open orders
-        let non_player_orders_to_show =
-            MAX_BUY_ORDERS_SHOWN.saturating_sub(player_buy_orders.len());
-
-        if !non_player_buy_orders.is_empty() {
-            parent.spawn((
-                TextBundle::from_section(
-                    "",
-                    TextStyle {
-                        font: font_assets.monospace.clone(),
-                        font_size: ORDER_LIST_BODY_SIZE,
-                        color: Color::BLACK,
-                    },
-                ),
-                KeyText::new().with(0, text_keys::STOCK_BUY_SCENE_BUY_EXISTING_BUY_TITLE),
-            ));
-
-            for order in non_player_buy_orders.iter().take(non_player_orders_to_show) {
-                parent.spawn((
-                    TextBundle::from_sections(vec![TextSection::new(
-                        "",
-                        TextStyle {
-                            font: font_assets.monospace.clone(),
-                            font_size: ORDER_LIST_BODY_SIZE,
-                            color: Color::BLACK,
-                        },
-                    )]),
+        let mut player_order_id = None;
+        let updated_key = match row.kind {
+            OrderKind::Buy => {
+                if let Some(order) = player_buy_orders.pop() {
+                    player_order_id = Some(order.id);
+                    KeyText::new().with_value(
+                        0,
+                        STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
+                        &[
+                            &format!("{: >4}", order.remaining_quantity),
+                            &money_display(order.price),
+                        ],
+                    )
+                } else if let Some(order) = non_player_buy_orders.pop() {
                     KeyText::new().with_value(
                         0,
                         STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
@@ -2346,23 +2517,49 @@ fn update_buy_order_list(
                             &format!("{: >4}", order.quantity),
                             &money_display(order.price),
                         ],
-                    ),
-                ));
+                    )
+                } else {
+                    KeyText::new()
+                }
             }
-        } else if non_player_orders_to_show > 0 {
-            parent.spawn((
-                TextBundle::from_sections(vec![TextSection::new(
-                    "",
-                    TextStyle {
-                        font: font_assets.monospace.clone(),
-                        font_size: ORDER_LIST_BODY_SIZE,
-                        color: Color::BLACK,
-                    },
-                )]),
-                KeyText::new().with(0, STOCK_BUY_SCENE_FEATURE_BUY_OPEN_NONE),
-            ));
-        }
-    });
+            OrderKind::Sell => {
+                if let Some(order) = player_sell_orders.pop() {
+                    player_order_id = Some(order.id);
+                    KeyText::new().with_value(
+                        0,
+                        STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
+                        &[
+                            &format!("{: >4}", order.remaining_quantity),
+                            &money_display(order.price),
+                        ],
+                    )
+                } else if let Some(order) = non_player_sell_orders.pop() {
+                    KeyText::new().with_value(
+                        0,
+                        STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
+                        &[
+                            &format!("{: >4}", order.quantity),
+                            &money_display(order.price),
+                        ],
+                    )
+                } else {
+                    KeyText::new()
+                }
+            }
+        };
+
+        *text = updated_key;
+
+        let (mut viability, mut remove_order_button) =
+            order_row_remove_buttons.get_mut(children[1]).unwrap();
+        *viability = match player_order_id {
+            Some(id) => {
+                remove_order_button.0 = id;
+                Visibility::Visible
+            }
+            None => Visibility::Hidden,
+        };
+    }
 }
 
 #[derive(Component)]
@@ -2374,9 +2571,10 @@ struct BuySellStockButton {
 fn buy_stock_button_interacted(
     mut order_book: ResMut<OrderBook>,
     selected: Query<&SelectedExpandedCompany>,
+    company_per_id: Query<&PersistentId, With<Company>>,
     price_input: Query<&StockPriceInput>,
     quantity_input: Query<&StockQuantityInput>,
-    mut player: Query<(Entity, &mut Wallet, &mut SharePortfolio), With<Player>>,
+    mut player: Query<(&PersistentId, &mut Wallet, &mut SharePortfolio), With<Player>>,
     buttons: Query<(&Interaction, &BuySellStockButton), Changed<Interaction>>,
     buy_sell_mode: Query<&BuySellModeSelectButton>,
 ) {
@@ -2396,10 +2594,11 @@ fn buy_stock_button_interacted(
         .current;
     let (player_entity, mut player_wallet, mut share_portfolio) = player.single_mut();
 
+    let selected = selected.single().0;
+    let company_per_id = *company_per_id.get(selected).unwrap();
+
     match *buy_sell_mode {
         BuySellModeSelectButton::Buy => {
-            let selected = selected.single().0;
-
             let total_price = price * quantity as i64;
             if total_price > player_wallet.balance {
                 return;
@@ -2407,24 +2606,22 @@ fn buy_stock_button_interacted(
 
             player_wallet.balance -= total_price;
 
-            order_book.add(NewOrder::Buy(BuyOrder::new(
-                selected,
+            order_book.add(StockOrder::new_buy(
+                company_per_id,
                 quantity,
                 price,
-                player_entity,
-            )));
+                *player_entity,
+            ));
         }
         BuySellModeSelectButton::Sell => {
-            let selected = selected.single().0;
+            share_portfolio.remove_shares(company_per_id, quantity);
 
-            share_portfolio.remove_shares(selected, quantity);
-
-            order_book.add(NewOrder::Sell(SellOrder::new(
-                selected,
+            order_book.add(StockOrder::new_sell(
+                company_per_id,
                 quantity,
                 price,
-                player_entity,
-            )));
+                *player_entity,
+            ));
         }
     }
 }
@@ -2436,6 +2633,7 @@ fn disable_buy_button(
     player_wallet: Query<&Wallet, With<Player>>,
     share_portfolio: Query<&SharePortfolio, With<Player>>,
     selected: Query<&SelectedExpandedCompany>,
+    company_per_id: Query<&PersistentId, With<Company>>,
     buttons: Query<(Entity, &BuySellStockButton)>,
     without_interaction: Query<Entity, (With<BuySellStockButton>, Without<Interaction>)>,
     with_interaction: Query<Entity, (With<BuySellStockButton>, With<Interaction>)>,
@@ -2443,6 +2641,7 @@ fn disable_buy_button(
 ) {
     let current_mode = current_mode.single();
     let selected = selected.single().0;
+    let company_per_id = *company_per_id.get(selected).unwrap();
     let (entity, buy_button) = buttons.single();
     let quantity = quantity_input
         .get(buy_button.quantity_input)
@@ -2452,7 +2651,7 @@ fn disable_buy_button(
     match *current_mode {
         BuySellModeSelectButton::Sell => {
             let player_share_portfolio = share_portfolio.single();
-            let count = player_share_portfolio.get_count(&selected);
+            let count = player_share_portfolio.get_count(&company_per_id);
             if (quantity == 0 || count < quantity) && with_interaction.get(entity).is_ok() {
                 commands.entity(entity).remove::<Interaction>();
             } else if count > quantity && without_interaction.get(entity).is_ok() {
@@ -2499,6 +2698,7 @@ enum BuySellModeSelectButton {
 
 fn toggle_buy_sell_mode(
     selected: Query<&SelectedExpandedCompany>,
+    company_per_id: Query<&PersistentId, With<Company>>,
     player: Query<&SharePortfolio, With<Player>>,
     companies: Query<&ShareHistory, With<Company>>,
     mut price_input: Query<&mut StockPriceInput>,
@@ -2511,6 +2711,7 @@ fn toggle_buy_sell_mode(
         }
 
         let selected = selected.single().0;
+        let company_per_id = *company_per_id.get(selected).unwrap();
         let share_portfolio = player.single();
 
         let share_history = companies.get(selected).unwrap();
@@ -2527,7 +2728,7 @@ fn toggle_buy_sell_mode(
         for mut input in &mut quantity_input {
             input.current = match next_mode {
                 BuySellModeSelectButton::Buy => 1,
-                BuySellModeSelectButton::Sell => share_portfolio.get_count(&selected).min(1),
+                BuySellModeSelectButton::Sell => share_portfolio.get_count(&company_per_id).min(1),
             };
         }
 
@@ -2587,193 +2788,4 @@ fn update_buy_sell_button_text(
             );
         }
     }
-}
-
-#[derive(Component)]
-struct SellOrderList;
-
-fn update_sell_orders(
-    mut local: Local<LocalUpdateBuyOrders>,
-    mut commands: Commands,
-    font_assets: Res<FontAssets>,
-    order_book: Res<OrderBook>,
-    should_update: Query<Entity, Or<(Added<SellOrderList>, Changed<SharePortfolio>)>>,
-    sell_order_list: Query<Entity, With<SellOrderList>>,
-    selected: Query<&SelectedExpandedCompany>,
-    player: Query<Entity, With<Player>>,
-) {
-    if should_update.iter().count() == 0 && local.orders_len == order_book.total_sell_orders() {
-        return;
-    }
-
-    let sell_order_list = sell_order_list.single();
-
-    local.orders_len = order_book.total_sell_orders();
-
-    commands.entity(sell_order_list).despawn_descendants();
-
-    let selected = selected.single().0;
-    let player_entity = player.single();
-
-    commands.entity(sell_order_list).with_children(|parent| {
-        let open_sell_orders = order_book.get_sell_orders(selected);
-
-        let mut non_player_sell_orders: Vec<OrderBrief> = vec![];
-        let mut player_sell_orders = vec![];
-        {
-            for sell_order in open_sell_orders {
-                if sell_order.seller == player_entity {
-                    player_sell_orders.push(sell_order)
-                } else {
-                    if let Some(last) = non_player_sell_orders.iter_mut().last() {
-                        if last.price == sell_order.price {
-                            last.quantity += sell_order.remaining_quantity;
-                            continue;
-                        }
-                    }
-                    non_player_sell_orders
-                        .push(OrderBrief::new(sell_order.quantity, sell_order.price));
-                }
-            }
-        }
-
-        non_player_sell_orders.sort_by(|a, b| a.price.cmp(&b.price));
-
-        // Players Open orders
-        if !player_sell_orders.is_empty() {
-            parent.spawn((
-                TextBundle::from_section(
-                    "",
-                    TextStyle {
-                        font: font_assets.monospace.clone(),
-                        font_size: ORDER_LIST_BODY_SIZE - 3.,
-                        color: Color::BLACK,
-                    },
-                ),
-                KeyText::new().with(0, text_keys::STOCK_BUY_SCENE_BUY_PLAYER_OPEN_SELL_TITLE),
-            ));
-
-            for order in player_sell_orders.iter().take(MAX_BUY_ORDERS_SHOWN) {
-                parent
-                    .spawn(NodeBundle {
-                        style: Style {
-                            width: Val::Percent(100.0),
-                            flex_direction: FlexDirection::Row,
-                            ..default()
-                        },
-                        ..default()
-                    })
-                    .with_children(|parent| {
-                        parent.spawn((
-                            TextBundle::from_sections(vec![TextSection::new(
-                                "",
-                                TextStyle {
-                                    font: font_assets.monospace.clone(),
-                                    font_size: ORDER_LIST_BODY_SIZE,
-                                    color: Color::BLACK,
-                                },
-                            )]),
-                            KeyText::new().with_value(
-                                0,
-                                STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
-                                &[
-                                    &format!("{: >4}", order.remaining_quantity),
-                                    &money_display(order.price),
-                                ],
-                            ),
-                        ));
-
-                        parent
-                            .spawn((
-                                ButtonBundle {
-                                    style: Style {
-                                        width: Val::Px(30.0),
-                                        border: UiRect::all(Val::Px(2.0)),
-                                        align_content: AlignContent::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    },
-                                    ..default()
-                                },
-                                RemoveOrderButton(order.id),
-                                ButtonHover::default()
-                                    .with_background(palettes::ui::BUTTON_SET)
-                                    .with_border(palettes::ui::BUTTON_BORDER_SET),
-                            ))
-                            .with_children(|parent| {
-                                parent.spawn((
-                                    TextBundle::from_section(
-                                        "",
-                                        TextStyle {
-                                            font: font_assets.monospace.clone(),
-                                            font_size: ORDER_LIST_BODY_SIZE,
-                                            color: Color::BLACK,
-                                        },
-                                    )
-                                    .with_style(Style {
-                                        align_content: AlignContent::Center,
-                                        justify_content: JustifyContent::Center,
-                                        ..default()
-                                    }),
-                                    KeyText::new().with(0, STOCK_BUY_SCENE_BUY_REMOVE_ORDER_BUTTON),
-                                ));
-                            });
-                    });
-            }
-        }
-
-        // Non Player open orders
-        let non_player_orders_to_show =
-            MAX_BUY_ORDERS_SHOWN.saturating_sub(player_sell_orders.len());
-
-        if !non_player_sell_orders.is_empty() {
-            parent.spawn((
-                TextBundle::from_section(
-                    "",
-                    TextStyle {
-                        font: font_assets.monospace.clone(),
-                        font_size: ORDER_LIST_BODY_SIZE,
-                        color: Color::BLACK,
-                    },
-                ),
-                KeyText::new().with(0, text_keys::STOCK_BUY_SCENE_BUY_EXISTING_SELL_TITLE),
-            ));
-
-            for order in non_player_sell_orders
-                .iter()
-                .take(non_player_orders_to_show)
-            {
-                parent.spawn((
-                    TextBundle::from_sections(vec![TextSection::new(
-                        "",
-                        TextStyle {
-                            font: font_assets.monospace.clone(),
-                            font_size: ORDER_LIST_BODY_SIZE,
-                            color: Color::BLACK,
-                        },
-                    )]),
-                    KeyText::new().with_value(
-                        0,
-                        STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE,
-                        &[
-                            &format!("{: >4}", order.quantity),
-                            &money_display(order.price),
-                        ],
-                    ),
-                ));
-            }
-        } else if non_player_orders_to_show > 0 {
-            parent.spawn((
-                TextBundle::from_sections(vec![TextSection::new(
-                    "",
-                    TextStyle {
-                        font: font_assets.monospace.clone(),
-                        font_size: ORDER_LIST_BODY_SIZE,
-                        color: Color::BLACK,
-                    },
-                )]),
-                KeyText::new().with(0, STOCK_BUY_SCENE_FEATURE_SELL_OPEN_NONE),
-            ));
-        }
-    });
 }

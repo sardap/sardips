@@ -626,7 +626,7 @@ mod tests {
     #[test]
     fn test_parse_file() {
         let mut file_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        file_path.push("assets/dialogue/main.dialogue.ron");
+        file_path.push("../run/assets/dialogue/main.dialogue.ron");
 
         let data = std::fs::read_to_string(file_path).unwrap();
 

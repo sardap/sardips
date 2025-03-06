@@ -90,9 +90,9 @@ pub const STOCK_BUY_SCENE_BUY_EXISTING_SELL_TITLE: &str = "stock_buy_scene.buy_e
 pub const STOCK_BUY_SCENE_BUY_EXISTING_BUY_LINE: &str = "stock_buy_scene.buy_existing_buy_line";
 pub const STOCK_BUY_SCENE_BUY_PLAYER_OPEN_BUY_TITLE: &str =
     "stock_buy_scene.buy_player_open_buy_title";
-    pub const STOCK_BUY_SCENE_BUY_PLAYER_OPEN_SELL_TITLE: &str =
+pub const STOCK_BUY_SCENE_BUY_PLAYER_OPEN_SELL_TITLE: &str =
     "stock_buy_scene.buy_player_open_sell_title";
-    
+
 pub const STOCK_BUY_SCENE_BUY_PLAYER_MONEY: &str = "stock_buy_scene.buy_player_money";
 pub const STOCK_BUY_SCENE_BUY_PLAYER_OWNS_STOCKS: &str = "stock_buy_scene.buy_player_stocks";
 pub const STOCK_BUY_SCENE_BUY_BUY_HIGHER: &str = "stock_buy_scene.buy_buy_higher";
