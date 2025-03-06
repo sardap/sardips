@@ -31,6 +31,7 @@ pub mod mood_core;
 pub mod move_towards;
 pub mod name;
 pub mod particles;
+pub mod persistent_id;
 pub mod pet_core;
 pub mod rand_utils;
 pub mod shrink;
@@ -42,7 +43,6 @@ pub mod ui_utils;
 pub mod velocity;
 pub mod view;
 pub mod wrapped_vec;
-pub mod persistent_id;
 
 #[macro_use]
 extern crate lazy_static;

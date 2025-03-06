@@ -14,9 +14,16 @@ impl Plugin for SimulationPlugin {
         app.register_type::<Simulated>();
 
         app.insert_state(SimulationState::default())
+            .insert_state(SimulationViewState::default())
             .insert_resource(SimTimeScale(1.0))
-            .add_systems(OnEnter(SimulationState::Running), sim_entities_visibility)
-            .add_systems(OnExit(SimulationState::Running), sim_entities_visibility);
+            .add_systems(
+                OnEnter(SimulationViewState::Visible),
+                sim_entities_visibility,
+            )
+            .add_systems(
+                OnEnter(SimulationViewState::Invisible),
+                sim_entities_visibility,
+            );
 
         app.insert_resource(Time::<SimTime>::default())
             .init_schedule(RunSimulationUpdate)
@@ -43,6 +50,13 @@ pub const HUNGER_TICK_DOWN: f32 = 2. / 60.;
 pub const FUN_TICK_DOWN: f32 = 1. / 120.;
 
 #[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
+pub enum SimulationViewState {
+    #[default]
+    Invisible,
+    Visible,
+}
+
+#[derive(States, Clone, Copy, Default, Eq, PartialEq, Hash, Debug)]
 pub enum SimulationState {
     #[default]
     Paused,
@@ -54,15 +68,15 @@ pub enum SimulationState {
 pub struct Simulated;
 
 fn sim_entities_visibility(
-    sim_state: Res<State<SimulationState>>,
+    sim_state: Res<State<SimulationViewState>>,
     mut visibility: Query<&mut Visibility>,
     mut query: Query<(Entity, Option<&Children>), With<Simulated>>,
 ) {
     let mut update_vis = |entity| {
         if let Ok(mut visibility) = visibility.get_mut(entity) {
             *visibility = match **sim_state {
-                SimulationState::Paused => Visibility::Hidden,
-                SimulationState::Running => Visibility::Visible,
+                SimulationViewState::Invisible => Visibility::Hidden,
+                SimulationViewState::Visible => Visibility::Visible,
             };
         }
     };

@@ -326,7 +326,9 @@ pub struct CompanyRank {
 }
 
 impl CompanyRank {
-    pub fn new_ranking(companies: &[(Entity, CompanyPerformance)]) -> HashMap<Entity, Self> {
+    pub fn new_ranking(
+        companies: &[(PersistentId, CompanyPerformance)],
+    ) -> HashMap<PersistentId, Self> {
         let mut company_lookup = Vec::with_capacity(companies.len());
         for company in 0..companies.len() {
             company_lookup.push(company);
@@ -592,6 +594,22 @@ impl OrderBook {
                 sell_orders.insert(index, order);
             }
         }
+    }
+
+    pub fn get_sell_order_by_id(&self, id: u64) -> Option<&StockOrder> {
+        for (_, orders) in self.sell_orders.iter() {
+            for order in orders {
+                if order.id == id {
+                    return Some(order);
+                }
+            }
+        }
+
+        None
+    }
+
+    pub fn get_buy_order_by_id(&self, id: u64) -> Option<&StockOrder> {
+        self.buy_orders.iter().find(|x| x.id == id)
     }
 
     pub fn remove_order(&mut self, id: u64) {
@@ -1155,7 +1173,7 @@ pub struct BuySellOrchestrator {
 impl Default for BuySellOrchestrator {
     fn default() -> Self {
         Self {
-            buy_timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+            buy_timer: Timer::new(Duration::from_millis(100), TimerMode::Repeating),
         }
     }
 }
@@ -1211,7 +1229,24 @@ impl Default for StockMarketAI {
     }
 }
 
+struct LocalGenBuySellActivity {
+    ranking: Option<HashMap<PersistentId, CompanyRank>>,
+    last_update: Timer,
+    modulo: u64,
+}
+
+impl Default for LocalGenBuySellActivity {
+    fn default() -> Self {
+        Self {
+            ranking: None,
+            last_update: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+            modulo: 0,
+        }
+    }
+}
+
 fn generate_buy_sell_activity(
+    mut local: Local<LocalGenBuySellActivity>,
     time: Res<Time>,
     mut orchestrator: ResMut<BuySellOrchestrator>,
     mut order_book: ResMut<OrderBook>,
@@ -1224,83 +1259,37 @@ fn generate_buy_sell_activity(
     )>,
     companies: Query<(&PersistentId, &Company, &ShareHistory)>,
 ) {
+    const MAX_MODULO: u64 = 50;
+
+    if local.last_update.tick(time.delta()).just_finished() || local.ranking.is_none() {
+        local.ranking = Some(CompanyRank::new_ranking(
+            &companies
+                .iter()
+                .map(|(per_id, company, share_history)| {
+                    (*per_id, CompanyPerformance::new(company, share_history))
+                })
+                .collect::<Vec<_>>(),
+        ));
+    }
+
     // This should 100% run every tick and only run on a subset of ghosts every tick say 10% or whatever
     if !orchestrator.buy_timer.tick(time.delta()).finished() {
         return;
     }
 
-    struct CompanySet {
-        per_id: PersistentId,
-        performance: CompanyPerformance,
-    }
-
-    let companies = companies
-        .iter()
-        .map(|i| {
-            let (per_id, company, share_history) = i;
-            let performance = CompanyPerformance::new(company, share_history);
-            CompanySet {
-                per_id: *per_id,
-                performance,
-            }
-        })
-        .collect::<Vec<_>>();
-
-    let mut company_lookup = Vec::with_capacity(companies.len());
-    for company in 0..companies.len() {
-        company_lookup.push(company);
-    }
-
-    let mut pe_ranking = company_lookup.clone().into_iter().collect::<Vec<_>>();
-    pe_ranking.sort_by(|a, b| {
-        companies[*a]
-            .performance
-            .pe_ratio
-            .partial_cmp(&companies[*b].performance.pe_ratio)
-            .unwrap()
-    });
-
-    let mut pb_ranking = company_lookup.clone().into_iter().collect::<Vec<_>>();
-    pb_ranking.sort_by(|a, b| {
-        companies[*a]
-            .performance
-            .pb_ratio
-            .partial_cmp(&companies[*b].performance.pb_ratio)
-            .unwrap()
-            .reverse()
-    });
-
-    let mut peg_ranking = company_lookup.clone().into_iter().collect::<Vec<_>>();
-    peg_ranking.sort_by(|a, b| {
-        companies[*a]
-            .performance
-            .peg_ratio
-            .partial_cmp(&companies[*b].performance.peg_ratio)
-            .unwrap()
-    });
-
-    let mut company_rankings = HashMap::new();
-    for (i, company) in company_lookup.iter().enumerate() {
-        let pe_rank = pe_ranking.iter().position(|x| *x == i).unwrap();
-        let pb_rank = pb_ranking.iter().position(|x| *x == i).unwrap();
-        let peg_rank = peg_ranking.iter().position(|x| *x == i).unwrap();
-        company_rankings.insert(
-            *company,
-            CompanyRank {
-                pe_percentile: (pe_rank + 1) as f32 / companies.len() as f32,
-                pb_percentile: (pb_rank + 1) as f32 / companies.len() as f32,
-                peg_percentile: (peg_rank + 1) as f32 / companies.len() as f32,
-            },
-        );
-    }
+    let company_rankings = local.ranking.as_ref().unwrap();
 
     const MAX_ORDER_SIZE: u64 = 100;
 
     for (per_id, mut portfolio, mut wallet, rng, ai) in buyer_sellers.iter_mut() {
+        if per_id.value() % MAX_MODULO != local.modulo {
+            continue;
+        }
+
         let rng = rng.into_inner();
 
-        for (i, company) in companies.iter().enumerate() {
-            let company_rank = company_rankings.get(&i).unwrap();
+        for (company_per_id, _, share_history) in &companies {
+            let company_rank = company_rankings.get(company_per_id).unwrap();
 
             let buy_threshold = ai.get_buy_threshold(company_rank);
 
@@ -1309,7 +1298,7 @@ fn generate_buy_sell_activity(
             }
 
             let price =
-                (company.performance.stock_price as f32 * buy_threshold.price_modifier()) as Money;
+                (share_history.cached_price as f32 * buy_threshold.price_modifier()) as Money;
             let price = (price
                 + (price as f32 * gen_f32_range(rng, &(-0.05..0.05))).floor() as Money)
                 .max(1);
@@ -1332,15 +1321,15 @@ fn generate_buy_sell_activity(
             wallet.balance -= quantity as i64 * price;
 
             order_book.add(StockOrder::new_buy(
-                company.per_id,
+                *company_per_id,
                 quantity,
                 price,
                 *per_id,
             ));
         }
 
-        for (i, company) in companies.iter().enumerate() {
-            let shares = match portfolio.owned_shares.get(&company.per_id) {
+        for (company_per_id, _, share_history) in &companies {
+            let shares = match portfolio.owned_shares.get(company_per_id) {
                 Some(shares) => *shares,
                 None => continue,
             };
@@ -1349,7 +1338,7 @@ fn generate_buy_sell_activity(
                 continue;
             }
 
-            let rank = company_rankings.get(&i).unwrap();
+            let rank = company_rankings.get(company_per_id).unwrap();
 
             let sell_threshold = ai.get_buy_threshold(rank).invert();
 
@@ -1358,7 +1347,7 @@ fn generate_buy_sell_activity(
             }
 
             let price =
-                (company.performance.stock_price as f32 * sell_threshold.price_modifier()) as Money;
+                (share_history.cached_price as f32 * sell_threshold.price_modifier()) as Money;
 
             let price = (price
                 + (price as f32 * gen_f32_range(rng, &(0.01..0.05))).floor() as Money)
@@ -1372,15 +1361,17 @@ fn generate_buy_sell_activity(
                 continue;
             }
 
-            portfolio.remove_shares(company.per_id, quantity);
+            portfolio.remove_shares(*company_per_id, quantity);
             order_book.add(StockOrder::new_sell(
-                company.per_id,
+                *company_per_id,
                 quantity,
                 price,
                 *per_id,
             ));
         }
     }
+
+    local.modulo = (local.modulo + 1) % MAX_MODULO;
 }
 
 fn process_orders(
@@ -1800,17 +1791,20 @@ mod test {
                         save: Save,
                     },
                     company_per_id,
-                )).id();
+                ))
+                .id();
 
             let selling_ghost_per_id = per_id_gen.next_id();
-            let selling_ghost_entity = commands.spawn((
-                StockMarketGhostBundle {
-                    wallet: Wallet { balance: 1000000 },
-                    rng: RngComponent::new(),
-                    ..default()
-                },
-                selling_ghost_per_id,
-            )).id();
+            let selling_ghost_entity = commands
+                .spawn((
+                    StockMarketGhostBundle {
+                        wallet: Wallet { balance: 1000000 },
+                        rng: RngComponent::new(),
+                        ..default()
+                    },
+                    selling_ghost_per_id,
+                ))
+                .id();
 
             let buying_ghost_per_id = per_id_gen.next_id();
             let buying_ghost_entity = commands
@@ -1822,7 +1816,8 @@ mod test {
                         ..default()
                     },
                     buying_ghost_per_id,
-                )).id();
+                ))
+                .id();
 
             order_book.add(StockOrder::new_sell(
                 company_per_id,

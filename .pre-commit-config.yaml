@@ -15,10 +15,10 @@ repos:
         language: rust
         files: \.rs$
         pass_filenames: false
-      # - id: cargo-format
-      #   name: cargo format
-      #   description: Run the cargo format
-      #   entry: cargo fmt --all -- --check
-      #   language: rust
-      #   files: \.rs$
-      #   pass_filenames: false
+      - id: cargo-format
+        name: cargo format
+        description: Run the cargo format
+        entry: cargo fmt --all -- --check
+        language: rust
+        files: \.rs$
+        pass_filenames: false

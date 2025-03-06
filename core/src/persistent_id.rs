@@ -4,7 +4,6 @@ use shared_deps::moonshine_save::save::Save;
 
 use crate::GameState;
 
-
 pub struct PersistentIdPlugin;
 
 impl Plugin for PersistentIdPlugin {
@@ -16,21 +15,44 @@ impl Plugin for PersistentIdPlugin {
                 OnExit(GameState::Loading),
                 (add_persistent_id_generator, add_persistent_id_mapping),
             )
-            .add_systems(First, (add_persistent_id, populate_persistent_id_mapping).run_if(run_if_resource_exists));
+            .add_systems(
+                First,
+                (add_persistent_id, populate_persistent_id_mapping).run_if(run_if_resource_exists),
+            );
     }
 }
 
 fn run_if_resource_exists(
     persistent_id_generator: Option<Res<PersistentIdGenerator>>,
     persistent_id_mapping: Option<Res<PersistentIdMapping>>,
-) -> bool{
+) -> bool {
     persistent_id_generator.is_some() && persistent_id_mapping.is_some()
 }
 
-#[derive(Debug, Component, Default, Reflect, Serialize, Deserialize, Hash, Eq, PartialEq, PartialOrd, Ord, Copy, Clone)]
+#[derive(
+    Debug,
+    Component,
+    Default,
+    Reflect,
+    Serialize,
+    Deserialize,
+    Hash,
+    Eq,
+    PartialEq,
+    PartialOrd,
+    Ord,
+    Copy,
+    Clone,
+)]
 #[reflect(Component, Serialize, Deserialize, Hash)]
 // YOU SHOULD NOT SET THIS it's for tests
 pub struct PersistentId(u64);
+
+impl PersistentId {
+    pub fn value(&self) -> u64 {
+        self.0
+    }
+}
 
 #[derive(Resource, Default, Reflect, Serialize, Deserialize)]
 #[reflect(Resource, Serialize, Deserialize)]
@@ -58,10 +80,10 @@ fn add_persistent_id(
 ) {
     for entity in to_populate.iter() {
         let next_id = persistent_id_generator.next_id();
-        persistent_id_mapping.persistent_to_entity.insert(next_id.0, entity);
-        commands
-            .entity(entity)
-            .insert(next_id);
+        persistent_id_mapping
+            .persistent_to_entity
+            .insert(next_id.0, entity);
+        commands.entity(entity).insert(next_id);
     }
 }
 
@@ -81,7 +103,6 @@ impl PersistentIdMapping {
     pub fn insert(&mut self, entity: Entity, per_id: PersistentId) {
         self.persistent_to_entity.insert(per_id.0, entity);
     }
-
 }
 
 fn add_persistent_id_mapping(mut commands: Commands) {
@@ -95,7 +116,6 @@ fn populate_persistent_id_mapping(
     for (entity, persistent_id) in &to_update {
         // This doubles up work for the gen but handles entities that are loaded in
         // I can't figure how to add a loaded component to components there were loaded Feel like an idiot
-        persistent_id_mapping
-            .insert(entity, *persistent_id);
+        persistent_id_mapping.insert(entity, *persistent_id);
     }
 }
