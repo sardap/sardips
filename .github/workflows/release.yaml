@@ -42,17 +42,17 @@ jobs:
         run: |
           rm build.rs
       - name: Install rust toolchain for Apple Silicon
-        uses: dtolnay/rust-toolchain@1.84
+        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly-2025-02-16
           targets: aarch64-apple-darwin
       - name: Build release for Apple Silicon
         run: |
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --profile dist --target=aarch64-apple-darwin
       # - name: Install rust toolchain for Apple x86
-      #   uses: dtolnay/rust-toolchain@1.84
+      #   uses: dtolnay/rust-toolchain@master
       #   with:
-      #     toolchain: stable
+      #     toolchain: nightly-2025-02-16
       #     targets: x86_64-apple-darwin
       # - name: Build release for x86 Apple
       #   run: |
@@ -89,9 +89,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@1.84
+        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly-2025-02-16
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - name: Build release
@@ -103,7 +103,8 @@ jobs:
           mv target/dist/${{ env.GAME_EXECUTABLE_NAME }} .
       - name: Bundle release
         run: |
-          tar -czf ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz ${{ env.GAME_EXECUTABLE_NAME }} run/assets credits
+          mv run/assets ./assets
+          tar -czf ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz ${{ env.GAME_EXECUTABLE_NAME }} assets credits
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
@@ -129,9 +130,9 @@ jobs:
           $nuget_version = $version.TrimStart('v')
           echo "NUGET_VERSION=$nuget_version" >> $env:GITHUB_ENV
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@1.84
+        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly-2025-02-16
       - name: Install dotnet
         if: ${{ env.BUILD_INSTALLER }}
         uses: actions/setup-dotnet@v3
@@ -180,9 +181,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@1.84
+        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly-2025-02-16
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - name: Install trunk
@@ -222,7 +223,7 @@ jobs:
   #     VERSION: ${{needs.get-version.outputs.version}}
   #   steps:
   #     - uses: actions/checkout@v3
-  #     - uses: dtolnay/rust-toolchain@1.84
+  #     - uses: dtolnay/rust-toolchain@master
   #     - name: Add iOS targets
   #       run: rustup target add aarch64-apple-ios x86_64-apple-ios
   #     - name: Build app for iOS
@@ -251,7 +252,7 @@ jobs:
   #     VERSION: ${{needs.get-version.outputs.version}}
   #   steps:
   #     - uses: actions/checkout@v3
-  #     - uses: dtolnay/rust-toolchain@1.84
+  #     - uses: dtolnay/rust-toolchain@master
   #     - name: Add Android targets
   #       # could add more targets like armv7-linux-androideabi here (then also add to cargo-apk config)
   #       run: rustup target add aarch64-linux-android

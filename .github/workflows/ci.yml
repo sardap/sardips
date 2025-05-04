@@ -20,14 +20,14 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.toml') }}
-      - uses: dtolnay/rust-toolchain@1.84
+      - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly-2025-02-16
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
         if: runner.os == 'linux'
       - name: Build & run tests
-        run: cargo test
+        run: cargo test --workspace
   all-doc-tests:
     runs-on: ubuntu-latest
     steps:
@@ -41,9 +41,9 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ubuntu-latest-cargo-all-doc-tests-${{ hashFiles('**/Cargo.toml') }}
-      - uses: dtolnay/rust-toolchain@1.84
+      - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly-2025-02-16
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run doc tests with all features (this also compiles README examples)
@@ -61,13 +61,13 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ubuntu-latest-cargo-lint-${{ hashFiles('**/Cargo.toml') }}
-      - uses: dtolnay/rust-toolchain@1.84
+      - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly-2025-02-16
           components: rustfmt, clippy
       - name: Install alsa and udev
         run: sudo apt-get update; sudo apt-get install --no-install-recommends libasound2-dev libudev-dev
       - name: Run clippy
         run: cargo clippy --workspace --all-targets --all-features -- -Dwarnings
-      # - name: Check format
-      #   run: cargo fmt --all -- --check
+      - name: Check format
+        run: cargo fmt --all -- --check

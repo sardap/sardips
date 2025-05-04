@@ -34,11 +34,14 @@ pub fn spawn_back_button<T: Component + Default>(
         .with_children(|parent| {
             parent.spawn((
                 TextBundle {
-                    text: Text::from_section("", TextStyle {
-                        font_size: 40.0,
-                        color: Color::BLACK,
-                        font: font_assets.main_font.clone(),
-                    }),
+                    text: Text::from_section(
+                        "",
+                        TextStyle {
+                            font_size: 40.0,
+                            color: Color::BLACK,
+                            font: font_assets.main_font.clone(),
+                        },
+                    ),
                     ..default()
                 },
                 KeyText::new().with(0, BACK),

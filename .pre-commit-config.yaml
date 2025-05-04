@@ -4,7 +4,7 @@ repos:
       - id: cargo-test
         name: cargo test
         description: Run cargo test
-        entry: cargo test --doc --all-features
+        entry: cargo test --workspace
         language: rust
         files: \.rs$
         pass_filenames: false
@@ -15,10 +15,10 @@ repos:
         language: rust
         files: \.rs$
         pass_filenames: false
-      # - id: cargo-format
-      #   name: cargo format
-      #   description: Run the cargo format
-      #   entry: cargo fmt --all -- --check
-      #   language: rust
-      #   files: \.rs$
-      #   pass_filenames: false
+      - id: cargo-format
+        name: cargo format
+        description: Run the cargo format
+        entry: cargo fmt --all -- --check
+        language: rust
+        files: \.rs$
+        pass_filenames: false

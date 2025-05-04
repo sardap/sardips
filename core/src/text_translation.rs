@@ -235,10 +235,13 @@ mod test {
             .collect(),
         );
 
-        let key_string = KeyString::Value(("{0}({1}%)".to_string(), vec![
-            super::warp_recursive_value_key("global.bar"),
-            "25.55".to_string(),
-        ]));
+        let key_string = KeyString::Value((
+            "{0}({1}%)".to_string(),
+            vec![
+                super::warp_recursive_value_key("global.bar"),
+                "25.55".to_string(),
+            ],
+        ));
 
         let x = key_string.resolve_string(&text_db, Language::English);
 

@@ -285,11 +285,14 @@ fn setup_camera_and_ui(
                                 align_items: AlignItems::Center,
                                 ..default()
                             },
-                            text: Text::from_sections(vec![TextSection::new("", TextStyle {
-                                font: font_assets.main_font.clone(),
-                                font_size: 50.,
-                                color: Color::BLACK,
-                            })]),
+                            text: Text::from_sections(vec![TextSection::new(
+                                "",
+                                TextStyle {
+                                    font: font_assets.main_font.clone(),
+                                    font_size: 50.,
+                                    color: Color::BLACK,
+                                },
+                            )]),
                             ..default()
                         },
                         KeyText::new().with_value(0, MINIGAME_SNAKE_SCORE, &["0"]),
@@ -402,17 +405,21 @@ fn setup_score_screen(
                         align_items: AlignItems::Center,
                         ..default()
                     },
-                    text: Text::from_sections(vec![TextSection::new("", TextStyle {
-                        font: font_assets.main_font.clone(),
-                        font_size: 50.,
-                        color: Color::WHITE,
-                    })]),
+                    text: Text::from_sections(vec![TextSection::new(
+                        "",
+                        TextStyle {
+                            font: font_assets.main_font.clone(),
+                            font_size: 50.,
+                            color: Color::WHITE,
+                        },
+                    )]),
                     ..default()
                 },
-                KeyText::new().with_value(0, MINIGAME_SNAKE_SCORE, &[eaten_history
-                    .score()
-                    .to_string()
-                    .as_str()]),
+                KeyText::new().with_value(
+                    0,
+                    MINIGAME_SNAKE_SCORE,
+                    &[eaten_history.score().to_string().as_str()],
+                ),
                 SnakeScoreText,
             ));
 
@@ -428,11 +435,14 @@ fn setup_score_screen(
                             align_items: AlignItems::Center,
                             ..default()
                         },
-                        text: Text::from_sections(vec![TextSection::new("", TextStyle {
-                            font: font_assets.main_font.clone(),
-                            font_size: 30.,
-                            color: Color::WHITE,
-                        })]),
+                        text: Text::from_sections(vec![TextSection::new(
+                            "",
+                            TextStyle {
+                                font: font_assets.main_font.clone(),
+                                font_size: 30.,
+                                color: Color::WHITE,
+                            },
+                        )]),
                         ..default()
                     },
                     KeyText::new().with(0, format!("food.{}", template.name.to_lowercase())),

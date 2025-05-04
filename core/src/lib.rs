@@ -31,6 +31,7 @@ pub mod mood_core;
 pub mod move_towards;
 pub mod name;
 pub mod particles;
+pub mod persistent_id;
 pub mod pet_core;
 pub mod rand_utils;
 pub mod shrink;
@@ -53,6 +54,7 @@ impl Plugin for SardipsCorePlugin {
         app.insert_state(GameState::default())
             .add_plugins((SavePlugin, LoadPlugin))
             .add_plugins((
+                persistent_id::PersistentIdPlugin,
                 loading::LoadingPlugin,
                 particles::ParticlesPlugin,
                 shrink::ShrinkPlugin,
@@ -67,9 +69,9 @@ impl Plugin for SardipsCorePlugin {
                 text_translation::TextTranslationPlugin,
                 age_core::AgeCorePlugin,
                 breeding_core::BreedingCorePlugin,
-                food_core::FoodCorePlugin,
             ))
             .add_plugins((
+                food_core::FoodCorePlugin,
                 fun_core::FunCorePlugin,
                 hunger_core::HungerCorePlugin,
                 money_core::MoneyCorePlugin,
@@ -78,6 +80,7 @@ impl Plugin for SardipsCorePlugin {
                 view::ViewPlugin,
                 mood_core::MoodCorePlugin,
                 accessory_core::AccessoryCorePlugin,
+                bevy_http_client::HttpClientPlugin,
             ));
     }
 }

@@ -5,6 +5,7 @@ use std::time::Duration;
 use crate::{money::Wallet, sardip_save::SardipLoadingState, simulation::SimulationUpdate};
 use bevy::prelude::*;
 use sardips_core::money_core::Money;
+use sardips_core::persistent_id::{PersistentId, PersistentIdMapping};
 use sardips_core::rand_utils::{gen_f32_range, gen_f64_range, NewBuilder, WalkerTable};
 use sardips_core::wrapped_vec::WrappingVec;
 use serde::{Deserialize, Serialize};
@@ -53,7 +54,7 @@ impl Plugin for StockMarketPlugin {
 #[derive(Default, Component, Reflect)]
 #[reflect(Component)]
 pub struct SharePortfolio {
-    pub owned_shares: HashMap<Entity, u64>,
+    pub owned_shares: HashMap<PersistentId, u64>,
 }
 
 impl SharePortfolio {
@@ -61,12 +62,12 @@ impl SharePortfolio {
         Self::default()
     }
 
-    pub fn add_shares(&mut self, company: Entity, quantity: u64) {
+    pub fn add_shares(&mut self, company: PersistentId, quantity: u64) {
         let shares = self.owned_shares.entry(company).or_insert(0);
         *shares += quantity;
     }
 
-    pub fn remove_shares(&mut self, company: Entity, quantity: u64) {
+    pub fn remove_shares(&mut self, company: PersistentId, quantity: u64) {
         let shares = self.owned_shares.entry(company).or_insert(0);
         if *shares < quantity {
             *shares = 0;
@@ -75,7 +76,7 @@ impl SharePortfolio {
         }
     }
 
-    pub fn get_count(&self, company: &Entity) -> u64 {
+    pub fn get_count(&self, company: &PersistentId) -> u64 {
         *self.owned_shares.get(company).unwrap_or(&0)
     }
 }
@@ -325,7 +326,9 @@ pub struct CompanyRank {
 }
 
 impl CompanyRank {
-    pub fn new_ranking(companies: &[(Entity, CompanyPerformance)]) -> HashMap<Entity, Self> {
+    pub fn new_ranking(
+        companies: &[(PersistentId, CompanyPerformance)],
+    ) -> HashMap<PersistentId, Self> {
         let mut company_lookup = Vec::with_capacity(companies.len());
         for company in 0..companies.len() {
             company_lookup.push(company);
@@ -475,73 +478,76 @@ impl BuyThreshold {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone, Reflect, PartialEq, Eq)]
+#[reflect_value(Deserialize, Serialize)]
+pub enum OrderKind {
+    Buy,
+    Sell,
+}
+
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Reflect)]
 #[reflect_value(Deserialize, Serialize)]
-pub struct BuyOrder {
+pub struct StockOrder {
     pub id: u64,
+    pub kind: OrderKind,
     pub lifetime: Duration,
-    pub cycles: u16,
-    pub company: Entity,
+    pub company: PersistentId,
     pub quantity: u64,
     pub remaining_quantity: u64,
     pub price: Money,
-    pub buyer: Entity,
+    pub owner: PersistentId,
 }
 
-impl BuyOrder {
-    pub fn new(company: Entity, quantity: u64, price: Money, buyer: Entity) -> Self {
+impl StockOrder {
+    pub fn new_buy(
+        company: PersistentId,
+        quantity: u64,
+        price: Money,
+        buyer: PersistentId,
+    ) -> Self {
         Self {
             id: 0,
+            kind: OrderKind::Buy,
             lifetime: Duration::ZERO,
-            cycles: 0,
             company,
             quantity,
             remaining_quantity: quantity,
             price,
-            buyer,
+            owner: buyer,
+        }
+    }
+
+    pub fn new_sell(
+        company: PersistentId,
+        quantity: u64,
+        price: Money,
+        seller: PersistentId,
+    ) -> Self {
+        Self {
+            id: 0,
+            kind: OrderKind::Sell,
+            lifetime: Duration::ZERO,
+            company,
+            quantity,
+            remaining_quantity: quantity,
+            price,
+            owner: seller,
         }
     }
 }
 
-impl PartialOrd for BuyOrder {
+impl PartialOrd for StockOrder {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.price.cmp(&other.price))
     }
 }
 
-impl Ord for BuyOrder {
+impl Ord for StockOrder {
     fn cmp(&self, other: &Self) -> Ordering {
         self.price.cmp(&other.price)
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Reflect, PartialOrd)]
-#[reflect_value(Deserialize, Serialize, PartialEq)]
-pub struct SellOrder {
-    pub id: u64,
-    pub lifetime: Duration,
-    pub cycles: u64,
-    pub company: Entity,
-    pub quantity: u64,
-    pub remaining_quantity: u64,
-    pub price: Money,
-    pub seller: Entity,
-}
-
-impl SellOrder {
-    pub fn new(company: Entity, quantity: u64, price: Money, seller: Entity) -> Self {
-        Self {
-            id: 0,
-            lifetime: Duration::ZERO,
-            cycles: 0,
-            company,
-            quantity,
-            remaining_quantity: quantity,
-            price,
-            seller,
-        }
-    }
-}
 #[derive(Default, Reflect, Clone, Serialize, Deserialize)]
 #[reflect_value(Deserialize, Serialize)]
 pub struct OrderBrief {
@@ -559,8 +565,8 @@ impl OrderBrief {
 #[reflect_value(Deserialize, Serialize, Resource)]
 pub struct OrderBook {
     pub top_order_id: u64,
-    pub buy_orders: Vec<BuyOrder>,
-    pub sell_orders: HashMap<Entity, Vec<SellOrder>>,
+    pub buy_orders: Vec<StockOrder>,
+    pub sell_orders: HashMap<PersistentId, Vec<StockOrder>>,
 }
 
 impl OrderBook {
@@ -570,26 +576,40 @@ impl OrderBook {
         id
     }
 
-    pub fn add(&mut self, order: NewOrder) {
-        match order {
-            NewOrder::Buy(mut buy_order) => {
-                buy_order.id = self.get_next_order_id();
-                self.buy_orders.push(buy_order);
+    pub fn add(&mut self, mut order: StockOrder) {
+        order.id = self.get_next_order_id();
+
+        match order.kind {
+            OrderKind::Buy => {
+                self.buy_orders.push(order);
             }
-            NewOrder::Sell(mut new_sell_order) => {
-                new_sell_order.id = self.get_next_order_id();
+            OrderKind::Sell => {
+                let sell_orders = self.sell_orders.entry(order.company).or_default();
 
-                let sell_orders = self.sell_orders.entry(new_sell_order.company).or_default();
+                let index = match sell_orders.binary_search_by(|x| x.price.cmp(&order.price)) {
+                    Ok(i) => i,
+                    Err(i) => i,
+                };
 
-                let index =
-                    match sell_orders.binary_search_by(|x| x.price.cmp(&new_sell_order.price)) {
-                        Ok(i) => i,
-                        Err(i) => i,
-                    };
-
-                sell_orders.insert(index, new_sell_order);
+                sell_orders.insert(index, order);
             }
         }
+    }
+
+    pub fn get_sell_order_by_id(&self, id: u64) -> Option<&StockOrder> {
+        for (_, orders) in self.sell_orders.iter() {
+            for order in orders {
+                if order.id == id {
+                    return Some(order);
+                }
+            }
+        }
+
+        None
+    }
+
+    pub fn get_buy_order_by_id(&self, id: u64) -> Option<&StockOrder> {
+        self.buy_orders.iter().find(|x| x.id == id)
     }
 
     pub fn remove_order(&mut self, id: u64) {
@@ -610,12 +630,11 @@ impl OrderBook {
         }
     }
 
-    pub fn get_sell_orders<T: Into<Entity>>(&self, company: T) -> &Vec<SellOrder> {
+    pub fn get_sell_orders(&self, company: PersistentId) -> &Vec<StockOrder> {
         lazy_static! {
-            static ref EMPTY: Vec<SellOrder> = Vec::new();
+            static ref EMPTY: Vec<StockOrder> = Vec::new();
         }
 
-        let company = company.into();
         self.sell_orders
             .get(&company)
             .map_or(&(*EMPTY), |orders| orders)
@@ -624,12 +643,6 @@ impl OrderBook {
     pub fn total_sell_orders(&self) -> usize {
         self.sell_orders.values().map(|x| x.len()).sum()
     }
-}
-
-#[derive(Debug)]
-pub enum NewOrder {
-    Buy(BuyOrder),
-    Sell(SellOrder),
 }
 
 fn create_order_book(mut commands: Commands) {
@@ -867,9 +880,7 @@ fn spawn_companies(mut commands: Commands, existing_companies: Query<Entity, Wit
                 share_history: ShareHistory::new(template.stock_price),
                 wallet: Wallet::default(),
                 share_portfolio: SharePortfolio {
-                    owned_shares: hashmap! {
-                        entity => template.outstanding_shares - shares_to_allocate
-                    },
+                    owned_shares: hashmap! {},
                 },
                 rng: RngComponent::new(),
                 save: Save,
@@ -898,7 +909,12 @@ fn add_rng_to_stock_stuff(
 
 fn allocate_stocks(
     mut commands: Commands,
-    mut companies: Query<(Entity, &mut StocksToAllocate, &mut RngComponent)>,
+    mut companies: Query<(
+        Entity,
+        &PersistentId,
+        &mut StocksToAllocate,
+        &mut RngComponent,
+    )>,
     ghosts: Query<Entity, (With<StockMarketGhost>, With<SharePortfolio>)>,
     mut portfolios: Query<&mut SharePortfolio, With<StockMarketGhost>>,
 ) {
@@ -912,7 +928,7 @@ fn allocate_stocks(
         return;
     }
 
-    for (entity, mut to_allocate, mut rng) in &mut companies {
+    for (entity, per_id, mut to_allocate, mut rng) in &mut companies {
         // Pick a random ghost to allocate to
         let mut loops = 0;
         while to_allocate.to_allocate > 0 && loops < 100 {
@@ -921,7 +937,7 @@ fn allocate_stocks(
             let count = rng.u64(0..=MAX_ALLOCATION.min(to_allocate.to_allocate));
 
             let mut portfolio = portfolios.get_mut(ghost).unwrap();
-            portfolio.add_shares(entity, count);
+            portfolio.add_shares(*per_id, count);
 
             to_allocate.to_allocate -= count;
 
@@ -936,7 +952,7 @@ fn allocate_stocks(
 
 pub fn step_company_quarter<T: DelegatedRng>(
     quarter: u32,
-    company_entity: Entity,
+    company_per_id: PersistentId,
     company: &mut Company,
     share_history: &ShareHistory,
     wallet: &mut Wallet,
@@ -985,12 +1001,12 @@ pub fn step_company_quarter<T: DelegatedRng>(
         let capital_needed = profit.abs();
         let new_shares_qty = capital_needed / share_price;
         company.existing_shares += new_shares_qty as u64;
-        order_book.add(NewOrder::Sell(SellOrder::new(
-            company_entity,
+        order_book.add(StockOrder::new_sell(
+            company_per_id,
             new_shares_qty as u64,
             share_price,
-            company_entity,
-        )));
+            company_per_id,
+        ));
     }
 
     if next_assets < 0 {
@@ -1072,7 +1088,7 @@ fn tick_quarter(
     mut quarter_manager: ResMut<QuarterManger>,
     mut order_book: ResMut<OrderBook>,
     mut companies: Query<(
-        Entity,
+        &PersistentId,
         &mut Company,
         &ShareHistory,
         &mut SharePortfolio,
@@ -1088,14 +1104,14 @@ fn tick_quarter(
     {
         quarter_manager.current_quarter += 1;
 
-        for (entity, mut company, share_history, mut _portfolio, mut wallet, rng) in
+        for (per_id, mut company, share_history, mut _portfolio, mut wallet, rng) in
             companies.iter_mut()
         {
             let rng = rng.into_inner();
 
             step_company_quarter(
                 quarter_manager.current_quarter,
-                entity,
+                *per_id,
                 &mut company,
                 share_history,
                 &mut wallet,
@@ -1157,7 +1173,7 @@ pub struct BuySellOrchestrator {
 impl Default for BuySellOrchestrator {
     fn default() -> Self {
         Self {
-            buy_timer: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+            buy_timer: Timer::new(Duration::from_millis(100), TimerMode::Repeating),
         }
     }
 }
@@ -1213,96 +1229,67 @@ impl Default for StockMarketAI {
     }
 }
 
+struct LocalGenBuySellActivity {
+    ranking: Option<HashMap<PersistentId, CompanyRank>>,
+    last_update: Timer,
+    modulo: u64,
+}
+
+impl Default for LocalGenBuySellActivity {
+    fn default() -> Self {
+        Self {
+            ranking: None,
+            last_update: Timer::new(Duration::from_secs(5), TimerMode::Repeating),
+            modulo: 0,
+        }
+    }
+}
+
 fn generate_buy_sell_activity(
+    mut local: Local<LocalGenBuySellActivity>,
     time: Res<Time>,
     mut orchestrator: ResMut<BuySellOrchestrator>,
     mut order_book: ResMut<OrderBook>,
     mut buyer_sellers: Query<(
-        Entity,
+        &PersistentId,
         &mut SharePortfolio,
         &mut Wallet,
         &mut RngComponent,
         &StockMarketAI,
     )>,
-    companies: Query<(Entity, &Company, &ShareHistory)>,
+    companies: Query<(&PersistentId, &Company, &ShareHistory)>,
 ) {
+    const MAX_MODULO: u64 = 20;
+
+    if local.last_update.tick(time.delta()).just_finished() || local.ranking.is_none() {
+        local.ranking = Some(CompanyRank::new_ranking(
+            &companies
+                .iter()
+                .map(|(per_id, company, share_history)| {
+                    (*per_id, CompanyPerformance::new(company, share_history))
+                })
+                .collect::<Vec<_>>(),
+        ));
+    }
+
     // This should 100% run every tick and only run on a subset of ghosts every tick say 10% or whatever
     if !orchestrator.buy_timer.tick(time.delta()).finished() {
         return;
     }
 
-    struct CompanySet {
-        entity: Entity,
-        performance: CompanyPerformance,
-    }
-
-    let companies = companies
-        .iter()
-        .map(|i| {
-            let (entity, company, share_history) = i;
-            let performance = CompanyPerformance::new(company, share_history);
-            CompanySet {
-                entity,
-                performance,
-            }
-        })
-        .collect::<Vec<_>>();
-
-    let mut company_lookup = Vec::with_capacity(companies.len());
-    for company in 0..companies.len() {
-        company_lookup.push(company);
-    }
-
-    let mut pe_ranking = company_lookup.clone().into_iter().collect::<Vec<_>>();
-    pe_ranking.sort_by(|a, b| {
-        companies[*a]
-            .performance
-            .pe_ratio
-            .partial_cmp(&companies[*b].performance.pe_ratio)
-            .unwrap()
-    });
-
-    let mut pb_ranking = company_lookup.clone().into_iter().collect::<Vec<_>>();
-    pb_ranking.sort_by(|a, b| {
-        companies[*a]
-            .performance
-            .pb_ratio
-            .partial_cmp(&companies[*b].performance.pb_ratio)
-            .unwrap()
-            .reverse()
-    });
-
-    let mut peg_ranking = company_lookup.clone().into_iter().collect::<Vec<_>>();
-    peg_ranking.sort_by(|a, b| {
-        companies[*a]
-            .performance
-            .peg_ratio
-            .partial_cmp(&companies[*b].performance.peg_ratio)
-            .unwrap()
-    });
-
-    let mut company_rankings = HashMap::new();
-    for (i, company) in company_lookup.iter().enumerate() {
-        let pe_rank = pe_ranking.iter().position(|x| *x == i).unwrap();
-        let pb_rank = pb_ranking.iter().position(|x| *x == i).unwrap();
-        let peg_rank = peg_ranking.iter().position(|x| *x == i).unwrap();
-        company_rankings.insert(
-            *company,
-            CompanyRank {
-                pe_percentile: (pe_rank + 1) as f32 / companies.len() as f32,
-                pb_percentile: (pb_rank + 1) as f32 / companies.len() as f32,
-                peg_percentile: (peg_rank + 1) as f32 / companies.len() as f32,
-            },
-        );
-    }
+    let company_rankings = local.ranking.as_ref().unwrap();
 
     const MAX_ORDER_SIZE: u64 = 100;
 
-    for (entity, mut portfolio, mut wallet, rng, ai) in buyer_sellers.iter_mut() {
+    for (per_id, mut portfolio, mut wallet, rng, ai) in buyer_sellers.iter_mut() {
+        if per_id.value() % MAX_MODULO != local.modulo {
+            continue;
+        }
+
         let rng = rng.into_inner();
 
-        for (i, company) in companies.iter().enumerate() {
-            let company_rank = company_rankings.get(&i).unwrap();
+        for (company_per_id, _, share_history) in &companies {
+            let company_rank = company_rankings.get(company_per_id).unwrap();
 
             let buy_threshold = ai.get_buy_threshold(company_rank);
 
@@ -1311,7 +1298,7 @@ fn generate_buy_sell_activity(
             }
 
             let price =
-                (company.performance.stock_price as f32 * buy_threshold.price_modifier()) as Money;
+                (share_history.cached_price as f32 * buy_threshold.price_modifier()) as Money;
             let price = (price
                 + (price as f32 * gen_f32_range(rng, &(-0.05..0.05))).floor() as Money)
                 .max(1);
@@ -1332,13 +1319,17 @@ fn generate_buy_sell_activity(
             }
 
             wallet.balance -= quantity as i64 * price;
-            let order = BuyOrder::new(company.entity, quantity, price, entity);
 
-            order_book.add(NewOrder::Buy(order));
+            order_book.add(StockOrder::new_buy(
+                *company_per_id,
+                quantity,
+                price,
+                *per_id,
+            ));
         }
 
-        for (i, company) in companies.iter().enumerate() {
-            let shares = match portfolio.owned_shares.get(&company.entity) {
+        for (company_per_id, _, share_history) in &companies {
+            let shares = match portfolio.owned_shares.get(company_per_id) {
                 Some(shares) => *shares,
                 None => continue,
             };
@@ -1347,7 +1338,7 @@ fn generate_buy_sell_activity(
                 continue;
             }
 
-            let rank = company_rankings.get(&i).unwrap();
+            let rank = company_rankings.get(company_per_id).unwrap();
 
             let sell_threshold = ai.get_buy_threshold(rank).invert();
 
@@ -1356,7 +1347,7 @@ fn generate_buy_sell_activity(
             }
 
             let price =
-                (company.performance.stock_price as f32 * sell_threshold.price_modifier()) as Money;
+                (share_history.cached_price as f32 * sell_threshold.price_modifier()) as Money;
 
             let price = (price
                 + (price as f32 * gen_f32_range(rng, &(0.01..0.05))).floor() as Money)
@@ -1370,20 +1361,23 @@ fn generate_buy_sell_activity(
                 continue;
             }
 
-            portfolio.remove_shares(company.entity, quantity);
-            order_book.add(NewOrder::Sell(SellOrder::new(
-                company.entity,
+            portfolio.remove_shares(*company_per_id, quantity);
+            order_book.add(StockOrder::new_sell(
+                *company_per_id,
                 quantity,
                 price,
-                entity,
-            )));
+                *per_id,
+            ));
         }
     }
+
+    local.modulo = (local.modulo + 1) % MAX_MODULO;
 }
 
 fn process_orders(
     time: Res<Time>,
     order_book: ResMut<OrderBook>,
+    per_id_map: Res<PersistentIdMapping>,
     mut share_history: Query<&mut ShareHistory>,
     mut wallets: Query<&mut Wallet>,
     mut history: Query<&mut CompleteShareOrderHistory>,
@@ -1416,15 +1410,16 @@ fn process_orders(
                     .remaining_quantity
                     .min(sell_order.remaining_quantity);
 
-                let mut seller_wallet = match wallets.get_mut(sell_order.seller) {
+                let mut seller_wallet = match wallets.get_mut(per_id_map.get(sell_order.owner)) {
                     Ok(wallet) => wallet,
                     Err(_) => continue,
                 };
 
-                let mut buyer_portfolio = match share_portfolios.get_mut(buy_order.buyer) {
-                    Ok(portfolio) => portfolio,
-                    Err(_) => break,
-                };
+                let mut buyer_portfolio =
+                    match share_portfolios.get_mut(per_id_map.get(buy_order.owner)) {
+                        Ok(portfolio) => portfolio,
+                        Err(_) => break,
+                    };
 
                 let order_action_time = shared_deps::chrono::Utc::now();
                 buyer_portfolio.add_shares(sell_order.company, quantity);
@@ -1433,12 +1428,16 @@ fn process_orders(
                 buy_order.remaining_quantity -= quantity;
                 sell_order.remaining_quantity -= quantity;
 
-                if let Ok(mut share_history) = share_history.get_mut(sell_order.company) {
+                if let Ok(mut share_history) =
+                    share_history.get_mut(per_id_map.get(sell_order.company))
+                {
                     share_history.add_entry(sell_order.price, quantity);
                 }
 
                 // Update history for entities
-                if let Ok(mut share_order_history) = history.get_mut(buy_order.buyer) {
+                if let Ok(mut share_order_history) =
+                    history.get_mut(per_id_map.get(buy_order.owner))
+                {
                     share_order_history.orders.push(OrderHistoryEntry::new(
                         OrderKind::Buy,
                         sell_order.company,
@@ -1448,7 +1447,9 @@ fn process_orders(
                     ));
                 }
 
-                if let Ok(mut share_order_history) = history.get_mut(sell_order.seller) {
+                if let Ok(mut share_order_history) =
+                    history.get_mut(per_id_map.get(sell_order.owner))
+                {
                     share_order_history.orders.push(OrderHistoryEntry::new(
                         OrderKind::Sell,
                         sell_order.company,
@@ -1479,9 +1480,10 @@ fn process_orders(
             return false;
         }
 
-        if order.lifetime > PULL_TIME || share_portfolios.get(order.buyer).is_err() {
+        if order.lifetime > PULL_TIME || share_portfolios.get(per_id_map.get(order.owner)).is_err()
+        {
             // Attempt to refund the buyer
-            if let Ok(mut wallet) = wallets.get_mut(order.buyer) {
+            if let Ok(mut wallet) = wallets.get_mut(per_id_map.get(order.owner)) {
                 wallet.balance += order.remaining_quantity as i64 * order.price;
             }
             return false;
@@ -1496,9 +1498,9 @@ fn process_orders(
                 return false;
             }
 
-            if order.lifetime > PULL_TIME || wallets.get(order.seller).is_err() {
+            if order.lifetime > PULL_TIME || wallets.get(per_id_map.get(order.owner)).is_err() {
                 // return shares to seller
-                if let Ok(mut portfolio) = share_portfolios.get_mut(order.seller) {
+                if let Ok(mut portfolio) = share_portfolios.get_mut(per_id_map.get(order.owner)) {
                     portfolio.add_shares(order.company, order.remaining_quantity);
                 }
                 return false;
@@ -1511,17 +1513,10 @@ fn process_orders(
     });
 }
 
-#[derive(Reflect, Serialize, Deserialize, Component)]
-#[reflect(Component, Serialize, Deserialize)]
-enum OrderKind {
-    Buy,
-    Sell,
-}
-
 #[derive(Serialize, Deserialize, Reflect)]
 struct OrderHistoryEntry {
     pub kind: OrderKind,
-    pub company: Entity,
+    pub company: PersistentId,
     pub price: Money,
     pub quantity: u64,
     pub timestamp: i64,
@@ -1530,7 +1525,7 @@ struct OrderHistoryEntry {
 impl OrderHistoryEntry {
     pub fn new(
         kind: OrderKind,
-        company: Entity,
+        company: PersistentId,
         price: Money,
         quantity: u64,
         time: DateTime<Utc>,
@@ -1555,6 +1550,7 @@ pub struct CompleteShareOrderHistory {
 mod test {
     use std::collections::HashSet;
 
+    use sardips_core::persistent_id::{PersistentIdGenerator, PersistentIdPlugin};
     use shared_deps::bevy_turborand::{prelude::RngPlugin, GlobalRng};
 
     use super::*;
@@ -1571,7 +1567,10 @@ mod test {
             time.advance_by(Duration::from_days(1));
 
             let mut app = App::new();
+            app.add_plugins(PersistentIdPlugin);
             app.insert_resource(GlobalRng::with_seed(i as u64));
+            app.insert_resource(PersistentIdMapping::default());
+            app.insert_resource(PersistentIdGenerator::default());
             app.insert_resource(time);
 
             fn spawn_test_companies(mut commands: Commands, mut global_rng: ResMut<GlobalRng>) {
@@ -1708,7 +1707,9 @@ mod test {
         time.advance_by(Duration::from_days(1));
 
         let mut app = App::new();
-        app.add_plugins(RngPlugin::default());
+        app.add_plugins((RngPlugin::default(), PersistentIdPlugin));
+        app.insert_resource(PersistentIdGenerator::default());
+        app.insert_resource(PersistentIdMapping::default());
         app.insert_resource(time);
         app.add_systems(
             Startup,
@@ -1763,68 +1764,89 @@ mod test {
         fn gen_test_orders(mut commands: Commands, mut order_book: ResMut<OrderBook>) {
             // Spawn test company
 
-            let company_id = commands
-                .spawn(CompanyBundle {
-                    company: Company {
-                        ticker: "TEST".to_string(),
-                        existing_shares: 1000,
-                        history: vec![CompanyHistory {
-                            quarter: 0,
-                            assets: 100000,
-                            revenue: 10000,
-                            expenses: 5000,
-                            total_shares: 1000,
-                            dividend_paid: 0,
-                            performance: PerformanceRanking::Average,
-                        }],
-                        performance_history: vec![],
-                        industries: vec![(1., Industry::Tech)],
+            let mut per_id_gen = PersistentIdGenerator::default();
+            let company_per_id = per_id_gen.next_id();
+            let company_entity = commands
+                .spawn((
+                    CompanyBundle {
+                        company: Company {
+                            ticker: "TEST".to_string(),
+                            existing_shares: 1000,
+                            history: vec![CompanyHistory {
+                                quarter: 0,
+                                assets: 100000,
+                                revenue: 10000,
+                                expenses: 5000,
+                                total_shares: 1000,
+                                dividend_paid: 0,
+                                performance: PerformanceRanking::Average,
+                            }],
+                            performance_history: vec![],
+                            industries: vec![(1., Industry::Tech)],
+                        },
+                        share_history: ShareHistory::new(100),
+                        wallet: Wallet::default(),
+                        share_portfolio: SharePortfolio::default(),
+                        rng: RngComponent::new(),
+                        save: Save,
                     },
-                    share_history: ShareHistory::new(100),
-                    wallet: Wallet::default(),
-                    share_portfolio: SharePortfolio::default(),
-                    rng: RngComponent::new(),
-                    save: Save,
-                })
+                    company_per_id,
+                ))
                 .id();
 
-            let selling_ghost_id = commands
-                .spawn(StockMarketGhostBundle {
-                    wallet: Wallet { balance: 1000000 },
-                    rng: RngComponent::new(),
-                    ..default()
-                })
+            let selling_ghost_per_id = per_id_gen.next_id();
+            let selling_ghost_entity = commands
+                .spawn((
+                    StockMarketGhostBundle {
+                        wallet: Wallet { balance: 1000000 },
+                        rng: RngComponent::new(),
+                        ..default()
+                    },
+                    selling_ghost_per_id,
+                ))
                 .id();
 
-            let buying_ghost_id = commands
-                .spawn(StockMarketGhostBundle {
-                    wallet: Wallet { balance: 1000000 },
-                    rng: RngComponent::new(),
-                    share_portfolio: SharePortfolio::default(),
-                    ..default()
-                })
+            let buying_ghost_per_id = per_id_gen.next_id();
+            let buying_ghost_entity = commands
+                .spawn((
+                    StockMarketGhostBundle {
+                        wallet: Wallet { balance: 1000000 },
+                        rng: RngComponent::new(),
+                        share_portfolio: SharePortfolio::default(),
+                        ..default()
+                    },
+                    buying_ghost_per_id,
+                ))
                 .id();
 
-            order_book.add(NewOrder::Sell(SellOrder::new(
-                company_id,
+            order_book.add(StockOrder::new_sell(
+                company_per_id,
                 500,
                 100,
-                selling_ghost_id,
-            )));
+                selling_ghost_per_id,
+            ));
 
-            order_book.add(NewOrder::Sell(SellOrder::new(
-                company_id,
+            order_book.add(StockOrder::new_sell(
+                company_per_id,
                 500,
                 200,
-                selling_ghost_id,
-            )));
+                selling_ghost_per_id,
+            ));
 
-            order_book.add(NewOrder::Buy(BuyOrder::new(
-                company_id,
+            order_book.add(StockOrder::new_buy(
+                company_per_id,
                 1000,
                 100,
-                buying_ghost_id,
-            )));
+                buying_ghost_per_id,
+            ));
+
+            let mut per_id_mapping = PersistentIdMapping::default();
+            per_id_mapping.insert(company_entity, company_per_id);
+            per_id_mapping.insert(selling_ghost_entity, selling_ghost_per_id);
+            per_id_mapping.insert(buying_ghost_entity, buying_ghost_per_id);
+
+            commands.insert_resource(per_id_mapping);
+            commands.insert_resource(per_id_gen);
         }
 
         app.add_systems(PreUpdate, gen_test_orders.run_if(run_once()));
@@ -1833,6 +1855,7 @@ mod test {
         // Check book validate for tests
         let order_book = app.world().get_resource::<OrderBook>().unwrap();
 
+        assert_eq!(order_book.buy_orders.len(), 1, "Buy orders missing");
         assert_eq!(order_book.buy_orders[0].remaining_quantity, 500,);
         order_book.sell_orders.values().for_each(|orders| {
             assert_eq!(orders.len(), 1);
@@ -1880,24 +1903,23 @@ mod test {
 
     #[test]
     fn test_order_book_sell_ordered() {
-        let mut app = App::new();
-
-        let company_entity = app.world_mut().spawn_empty().id();
-        let seller_entity = app.world_mut().spawn_empty().id();
+        let mut id_gen = PersistentIdGenerator::default();
+        let company_per_id = id_gen.next_id();
+        let seller_per_id = id_gen.next_id();
 
         let mut order_book = OrderBook::default();
 
         let mut prices = vec![5, 2, 7, 2, 9, 10, 3];
         for price in &prices {
-            order_book.add(NewOrder::Sell(SellOrder::new(
-                company_entity,
+            order_book.add(StockOrder::new_buy(
+                company_per_id,
                 100,
                 *price,
-                seller_entity,
-            )));
+                seller_per_id,
+            ));
         }
 
-        let sell_orders = order_book.get_sell_orders(company_entity);
+        let sell_orders = order_book.get_sell_orders(company_per_id);
 
         prices.sort();
         for (i, order) in sell_orders.iter().enumerate() {

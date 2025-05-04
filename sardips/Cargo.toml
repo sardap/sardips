@@ -1,6 +1,6 @@
 [package]
 name = "sardips"
-version = "0.5.0"
+version = "0.6.0"
 publish = false
 authors = ["Paul Sarda paul@sarda.dev"]
 edition = "2021"
@@ -23,3 +23,6 @@ serde = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 maplit = { workspace = true }
+bevy_http_client = { workspace = true }
+flate2 = { workspace = true }
+base64 = { workspace = true }

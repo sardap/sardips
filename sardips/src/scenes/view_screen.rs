@@ -13,8 +13,8 @@ use crate::{
     palettes,
     pet::view::PetView,
     player::Player,
+    simulation::{SimulationState, SimulationViewState},
     tools::poop_scooper::{create_poop_scooper, PoopScooper},
-    SimulationState,
 };
 use sardips_core::{
     assets::{FontAssets, GameImageAssets, ViewScreenImageAssets},
@@ -243,12 +243,17 @@ fn setup_camera(mut commands: Commands) {
     ));
 }
 
-fn setup_state(mut sim_state: ResMut<NextState<SimulationState>>) {
+fn setup_state(
+    mut sim_state: ResMut<NextState<SimulationState>>,
+    mut sim_view_state: ResMut<NextState<SimulationViewState>>,
+) {
     sim_state.set(SimulationState::Running);
+    sim_view_state.set(SimulationViewState::Visible);
 }
 
 fn teardown(
     mut commands: Commands,
+    mut sim_view_state: ResMut<NextState<SimulationViewState>>,
     mut sim_state: ResMut<NextState<SimulationState>>,
     query: Query<Entity, Or<(With<ViewScreenUi>, With<ViewScreenCamera>)>>,
 ) {
@@ -257,6 +262,7 @@ fn teardown(
     }
 
     sim_state.set(SimulationState::Paused);
+    sim_view_state.set(SimulationViewState::Invisible);
 }
 
 fn info_panel_handle_click(

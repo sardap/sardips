@@ -13,7 +13,8 @@ members = [
     "text_keys",
     "fact_db",
     "shared_deps",
-    "core", "minigames/snake",
+    "core",
+    "minigames/snake",
 ]
 default-members = ["run"]
 
@@ -51,6 +52,11 @@ strum = { version = "0.26.1", features = ["strum_macros"] }
 strum_macros = "0.26.1"
 maplit = "1.0.2"
 lazy_static = "1.4.0"
+bevy_http_client = { version = "0.6" }
+flate2 = { version = "1.0.33", default-features = false, features = [
+    "zlib-rs",
+] }
+base64 = "0.22.1"
 
 
 [profile.dev.package."*"]

@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@1.84
+      - uses: dtolnay/rust-toolchain@master
       - name: Add iOS targets
         run: rustup target add aarch64-apple-ios
       - name: Install the Apple certificate and provisioning profile
