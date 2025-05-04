@@ -183,7 +183,7 @@ pub struct SnakeGameAssets {
     pub snake_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/mini_games/snake/snake.png")]
     pub snake: Handle<Image>,
-    #[asset(path = "textures/mini_games/snake/background.jpg")]
+    #[asset(path = "textures/mini_games/snake/background.jpeg")]
     pub background: Handle<Image>,
 }
 

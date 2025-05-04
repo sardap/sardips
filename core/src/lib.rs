@@ -80,6 +80,7 @@ impl Plugin for SardipsCorePlugin {
                 view::ViewPlugin,
                 mood_core::MoodCorePlugin,
                 accessory_core::AccessoryCorePlugin,
+                bevy_http_client::HttpClientPlugin,
             ));
     }
 }

@@ -11,7 +11,6 @@
     * A Bride
     * A Video game Case
     * A geine
-    * Depresed Ghost
     * A Dancer
     * A Urn
     * A real cardboard box
@@ -34,7 +33,7 @@ AssetPetTemplateSet(
             possible_evolutions: [
                 PossibleEvolution(
                     criteria: ["Age > 2"],
-                    // Blob has a speical case where it will always evolve into a starter
+                    // Blob has is a special case where it will always evolve into a starter
                     species: []
                 )
             ],
@@ -1211,6 +1210,38 @@ AssetPetTemplateSet(
                 interval: Frequent,
             )),
             cleanliness: Some(TemplateCleanliness()),
+            fun: Some(TemplateFun()),
+        ),
+        PetTemplate(
+            species_name: "Ghostie",
+            kind: Creature,
+            image_set: PetTemplateImageSet(
+                sprite_sheet: "textures/pets/ghostie.png",
+                tile_size: (101, 94),
+                columns: 5,
+                column_mood_map: {
+                    Neutral: 2,
+                    Sad: 1,
+                    Despairing: 0,
+                    Happy: 3,
+                    Ecstatic: 4,
+
+                },
+            ),
+            size: X(60),
+            weight: FlyWeight,
+            speed: Fast,
+            stomach: Some(
+                TemplateStomach(
+                    size: Medium,
+                    sensations: {
+                    }
+                )
+            ),
+            pooper: Some(TemplatePooper(
+                interval: Infrequent,
+            )),
+            cleanliness: None,
             fun: Some(TemplateFun()),
         ),
     ]

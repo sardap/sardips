@@ -164,6 +164,7 @@ fn play_button(
     mut game_state: ResMut<NextState<GameState>>,
     button: Query<&Interaction, (Changed<Interaction>, With<PlayButton>)>,
 ) {
+    game_state.set(GameState::LoadViewScreen);
     let button = button.get_single();
     if let Ok(Interaction::Pressed) = button {
         game_state.set(GameState::LoadViewScreen);
