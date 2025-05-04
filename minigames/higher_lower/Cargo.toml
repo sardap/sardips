@@ -1,6 +1,6 @@
 [package]
 name = "sardips_higher_lower"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 
 [dependencies]
