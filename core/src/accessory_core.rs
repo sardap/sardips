@@ -9,7 +9,8 @@ pub struct AccessoryCorePlugin;
 
 impl Plugin for AccessoryCorePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(AccessoryTemplateDatabase::new());
+        app.insert_resource(AccessoryTemplateDatabase::new())
+            .register_type::<AccessoryDiscoveredEntries>();
     }
 }
 
@@ -65,6 +66,7 @@ impl AccessoryLayer {
 
 #[derive(Deserialize, TypePath, Clone)]
 pub struct AccessoryTemplate {
+    pub name: String,
     pub anchor_point: AnchorPoint,
     pub anchor_offset: Vec2,
     pub texture: String,
@@ -96,6 +98,12 @@ impl AccessoryTemplate {
     }
 }
 
+#[derive(Component, Default, Clone, Reflect)]
+#[reflect(Component)]
+pub struct AccessoryDiscoveredEntries {
+    pub entries: std::collections::HashSet<String>,
+}
+
 #[derive(Resource, Default)]
 pub struct AccessoryTemplateDatabase {
     templates: HashMap<String, AccessoryTemplate>,
@@ -106,81 +114,91 @@ impl AccessoryTemplateDatabase {
         let mut templates = HashMap::new();
 
         let cowboy_hat = AccessoryTemplate {
+            name: "cowboy_hat".to_string(),
             anchor_point: AnchorPoint::Head,
             anchor_offset: Vec2::new(-5., -3.),
             texture: "textures/accessories/cowboyhat.png".to_string(),
             spewers: vec![],
             texture_size: Vec2::new(173., 89.),
             wear_size: AccessorySize::StretchX,
-            cost: 100,
+            cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert("cowboy_hat".to_string(), cowboy_hat.clone());
+        templates.insert(cowboy_hat.name.clone(), cowboy_hat.clone());
 
         let ushanka_hat = AccessoryTemplate {
+            name: "ushanka_hat".to_string(),
             anchor_point: AnchorPoint::Head,
             anchor_offset: Vec2::new(-5., -20.),
             texture: "textures/accessories/ushanka.png".to_string(),
             spewers: vec![],
             texture_size: Vec2::new(128., 120.),
             wear_size: AccessorySize::StretchX,
-            cost: 100,
+            cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert("ushanka_hat".to_string(), ushanka_hat.clone());
+        templates.insert(ushanka_hat.name.clone(), ushanka_hat.clone());
 
         let fez_hat = AccessoryTemplate {
+            name: "fez_hat".to_string(),
             anchor_point: AnchorPoint::Head,
             anchor_offset: Vec2::new(-5., 0.),
             texture: "textures/accessories/fez.png".to_string(),
             spewers: vec![],
             texture_size: Vec2::new(250., 101.),
             wear_size: AccessorySize::StretchX,
-            cost: 100,
+            cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert("fez_hat".to_string(), fez_hat.clone());
+        templates.insert(fez_hat.name.clone(), fez_hat.clone());
 
         let wiz_hat = AccessoryTemplate {
+            name: "wiz_hat".to_string(),
             anchor_point: AnchorPoint::Head,
             anchor_offset: Vec2::new(-5., 15.),
             texture: "textures/accessories/wizhat.png".to_string(),
             spewers: vec![],
             texture_size: Vec2::new(100., 123.),
             wear_size: AccessorySize::StretchX,
-            cost: 100,
+            cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert("wiz_hat".to_string(), wiz_hat.clone());
+        templates.insert(wiz_hat.name.clone(), wiz_hat.clone());
 
         let bennie_hat = AccessoryTemplate {
+            name: "bennie_hat".to_string(),
             anchor_point: AnchorPoint::Head,
             anchor_offset: Vec2::new(0., -5.),
             texture: "textures/accessories/bennie.png".to_string(),
             spewers: vec![],
             texture_size: Vec2::new(102., 66.),
             wear_size: AccessorySize::StretchX,
-            cost: 100,
+            cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert("bennie_hat".to_string(), bennie_hat.clone());
+        templates.insert(bennie_hat.name.clone(), bennie_hat.clone());
 
         let pink_helmet = AccessoryTemplate {
+            name: "pink_helmet".to_string(),
             anchor_point: AnchorPoint::Head,
             anchor_offset: Vec2::new(0., -5.),
             texture: "textures/accessories/pink_helment.png".to_string(),
             spewers: vec![],
             texture_size: Vec2::new(173., 89.),
             wear_size: AccessorySize::StretchX,
-            cost: 100,
+            cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert("pink_helmet".to_string(), pink_helmet.clone());
+        templates.insert(pink_helmet.name.clone(), pink_helmet.clone());
 
         Self { templates }
     }
 
     pub fn get(&self, name: &str) -> Option<&AccessoryTemplate> {
         self.templates.get(name)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &AccessoryTemplate)> {
+        self.templates.iter()
     }
 }

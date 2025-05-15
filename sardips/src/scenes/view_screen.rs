@@ -32,7 +32,7 @@ impl Plugin for ViewScreenPlugin {
         app.insert_state::<VSSubState>(VSSubState::default());
         app.add_systems(
             OnEnter(GameState::ViewScreen),
-            (setup_ui, setup_camera, setup_state),
+            (setup_ui, setup_camera, setup_state, setup_selector_trackers),
         );
         app.add_systems(OnExit(GameState::ViewScreen), teardown);
         app.add_systems(
@@ -71,6 +71,7 @@ enum MenuOption {
     MiniGames,
     Dipdex,
     Stocks,
+    BuyAccessory,
     Options,
 }
 
@@ -84,6 +85,7 @@ impl MenuOption {
             MenuOption::Dipdex => 4,
             MenuOption::Stocks => 5,
             MenuOption::Options => 0,
+            MenuOption::BuyAccessory => 0,
         }
     }
 }
@@ -183,13 +185,15 @@ fn setup_ui(
         ))
         .with_children(|parent| {
             // Render menu options
+            let percent = 90.0 / MenuOption::iter().len() as f32;
+
             for option in MenuOption::iter() {
                 parent
                     .spawn((
                         ButtonBundle {
                             style: Style {
                                 justify_self: JustifySelf::Center,
-                                width: Val::Px(70.),
+                                width: Val::Vw(percent),
                                 height: Val::Px(70.),
                                 border: UiRect::all(Val::Px(4.)),
                                 ..default()
@@ -251,6 +255,12 @@ fn setup_state(
     sim_view_state.set(SimulationViewState::Visible);
 }
 
+fn setup_selector_trackers(mut commands: Commands, pet_selected: Query<Entity, With<SelectedPet>>) {
+    if pet_selected.iter().len() == 0 {
+        commands.spawn(SelectedPet { entity: None });
+    }
+}
+
 fn teardown(
     mut commands: Commands,
     mut sim_view_state: ResMut<NextState<SimulationViewState>>,
@@ -266,6 +276,7 @@ fn teardown(
 }
 
 fn info_panel_handle_click(
+    mut selected_pet: Query<&mut SelectedPet>,
     mut update_info_panel: EventWriter<InfoPanelUpdate>,
     mut info_panel_clear: EventWriter<InfoPanelsClear>,
     buttons: Res<ButtonInput<MouseButton>>,
@@ -274,6 +285,8 @@ fn info_panel_handle_click(
     mut name_tags: Query<&mut NameTag>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
+        let mut selected_pet = selected_pet.single_mut();
+
         let mut clicked = false;
 
         for view in pets.iter() {
@@ -281,6 +294,8 @@ fn info_panel_handle_click(
                 entity: view.entity,
                 panel_type: PanelType::Pet,
             });
+            selected_pet.entity = Some(view.entity);
+            info!("Selected pet: {:?}", view.entity);
             clicked = true;
         }
 
@@ -292,6 +307,8 @@ fn info_panel_handle_click(
             clicked = true;
         }
 
+        // Should be clearing selection but Need to figure out how to consume clicks
+        // So when clicking on the button it doesn't run this function
         if !clicked {
             info_panel_clear.send(InfoPanelsClear);
         }
@@ -343,6 +360,10 @@ fn menu_button_interaction(
             MenuOption::Options => {
                 vs_state.set(VSSubState::None);
             }
+            MenuOption::BuyAccessory => {
+                vs_state.set(VSSubState::None);
+                game_state.set(GameState::BuyAccessory);
+            }
         }
 
         break;
@@ -380,18 +401,41 @@ fn update_money_text(
     text.sections[0].value = wallet.to_string();
 }
 
+#[derive(Component)]
+pub struct SelectedPet {
+    entity: Option<Entity>,
+}
+
+impl SelectedPet {
+    pub fn get_entity(&self) -> Option<Entity> {
+        self.entity
+    }
+}
+
 fn toggle_interactions(
     mut commands: Commands,
     pets: Query<&EntityView, With<PetView>>,
     menu_options: Query<(Entity, &MenuOption, Option<&Interaction>)>,
+    pet_info_panel: Query<&SelectedPet>,
 ) {
     let have_pet = pets.iter().len() > 0;
+
+    let selected_pet = match pet_info_panel.get_single() {
+        Ok(pet) => pet.get_entity(),
+        Err(_) => None,
+    };
 
     for (entity, option, interaction) in &menu_options {
         if *option == MenuOption::MiniGames {
             if have_pet && interaction.is_none() {
                 commands.entity(entity).insert(Interaction::None);
             } else if !have_pet && interaction.is_some() {
+                commands.entity(entity).remove::<Interaction>();
+            }
+        } else if *option == MenuOption::BuyAccessory {
+            if selected_pet.is_some() && interaction.is_none() {
+                commands.entity(entity).insert(Interaction::None);
+            } else if selected_pet.is_none() && interaction.is_some() {
                 commands.entity(entity).remove::<Interaction>();
             }
         }

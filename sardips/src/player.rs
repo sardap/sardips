@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use sardips_core::accessory_core::AccessoryDiscoveredEntries;
 use shared_deps::moonshine_save::save::Save;
 
 use crate::{
@@ -26,6 +27,7 @@ pub struct PlayerBundle {
     pub share_order_history: CompleteShareOrderHistory,
     pub dipdex_entries: DipdexDiscoveredEntries,
     pub food_entires: FoodDiscoveredEntries,
+    pub accessory_entries: AccessoryDiscoveredEntries,
     pub save: Save,
 }
 

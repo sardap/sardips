@@ -94,6 +94,7 @@ pub enum GameState {
     ViewScreen,
     MiniGame,
     Template,
+    BuyAccessory,
     DipdexView,
     FoodBuy,
     StockBuy,
