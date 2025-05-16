@@ -3,7 +3,8 @@ use shared_deps::bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
 use strum_macros::EnumIter;
 
 use crate::{
-    accessory::{Accessory, AccessoryBundle},
+    accessory::Accessory,
+    inventory::{Inventory, Item},
     money::Wallet,
     palettes,
     player::Player,
@@ -17,9 +18,7 @@ use sardips_core::{
     ui_utils::spawn_back_button,
     GameState,
 };
-use text_keys::{FOOD_BUY_SCENE_COST_LABEL, FOOD_BUY_SCENE_TITLE};
-
-use super::view_screen::SelectedPet;
+use text_keys::{FOOD_BUY_SCENE_COST_LABEL, FOOD_BUY_SCENE_QTY_LABEL, FOOD_BUY_SCENE_TITLE};
 
 pub struct BuyAccessoryScenePlugin;
 
@@ -33,7 +32,13 @@ impl Plugin for BuyAccessoryScenePlugin {
             )
             .add_systems(
                 Update,
-                (tick_input, rotate_static, exit_accessory, buy_interaction)
+                (
+                    tick_input,
+                    rotate_static,
+                    exit_accessory,
+                    buy_interaction,
+                    update_qty_label,
+                )
                     .run_if(in_state(BuyAccessorySceneState::Selecting)),
             )
             .add_systems(OnExit(GameState::BuyAccessory), cleanup);
@@ -251,6 +256,19 @@ fn setup_ui(
                                         RotateStatic::default(),
                                     ));
                                 });
+
+                            parent.spawn((
+                                TextBundle::from_sections(vec![TextSection::new(
+                                    "",
+                                    TextStyle {
+                                        font_size: COST_SIZE,
+                                        color: Color::BLACK,
+                                        font: font_assets.main_font.clone(),
+                                    },
+                                )]),
+                                KeyText::new().with_value(0, FOOD_BUY_SCENE_QTY_LABEL, &["0"]),
+                                QtyLabel(template.name.clone()),
+                            ));
                         });
                 });
 
@@ -280,6 +298,31 @@ fn setup_ui(
         });
 }
 
+#[derive(Component)]
+struct QtyLabel(String);
+
+fn update_qty_label(
+    changed_inventory: Query<Entity, (With<Player>, Changed<Inventory>)>,
+    label_new: Query<Entity, Added<QtyLabel>>,
+    mut labels: Query<(&mut KeyText, &QtyLabel)>,
+    inventory: Query<&Inventory, With<Player>>,
+) {
+    if changed_inventory.iter().count() == 0 && label_new.iter().count() == 0 {
+        return;
+    }
+
+    let inventory = inventory.single();
+
+    // A real fuck it section
+    let accessory: Vec<_> = inventory.get_accessories().collect();
+
+    for (mut text, qty) in &mut labels {
+        let count = accessory.iter().filter(|i| i.template == qty.0).count();
+
+        text.replace_value(0, 0, count.to_string());
+    }
+}
+
 #[derive(Component, Default)]
 struct ExitBuyAccessory;
 
@@ -302,22 +345,12 @@ struct BuyButton {
 }
 
 fn buy_interaction(
-    mut commands: Commands,
     accessory_db: Res<AccessoryTemplateDatabase>,
     mut sounds: EventWriter<PlaySoundEffect>,
-    mut wallet: Query<&mut Wallet, With<Player>>,
+    mut wallet: Query<(&mut Wallet, &mut Inventory), With<Player>>,
     buy_buttons: Query<(&Interaction, &BuyButton), Changed<Interaction>>,
-    selected_pet: Query<&SelectedPet>,
 ) {
-    let mut wallet = wallet.single_mut();
-
-    let pet = match selected_pet.single().get_entity() {
-        Some(entity) => entity,
-        None => {
-            info!("No pet selected");
-            return;
-        }
-    };
+    let (mut wallet, mut inventory) = wallet.single_mut();
 
     for (interaction, button) in buy_buttons.iter() {
         if *interaction != Interaction::Pressed {
@@ -332,12 +365,7 @@ fn buy_interaction(
         wallet.balance -= template.cost;
         info!("Buying {}", template.name);
 
-        commands.entity(pet).with_children(|parent| {
-            parent.spawn(AccessoryBundle {
-                accessory: Accessory::new(&template.name),
-                ..default()
-            });
-        });
+        inventory.add_item(Item::Accessory(Accessory::new(&template.name)));
     }
 }
 
@@ -395,3 +423,6 @@ fn tick_input(query: Query<(&Interaction, &TemplateSceneButton), Changed<Interac
         }
     }
 }
+
+// TODO make a little dress up thing when you select it shows it on the guy and maybe you can add spewers
+// Maybe add a seprate section for spwpewers

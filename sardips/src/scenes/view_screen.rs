@@ -99,6 +99,47 @@ fn setup_ui(
     view_screen_images: Res<ViewScreenImageAssets>,
 ) {
     // Top UI
+    let ui_background_camera: Entity = commands
+        .spawn((
+            Camera2dBundle {
+                camera: Camera {
+                    order: 0,
+                    ..default()
+                },
+                ..default()
+            },
+            ViewScreenUi,
+        ))
+        .id();
+
+    commands
+        .spawn((
+            TargetCamera(ui_background_camera),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    position_type: PositionType::Absolute,
+                    ..default()
+                },
+
+                ..default()
+            },
+            ViewScreenUi,
+        ))
+        .with_children(|parent| {
+            parent.spawn(ImageBundle {
+                style: Style {
+                    // width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    ..default()
+                },
+                image: UiImage::new(view_screen_images.background.clone())
+                    .with_color(Color::srgba(1., 1., 1., 0.3)),
+                ..default()
+            });
+        });
+
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -416,26 +457,14 @@ fn toggle_interactions(
     mut commands: Commands,
     pets: Query<&EntityView, With<PetView>>,
     menu_options: Query<(Entity, &MenuOption, Option<&Interaction>)>,
-    pet_info_panel: Query<&SelectedPet>,
 ) {
     let have_pet = pets.iter().len() > 0;
-
-    let selected_pet = match pet_info_panel.get_single() {
-        Ok(pet) => pet.get_entity(),
-        Err(_) => None,
-    };
 
     for (entity, option, interaction) in &menu_options {
         if *option == MenuOption::MiniGames {
             if have_pet && interaction.is_none() {
                 commands.entity(entity).insert(Interaction::None);
             } else if !have_pet && interaction.is_some() {
-                commands.entity(entity).remove::<Interaction>();
-            }
-        } else if *option == MenuOption::BuyAccessory {
-            if selected_pet.is_some() && interaction.is_none() {
-                commands.entity(entity).insert(Interaction::None);
-            } else if selected_pet.is_none() && interaction.is_some() {
                 commands.entity(entity).remove::<Interaction>();
             }
         }

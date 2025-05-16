@@ -113,6 +113,10 @@ impl AccessoryTemplateDatabase {
     pub fn new() -> Self {
         let mut templates = HashMap::new();
 
+        let mut add_template = |entry: AccessoryTemplate| {
+            templates.insert(entry.name.clone(), entry);
+        };
+
         let cowboy_hat = AccessoryTemplate {
             name: "cowboy_hat".to_string(),
             anchor_point: AnchorPoint::Head,
@@ -124,7 +128,7 @@ impl AccessoryTemplateDatabase {
             cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert(cowboy_hat.name.clone(), cowboy_hat.clone());
+        add_template(cowboy_hat);
 
         let ushanka_hat = AccessoryTemplate {
             name: "ushanka_hat".to_string(),
@@ -137,7 +141,7 @@ impl AccessoryTemplateDatabase {
             cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert(ushanka_hat.name.clone(), ushanka_hat.clone());
+        add_template(ushanka_hat);
 
         let fez_hat = AccessoryTemplate {
             name: "fez_hat".to_string(),
@@ -150,7 +154,7 @@ impl AccessoryTemplateDatabase {
             cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert(fez_hat.name.clone(), fez_hat.clone());
+        add_template(fez_hat);
 
         let wiz_hat = AccessoryTemplate {
             name: "wiz_hat".to_string(),
@@ -163,7 +167,7 @@ impl AccessoryTemplateDatabase {
             cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert(wiz_hat.name.clone(), wiz_hat.clone());
+        add_template(wiz_hat);
 
         let bennie_hat = AccessoryTemplate {
             name: "bennie_hat".to_string(),
@@ -176,7 +180,7 @@ impl AccessoryTemplateDatabase {
             cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert(bennie_hat.name.clone(), bennie_hat.clone());
+        add_template(bennie_hat);
 
         let pink_helmet = AccessoryTemplate {
             name: "pink_helmet".to_string(),
@@ -189,7 +193,7 @@ impl AccessoryTemplateDatabase {
             cost: 0,
             layer: AccessoryLayer::Front,
         };
-        templates.insert(pink_helmet.name.clone(), pink_helmet.clone());
+        add_template(pink_helmet);
 
         Self { templates }
     }

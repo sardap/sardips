@@ -4,6 +4,7 @@ use shared_deps::moonshine_save::save::Save;
 
 use crate::{
     food::FoodDiscoveredEntries,
+    inventory::Inventory,
     money::Wallet,
     pet::dipdex::DipdexDiscoveredEntries,
     sardip_save::SardipLoadingState,
@@ -28,6 +29,7 @@ pub struct PlayerBundle {
     pub dipdex_entries: DipdexDiscoveredEntries,
     pub food_entires: FoodDiscoveredEntries,
     pub accessory_entries: AccessoryDiscoveredEntries,
+    pub inventory: Inventory,
     pub save: Save,
 }
 

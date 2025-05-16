@@ -24,7 +24,7 @@ pub struct Wearer<'a> {
     pub anchor_points: &'a AnchorPointSet,
 }
 
-#[derive(Component, Clone, Serialize, Deserialize, Reflect)]
+#[derive(Component, Clone, Serialize, Deserialize, Reflect, PartialEq)]
 #[reflect(Component)]
 pub struct Accessory {
     pub template: String,
