@@ -32,7 +32,7 @@ impl Plugin for ViewScreenPlugin {
         app.insert_state::<VSSubState>(VSSubState::default());
         app.add_systems(
             OnEnter(GameState::ViewScreen),
-            (setup_ui, setup_camera, setup_state),
+            (setup_ui, setup_camera, setup_state, setup_selector_trackers),
         );
         app.add_systems(OnExit(GameState::ViewScreen), teardown);
         app.add_systems(
@@ -71,6 +71,7 @@ enum MenuOption {
     MiniGames,
     Dipdex,
     Stocks,
+    BuyAccessory,
     Options,
 }
 
@@ -84,6 +85,7 @@ impl MenuOption {
             MenuOption::Dipdex => 4,
             MenuOption::Stocks => 5,
             MenuOption::Options => 0,
+            MenuOption::BuyAccessory => 0,
         }
     }
 }
@@ -97,6 +99,47 @@ fn setup_ui(
     view_screen_images: Res<ViewScreenImageAssets>,
 ) {
     // Top UI
+    let ui_background_camera: Entity = commands
+        .spawn((
+            Camera2dBundle {
+                camera: Camera {
+                    order: 0,
+                    ..default()
+                },
+                ..default()
+            },
+            ViewScreenUi,
+        ))
+        .id();
+
+    commands
+        .spawn((
+            TargetCamera(ui_background_camera),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    position_type: PositionType::Absolute,
+                    ..default()
+                },
+
+                ..default()
+            },
+            ViewScreenUi,
+        ))
+        .with_children(|parent| {
+            parent.spawn(ImageBundle {
+                style: Style {
+                    // width: Val::Percent(100.),
+                    height: Val::Percent(100.),
+                    ..default()
+                },
+                image: UiImage::new(view_screen_images.background.clone())
+                    .with_color(Color::srgba(1., 1., 1., 0.3)),
+                ..default()
+            });
+        });
+
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -183,13 +226,15 @@ fn setup_ui(
         ))
         .with_children(|parent| {
             // Render menu options
+            let percent = 90.0 / MenuOption::iter().len() as f32;
+
             for option in MenuOption::iter() {
                 parent
                     .spawn((
                         ButtonBundle {
                             style: Style {
                                 justify_self: JustifySelf::Center,
-                                width: Val::Px(70.),
+                                width: Val::Vw(percent),
                                 height: Val::Px(70.),
                                 border: UiRect::all(Val::Px(4.)),
                                 ..default()
@@ -251,6 +296,12 @@ fn setup_state(
     sim_view_state.set(SimulationViewState::Visible);
 }
 
+fn setup_selector_trackers(mut commands: Commands, pet_selected: Query<Entity, With<SelectedPet>>) {
+    if pet_selected.iter().len() == 0 {
+        commands.spawn(SelectedPet { entity: None });
+    }
+}
+
 fn teardown(
     mut commands: Commands,
     mut sim_view_state: ResMut<NextState<SimulationViewState>>,
@@ -266,6 +317,7 @@ fn teardown(
 }
 
 fn info_panel_handle_click(
+    mut selected_pet: Query<&mut SelectedPet>,
     mut update_info_panel: EventWriter<InfoPanelUpdate>,
     mut info_panel_clear: EventWriter<InfoPanelsClear>,
     buttons: Res<ButtonInput<MouseButton>>,
@@ -274,6 +326,8 @@ fn info_panel_handle_click(
     mut name_tags: Query<&mut NameTag>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
+        let mut selected_pet = selected_pet.single_mut();
+
         let mut clicked = false;
 
         for view in pets.iter() {
@@ -281,6 +335,8 @@ fn info_panel_handle_click(
                 entity: view.entity,
                 panel_type: PanelType::Pet,
             });
+            selected_pet.entity = Some(view.entity);
+            info!("Selected pet: {:?}", view.entity);
             clicked = true;
         }
 
@@ -292,6 +348,8 @@ fn info_panel_handle_click(
             clicked = true;
         }
 
+        // Should be clearing selection but Need to figure out how to consume clicks
+        // So when clicking on the button it doesn't run this function
         if !clicked {
             info_panel_clear.send(InfoPanelsClear);
         }
@@ -343,6 +401,10 @@ fn menu_button_interaction(
             MenuOption::Options => {
                 vs_state.set(VSSubState::None);
             }
+            MenuOption::BuyAccessory => {
+                vs_state.set(VSSubState::None);
+                game_state.set(GameState::BuyAccessory);
+            }
         }
 
         break;
@@ -378,6 +440,17 @@ fn update_money_text(
     let mut text = text.single_mut();
 
     text.sections[0].value = wallet.to_string();
+}
+
+#[derive(Component)]
+pub struct SelectedPet {
+    entity: Option<Entity>,
+}
+
+impl SelectedPet {
+    pub fn get_entity(&self) -> Option<Entity> {
+        self.entity
+    }
 }
 
 fn toggle_interactions(

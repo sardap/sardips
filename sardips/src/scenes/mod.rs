@@ -1,3 +1,4 @@
+pub mod buy_accessory;
 pub mod dipdex_scene;
 pub mod food_buy_scene;
 pub mod info_panel;
@@ -9,6 +10,7 @@ pub mod template_scene;
 pub mod view_screen;
 
 use bevy::prelude::*;
+use buy_accessory::BuyAccessoryScenePlugin;
 use food_buy_scene::FoodBuyScenePlugin;
 use info_panel::InfoPanelPlugin;
 use stock_scene::StockScenePlugin;
@@ -31,6 +33,7 @@ impl Plugin for GameScenePlugin {
             DipdexScenePlugin,
             FoodBuyScenePlugin,
             StockScenePlugin,
+            BuyAccessoryScenePlugin,
         ));
     }
 }

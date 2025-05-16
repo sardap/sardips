@@ -7,7 +7,6 @@ use sardips_core::pet_core::{EvolvingPet, PetTemplate, PetTemplateDatabase};
 use serde::Deserialize;
 use shared_deps::bevy_common_assets::ron::RonAssetPlugin;
 
-use crate::accessory::AccessoryBundle;
 use crate::layering;
 use sardips_core::{text_database::TextDatabase, velocity::Speed, GameState};
 
@@ -101,10 +100,6 @@ pub fn spawn_pet(
     if let Some(money_hungry) = template.get_money_hungry() {
         commands.entity(entity_id).insert(money_hungry);
     }
-
-    commands.entity(entity_id).with_children(|parent| {
-        parent.spawn(AccessoryBundle { ..default() });
-    });
 
     entity_id
 }

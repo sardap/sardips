@@ -55,6 +55,7 @@ pub const DIPDEX_SPECIES_TITLE: &str = "dipdex.species_title";
 
 pub const FOOD_BUY_SCENE_TITLE: &str = "food_buy_scene.title";
 pub const FOOD_BUY_SCENE_COST_LABEL: &str = "food_buy_scene.cost_label";
+pub const FOOD_BUY_SCENE_QTY_LABEL: &str = "food_buy_scene.qty_label";
 pub const FOOD_BUY_SCENE_MONEY_LABEL: &str = "food_buy_scene.money_label";
 
 pub const STOCK_BUY_SCENE_TITLE: &str = "stock_buy_scene.title";

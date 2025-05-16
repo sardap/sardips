@@ -14,6 +14,7 @@ pub mod dynamic_dialogue;
 pub mod fact_update;
 pub mod food;
 pub mod game_zone;
+pub mod inventory;
 pub mod layering;
 pub mod minigames;
 pub mod money;
@@ -37,6 +38,7 @@ use dynamic_dialogue::DynamicDialoguePlugin;
 use fact_db::FactsPlugin;
 use fact_update::FactUpdatePlugin;
 use food::{template::FoodTemplatePlugin, FoodPlugin};
+use inventory::InventoryPlugin;
 use minigames::MinigamePlugin;
 use money::MoneyPlugin;
 use pet::{dipdex::DipdexPlugin, PetPlugin};
@@ -120,6 +122,7 @@ impl Plugin for GamePlugin {
             StockTickerPlugin,
             DipdexPlugin,
             AccessoryPlugin,
+            InventoryPlugin,
         ));
 
         // #[cfg(feature = "dev")]

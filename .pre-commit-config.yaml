@@ -1,6 +1,13 @@
 repos:
   - repo: local
     hooks:
+      - id: cargo-format
+        name: cargo format
+        description: Run the cargo format
+        entry: cargo fmt --all -- --check
+        language: rust
+        files: \.rs$
+        pass_filenames: false
       - id: cargo-test
         name: cargo test
         description: Run cargo test
@@ -12,13 +19,6 @@ repos:
         name: cargo clippy
         description: Run the Clippy linter on the package.
         entry: cargo clippy --workspace --all-targets --all-features -- -Dwarnings
-        language: rust
-        files: \.rs$
-        pass_filenames: false
-      - id: cargo-format
-        name: cargo format
-        description: Run the cargo format
-        entry: cargo fmt --all -- --check
         language: rust
         files: \.rs$
         pass_filenames: false
