@@ -117,7 +117,7 @@ fn toggle_dev_console(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     state: Res<State<DevConsoleState>>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::AltLeft) {
+    if keyboard_input.just_pressed(KeyCode::Backquote) {
         info!("Toggling dev console");
         next_state.set(match **state {
             DevConsoleState::Closed => DevConsoleState::Open,
