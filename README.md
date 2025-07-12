@@ -10,7 +10,7 @@ I strongly think not having a real game for the years on and off working on it d
 Anywhere here it is all that will be completed of this iteration.
 
 
-## Highlights
+## What was completed
 ### Home Screen
 
 <img src="./screenshots/main_screen.png" width="200"/>
@@ -40,7 +40,7 @@ Created a set of minigames which different sardips like or hate more.
 ### Lot's of Sardips (Pets)
 Created 38 pets all with 5 different states. Different likes, Stomachs, Speeds, etc.
 
-    <img src="./screenshots/dipdex_list.png" width="200"/>
+<img src="./screenshots/dipdex_list.png" width="200"/>
 <img src="./screenshots/dipdex_feature.png" width="200"/>
 <img src="./screenshots/dipdex_feature_2.png" width="200"/>
 
@@ -51,7 +51,9 @@ Only support English and Korean but the whole system is there.
 <img src="./screenshots/korean.png" width="200"/>
 
 ### Accessory + Particle system
+I started to add hats some with effects.
 
+<img src="./screenshots/hats.png" width="200"/>
 
 ## Dev commands
 Open the dev console with `/~
