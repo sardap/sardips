@@ -1,22 +1,11 @@
 use bevy::prelude::*;
-use shared_deps::bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
 use strum_macros::EnumIter;
 
 use crate::{
-    accessory::Accessory,
-    inventory::{Inventory, Item},
-    money::Wallet,
-    palettes,
-    player::Player,
+    accessory::Accessory, inventory::Inventory, money::Wallet, palettes, pet::Pet, pet_display::{spawn_pet_preview, PetPreview}, player::Player
 };
 use sardips_core::{
-    accessory_core::{AccessoryDiscoveredEntries, AccessoryTemplateDatabase},
-    assets::{DipdexImageAssets, FontAssets},
-    button_hover::{ButtonColorSet, ButtonHover},
-    sounds::{PlaySoundEffect, SoundEffect},
-    text_translation::KeyText,
-    ui_utils::spawn_back_button,
-    GameState,
+    accessory_core::{AccessoryDiscoveredEntries, AccessoryTemplateDatabase}, assets::{DipdexImageAssets, FontAssets}, button_hover::{ButtonColorSet, ButtonHover}, name::SpeciesName, rotate_static::RotateStatic, text_translation::KeyText, ui_utils::spawn_back_button, GameState
 };
 use text_keys::{FOOD_BUY_SCENE_COST_LABEL, FOOD_BUY_SCENE_QTY_LABEL, FOOD_BUY_SCENE_TITLE};
 
@@ -28,16 +17,16 @@ impl Plugin for BuyAccessoryScenePlugin {
             .add_systems(OnEnter(GameState::BuyAccessory), setup_state)
             .add_systems(
                 OnEnter(BuyAccessorySceneState::Selecting),
-                (setup_camera, setup_ui),
+                (setup_camera, setup_ui, setup_selection),
             )
             .add_systems(
                 Update,
                 (
                     tick_input,
-                    rotate_static,
                     exit_accessory,
-                    buy_interaction,
+                    select_interaction,
                     update_qty_label,
+                    active_selection_changed,
                 )
                     .run_if(in_state(BuyAccessorySceneState::Selecting)),
             )
@@ -66,12 +55,23 @@ fn setup_camera(mut commands: Commands) {
             ..default()
         },
         TemplateSceneCamera,
-        TemplateScene,
+        BuyAccessoryScene,
     ));
 }
 
 const FUNDS_SIZE: f32 = 25.;
 const COST_SIZE: f32 = 20.;
+
+fn setup_selection(
+    mut commands: Commands,
+) {
+
+    commands.spawn((
+        ActiveSelection::default(),
+        BuyAccessoryScene
+    ));
+
+}
 
 fn setup_ui(
     mut commands: Commands,
@@ -80,8 +80,10 @@ fn setup_ui(
     font_assets: Res<FontAssets>,
     accessory_db: Res<AccessoryTemplateDatabase>,
     player: Query<(&AccessoryDiscoveredEntries, &Wallet), With<Player>>,
+    active_pets: Query<&SpeciesName, With<Pet>>
 ) {
     let (discovered, wallet) = player.single();
+    let pet_template_name = active_pets.iter().next().unwrap().0.clone();
 
     commands
         .spawn((
@@ -96,7 +98,7 @@ fn setup_ui(
                 },
                 ..default()
             },
-            TemplateScene,
+            BuyAccessoryScene,
         ))
         .with_children(|parent| {
             parent.spawn((
@@ -214,7 +216,7 @@ fn setup_ui(
                                             pressed: Color::BLACK,
                                             disabled: Color::BLACK,
                                         }),
-                                    BuyButton {
+                                    SelectButton {
                                         name: template.name.clone(),
                                     },
                                 ))
@@ -289,6 +291,48 @@ fn setup_ui(
                 }
             }
 
+            parent
+                .spawn(NodeBundle {
+                    style: Style {
+                        width: Val::Px(100.),
+                        height: Val::Px(100.),
+                        padding: UiRect::all(Val::Px(10.)),
+                        flex_direction: FlexDirection::Column,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        ..default()
+                    },
+                    background_color: BackgroundColor(palettes::PASTEL_GREEN),
+                    ..default()
+                })
+                .with_children(|parent| {
+                    // Spawn pet image
+                    spawn_pet_preview(
+                        parent,
+                        PetPreview::new(pet_template_name).with_max_size(100.),
+                    )
+                    .insert(DressUpView);
+                    // Spawn overlay
+                    parent.spawn((
+                        ImageBundle {
+                            style: Style {
+                                position_type: PositionType::Absolute,
+                                width: Val::Percent(90.),
+                                height: Val::Percent(90.),
+                                ..default()
+                            },
+                            image: UiImage::new(dipdex_assets.screen_noise.clone())
+                                .with_color(Color::srgba(1., 1., 1., 0.05)),
+                            ..default()
+                        },
+                        TextureAtlas {
+                            layout: dipdex_assets.screen_noise_layout.clone(),
+                            index: 0,
+                        },
+                        RotateStatic::default(),
+                    ));
+                });
+
             spawn_back_button::<ExitBuyAccessory>(
                 parent,
                 &font_assets,
@@ -340,65 +384,54 @@ fn exit_accessory(
 }
 
 #[derive(Component)]
-struct BuyButton {
+struct SelectButton {
     name: String,
 }
 
-fn buy_interaction(
-    accessory_db: Res<AccessoryTemplateDatabase>,
-    mut sounds: EventWriter<PlaySoundEffect>,
-    mut wallet: Query<(&mut Wallet, &mut Inventory), With<Player>>,
-    buy_buttons: Query<(&Interaction, &BuyButton), Changed<Interaction>>,
-) {
-    let (mut wallet, mut inventory) = wallet.single_mut();
+#[derive(Component, Default)]
+struct ActiveSelection {
+    pub selected: Option<String>,
+}
 
-    for (interaction, button) in buy_buttons.iter() {
+fn select_interaction(
+    select_buttons: Query<(&Interaction, &SelectButton), Changed<Interaction>>,
+    mut selection: Query<&mut ActiveSelection>,
+) {
+    let mut selection = selection.single_mut();
+
+    for (interaction, button) in &select_buttons {
         if *interaction != Interaction::Pressed {
             continue;
         }
 
-        let template = accessory_db.get(&button.name).unwrap();
-        if template.cost > wallet.balance {
-            sounds.send(PlaySoundEffect::new(SoundEffect::Error));
-            continue;
-        }
-        wallet.balance -= template.cost;
-        info!("Buying {}", template.name);
-
-        inventory.add_item(Item::Accessory(Accessory::new(&template.name)));
+        selection.selected = Some(button.name.clone());
     }
 }
 
-#[derive(Component)]
-struct RotateStatic {
-    timer: Timer,
-}
-
-impl Default for RotateStatic {
-    fn default() -> Self {
-        Self {
-            timer: Timer::from_seconds(0.2, TimerMode::Repeating),
-        }
-    }
-}
-
-fn rotate_static(
-    time: Res<Time>,
-    mut rand: ResMut<GlobalRng>,
-    mut rotate: Query<(&mut TextureAtlas, &mut RotateStatic)>,
+fn active_selection_changed(
+    selection: Query<&ActiveSelection, Changed<ActiveSelection>>,
+    mut display: Query<&mut PetPreview>,
 ) {
-    let rand = rand.get_mut();
+    let selection = match selection.get_single() {
+        Ok(x) => x,
+        Err(_) => return
+    };
 
-    for (mut layout, mut rotate) in rotate.iter_mut() {
-        if rotate.timer.tick(time.delta()).just_finished() {
-            layout.index = rand.gen_usize() % 64;
+    let mut display = display.single_mut();
+
+    match &selection.selected {
+        Some(name) => {
+            display.replace_accessory(Accessory::new(name));
+        },
+        None => {
+            display.clear_accessory();
         }
     }
 }
 
 fn cleanup(
     mut commands: Commands,
-    entities: Query<Entity, With<TemplateScene>>,
+    entities: Query<Entity, With<BuyAccessoryScene>>,
     mut state: ResMut<NextState<BuyAccessorySceneState>>,
 ) {
     for entity in entities.iter() {
@@ -411,7 +444,7 @@ fn cleanup(
 struct TemplateSceneCamera;
 
 #[derive(Component)]
-struct TemplateScene;
+struct BuyAccessoryScene;
 
 #[derive(Component, EnumIter, Copy, Clone, PartialEq, Eq, Hash)]
 enum TemplateSceneButton {}
@@ -423,6 +456,28 @@ fn tick_input(query: Query<(&Interaction, &TemplateSceneButton), Changed<Interac
         }
     }
 }
+
+#[derive(Component)]
+struct DressUpView;
+
+#[derive(Component)]
+struct BuyButton;
+
+fn buy_button_interaction(
+    select_buttons: Query<(&Interaction, &SelectButton), Changed<Interaction>>,
+    mut selection: Query<&mut ActiveSelection>,
+) {
+    let mut selection = selection.single_mut();
+
+    for (interaction, button) in &select_buttons {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+
+        selection.selected = Some(button.name.clone());
+    }
+}
+
 
 // TODO make a little dress up thing when you select it shows it on the guy and maybe you can add spewers
 // Maybe add a seprate section for spwpewers

@@ -37,7 +37,6 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn load_templates(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut layouts: ResMut<Assets<TextureAtlasLayout>>,
     template_handle: Res<PetTemplateSetHandle>,
     mut template_assets: ResMut<Assets<AssetPetTemplateSet>>,
@@ -47,7 +46,7 @@ fn load_templates(
             templates: set.templates,
         };
 
-        db.populate_pre_calculated(&asset_server, &mut layouts);
+        db.populate_pre_calculated( &mut layouts);
 
         commands.insert_resource(db);
     }

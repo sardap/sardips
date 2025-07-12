@@ -28,6 +28,7 @@ pub mod stock_market;
 pub mod stock_ticker;
 pub mod thinking;
 pub mod tools;
+pub mod pet_display;
 
 use accessory::AccessoryPlugin;
 use age::AgePlugin;
@@ -43,6 +44,7 @@ use minigames::MinigamePlugin;
 use money::MoneyPlugin;
 use pet::{dipdex::DipdexPlugin, PetPlugin};
 use player::PlayerPlugin;
+use pet_display::PetPreviewPlugin;
 use sardip_save::SardipSavePlugin;
 use scenes::GameScenePlugin;
 use shared_deps::bevy_kira_audio::prelude::*;
@@ -123,6 +125,7 @@ impl Plugin for GamePlugin {
             DipdexPlugin,
             AccessoryPlugin,
             InventoryPlugin,
+            PetPreviewPlugin,
         ));
 
         // #[cfg(feature = "dev")]
