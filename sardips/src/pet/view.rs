@@ -40,6 +40,7 @@ pub struct PetViewBundle {
 
 fn spawn_pet_view(
     mut commands: Commands,
+    asset_server: Res<AssetServer>,
     pet_db: Res<PetTemplateDatabase>,
     pet: Query<(Entity, &SpeciesName, &Transform), Added<Pet>>,
 ) {
@@ -61,7 +62,7 @@ fn spawn_pet_view(
                             custom_size: Some(custom_size),
                             ..default()
                         },
-                        texture: template.pre_calculated.texture.clone(),
+                        texture: asset_server.load(&template.image_set.sprite_sheet),
                         ..default()
                     },
                     atlas: TextureAtlas {

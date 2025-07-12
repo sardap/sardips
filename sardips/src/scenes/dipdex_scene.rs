@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use shared_deps::bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
 use strum::IntoEnumIterator;
 
 use sardips_core::{
@@ -9,12 +8,13 @@ use sardips_core::{
     mood_core::{AutoSetMoodImage, MoodCategory, MoodImageIndexes, SatisfactionRating},
     name::SpeciesName,
     pet_core::{PetTemplate, PetTemplateDatabase},
+    rotate_static::RotateStatic,
     text_database::TextDatabase,
     text_translation::KeyText,
     GameState,
 };
 
-use crate::{palettes, pet::dipdex::DipdexDiscoveredEntries, player::Player};
+use crate::{palettes, pet::dipdex::DipdexDiscoveredEntries, player::Player, pet_display::{spawn_pet_preview, PetPreview}};
 use text_keys::{self, BACK};
 
 pub struct DipdexScenePlugin;
@@ -29,10 +29,6 @@ impl Plugin for DipdexScenePlugin {
             .add_systems(OnExit(GameState::DipdexView), cleanup)
             .add_systems(OnEnter(DipdexState::Selecting), show_node::<DipdexPageNode>)
             .add_systems(OnExit(DipdexState::Selecting), hide_node::<DipdexPageNode>)
-            .add_systems(
-                Update,
-                rotate_static.run_if(in_state(GameState::DipdexView)),
-            )
             .add_systems(
                 Update,
                 (
@@ -310,29 +306,10 @@ fn make_dipdex_list_entry(
         })
         .with_children(|parent| {
             if discovered {
-                let (w, h) = if template.pre_calculated.custom_size.x
-                    > template.pre_calculated.custom_size.y
-                {
-                    (Val::Percent(60.), Val::Auto)
-                } else {
-                    (Val::Auto, Val::Percent(60.))
-                };
-                parent.spawn((
-                    ImageBundle {
-                        style: Style {
-                            width: w,
-                            height: h,
-                            ..default()
-                        },
-                        image: UiImage::new(template.pre_calculated.texture.clone()),
-                        ..default()
-                    },
-                    TextureAtlas {
-                        layout: template.pre_calculated.layout.clone(),
-                        ..default()
-                    },
-                ));
-
+                spawn_pet_preview(
+                    parent,
+                    PetPreview::new(template.species_name.clone()),
+                );
                 // Spawn overlay
                 parent.spawn((
                     ImageBundle {
@@ -420,33 +397,6 @@ fn make_dipdex_list_entry(
 
     if !discovered {
         entity.remove::<Interaction>();
-    }
-}
-
-#[derive(Component)]
-struct RotateStatic {
-    timer: Timer,
-}
-
-impl Default for RotateStatic {
-    fn default() -> Self {
-        Self {
-            timer: Timer::from_seconds(0.2, TimerMode::Repeating),
-        }
-    }
-}
-
-fn rotate_static(
-    time: Res<Time>,
-    mut rand: ResMut<GlobalRng>,
-    mut rotate: Query<(&mut TextureAtlas, &mut RotateStatic)>,
-) {
-    let rand = rand.get_mut();
-
-    for (mut layout, mut rotate) in rotate.iter_mut() {
-        if rotate.timer.tick(time.delta()).just_finished() {
-            layout.index = rand.gen_usize() % 64;
-        }
     }
 }
 
@@ -672,28 +622,11 @@ fn update_dipdex_entry_view(
                         })
                         .with_children(|parent| {
                             // Make it fill 90% of width or height
-                            let (w, h) = if template.pre_calculated.custom_size.x
-                                > template.pre_calculated.custom_size.y
-                            {
-                                (Val::Percent(100.), Val::Auto)
-                            } else {
-                                (Val::Auto, Val::Percent(100.))
-                            };
-
-                            parent.spawn((
-                                ImageBundle {
-                                    style: Style {
-                                        width: w,
-                                        height: h,
-                                        ..default()
-                                    },
-                                    image: UiImage::new(template.pre_calculated.texture.clone()),
-                                    ..default()
-                                },
-                                TextureAtlas {
-                                    layout: template.pre_calculated.layout.clone(),
-                                    ..default()
-                                },
+                            spawn_pet_preview(
+                                parent,
+                                PetPreview::new(template.species_name.clone())
+                                    .with_max_size(90.),
+                            ).insert((
                                 MoodImageIndexes::new(&template.image_set.column_mood_map),
                                 PetEntryImage,
                                 MoodCategory::default(),

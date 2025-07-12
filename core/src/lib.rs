@@ -34,6 +34,7 @@ pub mod particles;
 pub mod persistent_id;
 pub mod pet_core;
 pub mod rand_utils;
+pub mod rotate_static;
 pub mod shrink;
 pub mod sounds;
 pub mod sprite_utils;
@@ -52,7 +53,7 @@ pub struct SardipsCorePlugin;
 impl Plugin for SardipsCorePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(GameState::default())
-            .add_plugins((SavePlugin, LoadPlugin))
+            .add_plugins((SavePlugin, LoadPlugin, bevy_http_client::HttpClientPlugin))
             .add_plugins((
                 persistent_id::PersistentIdPlugin,
                 loading::LoadingPlugin,
@@ -80,7 +81,7 @@ impl Plugin for SardipsCorePlugin {
                 view::ViewPlugin,
                 mood_core::MoodCorePlugin,
                 accessory_core::AccessoryCorePlugin,
-                bevy_http_client::HttpClientPlugin,
+                rotate_static::RotateStaticPlugin,
             ));
     }
 }

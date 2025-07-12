@@ -98,6 +98,7 @@ impl AccessoryTemplate {
     }
 }
 
+
 #[derive(Component, Default, Clone, Reflect)]
 #[reflect(Component)]
 pub struct AccessoryDiscoveredEntries {
@@ -122,7 +123,9 @@ impl AccessoryTemplateDatabase {
             anchor_point: AnchorPoint::Head,
             anchor_offset: Vec2::new(-5., -3.),
             texture: "textures/accessories/cowboyhat.png".to_string(),
-            spewers: vec![],
+            spewers: vec![
+                crate::particles::HAPPY.clone()
+            ],
             texture_size: Vec2::new(173., 89.),
             wear_size: AccessorySize::StretchX,
             cost: 0,

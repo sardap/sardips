@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use shared_deps::bevy_turborand::{DelegatedRng, GenCore, GlobalRng};
 use strum_macros::EnumIter;
 
 use crate::{
@@ -12,6 +11,7 @@ use sardips_core::{
     assets::{DipdexImageAssets, FontAssets, ViewScreenImageAssets},
     button_hover::{ButtonColorSet, ButtonHover},
     food_core::FoodTemplateDatabase,
+    rotate_static::RotateStatic,
     sounds::{PlaySoundEffect, SoundEffect},
     text_translation::KeyText,
     ui_utils::spawn_back_button,
@@ -31,7 +31,7 @@ impl Plugin for FoodBuyScenePlugin {
             )
             .add_systems(
                 Update,
-                (tick_input, exit_dipdex, rotate_static, buy_interaction)
+                (tick_input, exit_dipdex, buy_interaction)
                     .run_if(in_state(FoodBuySceneState::Selecting)),
             )
             .add_systems(OnExit(GameState::FoodBuy), cleanup);
@@ -360,33 +360,6 @@ fn exit_dipdex(
         if *interaction == Interaction::Pressed {
             game_state.set(GameState::ViewScreen);
             buy_state.set(FoodBuySceneState::None);
-        }
-    }
-}
-
-#[derive(Component)]
-struct RotateStatic {
-    timer: Timer,
-}
-
-impl Default for RotateStatic {
-    fn default() -> Self {
-        Self {
-            timer: Timer::from_seconds(0.2, TimerMode::Repeating),
-        }
-    }
-}
-
-fn rotate_static(
-    time: Res<Time>,
-    mut rand: ResMut<GlobalRng>,
-    mut rotate: Query<(&mut TextureAtlas, &mut RotateStatic)>,
-) {
-    let rand = rand.get_mut();
-
-    for (mut layout, mut rotate) in rotate.iter_mut() {
-        if rotate.timer.tick(time.delta()).just_finished() {
-            layout.index = rand.gen_usize() % 64;
         }
     }
 }

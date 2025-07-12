@@ -1,6 +1,6 @@
 use std::{ops::Range, time::Duration};
 
-use bevy::{color::ColorRange, prelude::*, utils::hashbrown::HashSet};
+use bevy::{color::ColorRange, prelude::*, render::view::RenderLayers, utils::hashbrown::HashSet};
 use serde::{Deserialize, Serialize};
 use shared_deps::bevy_turborand::{DelegatedRng, RngComponent};
 
@@ -89,6 +89,7 @@ pub struct Spewer {
     pub lifetime: SpewerLifetime,
     pub spawn_interval: Duration,
     pub spawn_area: Rect,
+    pub render_layer: usize,
 }
 
 lazy_static! {
@@ -114,6 +115,7 @@ lazy_static! {
             ),
             spawn_interval: Duration::from_millis(25),
             spawn_area: Rect::new(-5., -5., 5., 5.),
+            render_layer: 0,
         }
     };
     pub static ref SPARKS: Spewer = {
@@ -149,6 +151,7 @@ lazy_static! {
             lifetime: SpewerLifetime::Uniform(Duration::from_millis(1500)),
             spawn_interval: Duration::from_millis(50),
             spawn_area: Rect::new(-5., -5., 5., 5.),
+            ..default()
         }
     };
     pub static ref BITS: Spewer = {
@@ -181,6 +184,7 @@ impl Default for Spewer {
             lifetime: SpewerLifetime::Uniform(Duration::from_millis(1500)),
             spawn_interval: Duration::from_millis(50),
             spawn_area: Rect::new(-5., -5., 5., 5.),
+            render_layer: 0
         }
     }
 }
@@ -208,6 +212,11 @@ impl Spewer {
 
     pub fn with_spawn_area(mut self, spawn_area: Rect) -> Self {
         self.spawn_area = spawn_area;
+        self
+    }
+
+    pub fn with_render_layer(mut self, render_layer: usize) -> Self {
+        self.render_layer = render_layer;
         self
     }
 }
@@ -387,6 +396,7 @@ fn spawn_particles(
                 Particle::new(entity, lifetime, color_index),
                 MovementDirection3D { direction },
                 VelocityDeltaUpdate,
+                RenderLayers::layer(spewer.render_layer)
             ));
         }
     }

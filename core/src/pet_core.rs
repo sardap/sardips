@@ -303,7 +303,6 @@ impl TemplateSize {
 pub struct PreCalculated {
     pub number: i32,
     pub layout: Handle<TextureAtlasLayout>,
-    pub texture: Handle<Image>,
     pub custom_size: Vec2,
 }
 
@@ -421,7 +420,6 @@ impl PetTemplateDatabase {
 
     pub fn populate_pre_calculated(
         &mut self,
-        asset_server: &AssetServer,
         layouts: &mut Assets<TextureAtlasLayout>,
     ) {
         for (i, template) in self.templates.iter_mut().enumerate() {
@@ -436,13 +434,11 @@ impl PetTemplateDatabase {
                 None,
             );
             let layout = layouts.add(layout);
-            let texture = asset_server.load(&template.image_set.sprite_sheet);
 
             let custom_size = template.size.vec2(template.image_set.tile_size);
 
             template.pre_calculated = PreCalculated {
                 layout,
-                texture,
                 number: i as i32 + 1,
                 custom_size,
             };

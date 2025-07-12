@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use sardips_core::{
-    accessory_core::{AccessoryDiscoveredEntries, AccessoryTemplateDatabase, AnchorPointSet},
+    accessory_core::{AccessoryDiscoveredEntries, AccessoryTemplate, AccessoryTemplateDatabase, AnchorPointSet},
     particles::Spewer,
 };
 use serde::{Deserialize, Serialize};
@@ -47,6 +47,7 @@ impl Default for Accessory {
         Self::new("pink_helmet")
     }
 }
+
 
 #[derive(Bundle, Default)]
 pub struct AccessoryBundle {
