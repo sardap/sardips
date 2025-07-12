@@ -2113,7 +2113,7 @@ checksum = "af9673d8203fcb076b19dfd17e38b3d4ae9f44959416ea532ce72415a6020365"
 
 [[package]]
 name = "fact_db"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "lazy_static",
@@ -4162,7 +4162,7 @@ dependencies = [
 
 [[package]]
 name = "sardips"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "base64 0.22.1",
  "bevy",
@@ -4182,7 +4182,7 @@ dependencies = [
 
 [[package]]
 name = "sardips-run"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "embed-resource",
@@ -4200,7 +4200,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_core"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "bevy_asset_loader",
@@ -4217,7 +4217,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_endless_shooter"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "maplit",
@@ -4228,7 +4228,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_four_in_row"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "lazy_static",
@@ -4238,7 +4238,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_higher_lower"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "sardips_core",
@@ -4260,7 +4260,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_rhythm"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "sardips_core",
@@ -4281,7 +4281,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_tic_tac_toe"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "lazy_static",
@@ -4292,7 +4292,7 @@ dependencies = [
 
 [[package]]
 name = "sardips_translate"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "bevy",
  "sardips_core",
@@ -4370,7 +4370,7 @@ dependencies = [
 
 [[package]]
 name = "shared_deps"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "async-std",
  "avian2d",
@@ -4697,7 +4697,7 @@ dependencies = [
 
 [[package]]
 name = "text_keys"
-version = "0.6.0"
+version = "0.7.0"
 
 [[package]]
 name = "thiserror"

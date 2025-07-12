@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use sardips_core::{accessory_core::AnchorPointSet, particles::Spewer};
+use sardips_core::{
+    accessory_core::{AccessoryDiscoveredEntries, AccessoryTemplateDatabase, AnchorPointSet},
+    particles::Spewer,
+};
 use serde::{Deserialize, Serialize};
 use shared_deps::moonshine_save::save::Save;
 use view::AccessoryViewPlugin;
@@ -11,7 +14,8 @@ pub struct AccessoryPlugin;
 impl Plugin for AccessoryPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Accessory>()
-            .add_plugins(AccessoryViewPlugin);
+            .add_plugins(AccessoryViewPlugin)
+            .add_systems(Update, add_starting_accessory_discovered_entries);
     }
 }
 
@@ -20,7 +24,7 @@ pub struct Wearer<'a> {
     pub anchor_points: &'a AnchorPointSet,
 }
 
-#[derive(Component, Clone, Serialize, Deserialize, Reflect)]
+#[derive(Component, Clone, Serialize, Deserialize, Reflect, PartialEq)]
 #[reflect(Component)]
 pub struct Accessory {
     pub template: String,
@@ -48,4 +52,15 @@ impl Default for Accessory {
 pub struct AccessoryBundle {
     pub accessory: Accessory,
     pub save: Save,
+}
+
+fn add_starting_accessory_discovered_entries(
+    accessory_db: Res<AccessoryTemplateDatabase>,
+    mut added: Query<&mut AccessoryDiscoveredEntries, Added<AccessoryDiscoveredEntries>>,
+) {
+    for mut discovered in added.iter_mut() {
+        for (key, _) in accessory_db.iter() {
+            discovered.entries.insert(key.clone());
+        }
+    }
 }

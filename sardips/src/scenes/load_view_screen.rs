@@ -3,7 +3,10 @@ use bevy::prelude::*;
 #[cfg(not(feature = "dev"))]
 use crate::pet::template::SpawnPetEvent;
 
-use crate::sardip_save::SardipLoadingState;
+use crate::{
+    pet::{breeding::Egg, Pet},
+    sardip_save::SardipLoadingState,
+};
 use sardips_core::GameState;
 
 pub struct LoadViewScreenPlugin;
@@ -49,9 +52,18 @@ fn setup(mut loading_state: ResMut<NextState<SardipLoadingState>>) {
 }
 
 fn setup_complete(
+    pets_or_eggs: Query<Entity, Or<(With<Pet>, With<Egg>)>>,
     mut game_state: ResMut<NextState<GameState>>,
     mut loading_state: ResMut<NextState<SardipLoadingState>>,
+    mut spawn_pets: EventWriter<SpawnPetEvent>,
 ) {
+    if pets_or_eggs.is_empty() {
+        spawn_pets.send(SpawnPetEvent::Blank((
+            Vec2::new(0., 0.),
+            "Blob".to_string(),
+        )));
+    }
+
     game_state.set(GameState::ViewScreen);
     loading_state.set(SardipLoadingState::None);
 }

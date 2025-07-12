@@ -90,6 +90,7 @@ TextDatabase(
 
             "food_buy_scene.title": "Buy food",
             "food_buy_scene.cost_label": "${0}",
+            "food_buy_scene.qty_label": "QTY:{0}",
             "food_buy_scene.money_label": "Funds: ${0}",
 
             "stock_buy_scene.title": "Buy stock",

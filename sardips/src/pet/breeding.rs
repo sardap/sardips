@@ -181,7 +181,7 @@ pub struct EggBundle {
     pub name: EntityName,
 }
 
-fn spawn_egg(
+pub fn spawn_egg(
     contains: impl ToString,
     commands: &mut Commands,
     global_rng: &mut GlobalRng,

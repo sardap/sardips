@@ -74,6 +74,9 @@ pub struct ViewScreenImageAssets {
     pub food_sensation_layout: Handle<TextureAtlasLayout>,
     #[asset(path = "textures/view_screen/food_sensation.png")]
     pub food_sensation: Handle<Image>,
+
+    #[asset(path = "textures/view_screen/background.png")]
+    pub background: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
