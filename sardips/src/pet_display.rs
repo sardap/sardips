@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 
 use bevy::{
-    asset, ecs::system::EntityCommands, prelude::*, render::{
+    asset,
+    ecs::system::EntityCommands,
+    prelude::*,
+    render::{
         render_asset::RenderAssetUsages,
         render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
         view::RenderLayers,
-    }
+    },
 };
 use sardips_core::{
     accessory_core::{self, AccessoryTemplate, AccessoryTemplateDatabase},
@@ -265,14 +268,15 @@ fn setup_sardip_display(
                                     parent.spawn((
                                         Transform::from_xyz(0., 0., 5.),
                                         GlobalTransform::default(),
-                                        spewer.clone().with_spawn_area(Rect::new(
-                                            -size.x / 2.,
-                                            -size.y / 2.,
-                                            size.x / 2.,
-                                            size.y / 2.,
-                                        )).with_render_layer(
-                                            render_layer
-                                        ),
+                                        spewer
+                                            .clone()
+                                            .with_spawn_area(Rect::new(
+                                                -size.x / 2.,
+                                                -size.y / 2.,
+                                                size.x / 2.,
+                                                size.y / 2.,
+                                            ))
+                                            .with_render_layer(render_layer),
                                     ));
                                 }
                             });

@@ -42,43 +42,41 @@ impl Plugin for SardipSavePlugin {
                 .include_resource::<BuySellOrchestrator>()
                 .include_resource::<PersistentIdGenerator>()
                 .into(
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        file_from_resource::<SaveRequestFile>()
-                    },
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        shared_deps::moonshine_save::stream_from_resource::<SaveRequestWeb>()
-                    },
+                    // #[cfg(not(target_arch = "wasm32"))]
+                    // {
+                    file_from_resource::<SaveRequestFile>(), // },
+                                                             // #[cfg(target_arch = "wasm32")]
+                                                             // {
+                                                             //     shared_deps::moonshine_save::stream_from_resource::<SaveRequestWeb>()
+                                                             // },
                 ),
         );
 
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            app.add_systems(OnEnter(SardipLoadingState::Loading), trigger_load);
-            app.add_systems(PreUpdate, load(file_from_resource::<LoadRequest>()));
-            app.add_systems(
-                Update,
-                post_load.run_if(
-                    in_state(SardipLoadingState::Loading)
-                        .and_then(not(resource_exists::<LoadRequest>)),
-                ),
-            );
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            app.add_systems(
-                OnEnter(SardipLoadingState::Loading),
-                trigger_load_save_remote,
-            );
-            app.add_systems(Update, handle_load_save_response);
-            app.add_systems(
-                PreUpdate,
-                load(shared_deps::moonshine_save::stream_from_resource::<
-                    LoadFromStream,
-                >()),
-            );
-        }
+        // #[cfg(not(target_arch = "wasm32"))]
+        // {
+        app.add_systems(OnEnter(SardipLoadingState::Loading), trigger_load);
+        app.add_systems(PreUpdate, load(file_from_resource::<LoadRequest>()));
+        app.add_systems(
+            Update,
+            post_load.run_if(
+                in_state(SardipLoadingState::Loading).and_then(not(resource_exists::<LoadRequest>)),
+            ),
+        );
+        // }
+        // #[cfg(target_arch = "wasm32")]
+        // {
+        //     app.add_systems(
+        //         OnEnter(SardipLoadingState::Loading),
+        //         trigger_load_save_remote,
+        //     );
+        //     app.add_systems(Update, handle_load_save_response);
+        //     app.add_systems(
+        //         PreUpdate,
+        //         load(shared_deps::moonshine_save::stream_from_resource::<
+        //             LoadFromStream,
+        //         >()),
+        //     );
+        // }
 
         app.add_systems(Update, trigger_save.run_if(in_state(GameState::ViewScreen)))
             .add_systems(Update, handle_saved_response)
@@ -307,21 +305,23 @@ fn handle_load_save_response(
     for event in events.drain() {
         let response: LoadResponse = event.into_inner();
         if response.save_blob.len() > 0 {
-            let decoded_data = BASE64_STANDARD.decode(&response.save_blob).unwrap();
-            let mut e = ZlibDecoder::new(&decoded_data[..]);
-            let mut decompressed_data = Vec::new();
-            e.read_to_end(&mut decompressed_data).unwrap();
+            if let Ok(decoded_data) = BASE64_STANDARD.decode(&response.save_blob) {
+                let mut e = ZlibDecoder::new(&decoded_data[..]);
+                let mut decompressed_data = Vec::new();
+                if e.read_to_end(&mut decompressed_data).is_ok() {
+                    commands.insert_resource(LoadFromStream {
+                        buffer: ReadBuffer {
+                            buffer: Arc::new(Mutex::new(decompressed_data)),
+                        },
+                    });
+                }
 
-            commands.insert_resource(LoadFromStream {
-                buffer: ReadBuffer {
-                    buffer: Arc::new(Mutex::new(decompressed_data)),
-                },
-            });
-            info!("Loaded save data from remote");
+                info!("Loaded save data from remote");
+            }
         } else {
             info!("No save data found on remote");
         }
-
-        state.set(SardipLoadingState::Loaded);
     }
+
+    state.set(SardipLoadingState::Loaded);
 }

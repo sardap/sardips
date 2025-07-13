@@ -46,7 +46,7 @@ fn load_templates(
             templates: set.templates,
         };
 
-        db.populate_pre_calculated( &mut layouts);
+        db.populate_pre_calculated(&mut layouts);
 
         commands.insert_resource(db);
     }

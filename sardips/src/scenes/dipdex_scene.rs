@@ -14,7 +14,12 @@ use sardips_core::{
     GameState,
 };
 
-use crate::{palettes, pet::dipdex::DipdexDiscoveredEntries, player::Player, pet_display::{spawn_pet_preview, PetPreview}};
+use crate::{
+    palettes,
+    pet::dipdex::DipdexDiscoveredEntries,
+    pet_display::{spawn_pet_preview, PetPreview},
+    player::Player,
+};
 use text_keys::{self, BACK};
 
 pub struct DipdexScenePlugin;
@@ -306,10 +311,7 @@ fn make_dipdex_list_entry(
         })
         .with_children(|parent| {
             if discovered {
-                spawn_pet_preview(
-                    parent,
-                    PetPreview::new(template.species_name.clone()),
-                );
+                spawn_pet_preview(parent, PetPreview::new(template.species_name.clone()));
                 // Spawn overlay
                 parent.spawn((
                     ImageBundle {
@@ -624,9 +626,9 @@ fn update_dipdex_entry_view(
                             // Make it fill 90% of width or height
                             spawn_pet_preview(
                                 parent,
-                                PetPreview::new(template.species_name.clone())
-                                    .with_max_size(90.),
-                            ).insert((
+                                PetPreview::new(template.species_name.clone()).with_max_size(90.),
+                            )
+                            .insert((
                                 MoodImageIndexes::new(&template.image_set.column_mood_map),
                                 PetEntryImage,
                                 MoodCategory::default(),

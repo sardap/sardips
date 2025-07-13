@@ -184,7 +184,7 @@ impl Default for Spewer {
             lifetime: SpewerLifetime::Uniform(Duration::from_millis(1500)),
             spawn_interval: Duration::from_millis(50),
             spawn_area: Rect::new(-5., -5., 5., 5.),
-            render_layer: 0
+            render_layer: 0,
         }
     }
 }
@@ -396,7 +396,7 @@ fn spawn_particles(
                 Particle::new(entity, lifetime, color_index),
                 MovementDirection3D { direction },
                 VelocityDeltaUpdate,
-                RenderLayers::layer(spewer.render_layer)
+                RenderLayers::layer(spewer.render_layer),
             ));
         }
     }

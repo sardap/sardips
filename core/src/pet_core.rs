@@ -418,10 +418,7 @@ impl PetTemplateDatabase {
         self.templates.push(template);
     }
 
-    pub fn populate_pre_calculated(
-        &mut self,
-        layouts: &mut Assets<TextureAtlasLayout>,
-    ) {
+    pub fn populate_pre_calculated(&mut self, layouts: &mut Assets<TextureAtlasLayout>) {
         for (i, template) in self.templates.iter_mut().enumerate() {
             let layout = TextureAtlasLayout::from_grid(
                 UVec2::new(

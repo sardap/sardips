@@ -2,10 +2,23 @@ use bevy::prelude::*;
 use strum_macros::EnumIter;
 
 use crate::{
-    accessory::Accessory, inventory::Inventory, money::Wallet, palettes, pet::Pet, pet_display::{spawn_pet_preview, PetPreview}, player::Player
+    accessory::Accessory,
+    inventory::Inventory,
+    money::Wallet,
+    palettes,
+    pet::Pet,
+    pet_display::{spawn_pet_preview, PetPreview},
+    player::Player,
 };
 use sardips_core::{
-    accessory_core::{AccessoryDiscoveredEntries, AccessoryTemplateDatabase}, assets::{DipdexImageAssets, FontAssets}, button_hover::{ButtonColorSet, ButtonHover}, name::SpeciesName, rotate_static::RotateStatic, text_translation::KeyText, ui_utils::spawn_back_button, GameState
+    accessory_core::{AccessoryDiscoveredEntries, AccessoryTemplateDatabase},
+    assets::{DipdexImageAssets, FontAssets},
+    button_hover::{ButtonColorSet, ButtonHover},
+    name::SpeciesName,
+    rotate_static::RotateStatic,
+    text_translation::KeyText,
+    ui_utils::spawn_back_button,
+    GameState,
 };
 use text_keys::{FOOD_BUY_SCENE_COST_LABEL, FOOD_BUY_SCENE_QTY_LABEL, FOOD_BUY_SCENE_TITLE};
 
@@ -62,15 +75,8 @@ fn setup_camera(mut commands: Commands) {
 const FUNDS_SIZE: f32 = 25.;
 const COST_SIZE: f32 = 20.;
 
-fn setup_selection(
-    mut commands: Commands,
-) {
-
-    commands.spawn((
-        ActiveSelection::default(),
-        BuyAccessoryScene
-    ));
-
+fn setup_selection(mut commands: Commands) {
+    commands.spawn((ActiveSelection::default(), BuyAccessoryScene));
 }
 
 fn setup_ui(
@@ -80,7 +86,7 @@ fn setup_ui(
     font_assets: Res<FontAssets>,
     accessory_db: Res<AccessoryTemplateDatabase>,
     player: Query<(&AccessoryDiscoveredEntries, &Wallet), With<Player>>,
-    active_pets: Query<&SpeciesName, With<Pet>>
+    active_pets: Query<&SpeciesName, With<Pet>>,
 ) {
     let (discovered, wallet) = player.single();
     let pet_template_name = active_pets.iter().next().unwrap().0.clone();
@@ -414,7 +420,7 @@ fn active_selection_changed(
 ) {
     let selection = match selection.get_single() {
         Ok(x) => x,
-        Err(_) => return
+        Err(_) => return,
     };
 
     let mut display = display.single_mut();
@@ -422,7 +428,7 @@ fn active_selection_changed(
     match &selection.selected {
         Some(name) => {
             display.replace_accessory(Accessory::new(name));
-        },
+        }
         None => {
             display.clear_accessory();
         }
@@ -477,7 +483,6 @@ fn buy_button_interaction(
         selection.selected = Some(button.name.clone());
     }
 }
-
 
 // TODO make a little dress up thing when you select it shows it on the guy and maybe you can add spewers
 // Maybe add a seprate section for spwpewers
